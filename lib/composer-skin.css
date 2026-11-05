@@ -1,0 +1,47 @@
+/* 현재 Chat UI의 22px 입력 상자와 frost 표면을 독립 컴포저 범위에 옮긴다. */
+.bb-independent-composer {
+  display: contents;
+  --bb-composer-round-radius: 22px;
+  --bb-composer-squircle-radius: 46.4px;
+  --bb-composer-face: oklch(from var(--bb-chat-ui-glass-base, var(--background)) min(1, calc(l + 0.075)) c h / 0.68);
+  --bb-composer-shadow: color-mix(in oklab, var(--ink, var(--foreground)) 22%, transparent);
+  --bb-composer-edge: color-mix(in oklab, var(--popover) 35%, transparent);
+}
+.dark .bb-independent-composer {
+  --bb-composer-face: oklch(from var(--bb-chat-ui-glass-base, var(--background)) min(1, calc(l + 0.075)) c h / 0.76);
+  --bb-composer-shadow: color-mix(in oklab, var(--foreground) 35%, transparent);
+  --bb-composer-edge: color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+/* 기존 Chat UI의 입력 상자 규칙보다 우선하되 이 플러그인 안에서만 적용한다. */
+.bb-independent-composer.bb-independent-composer [data-promptbox] {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-color: transparent !important;
+  border-radius: var(--bb-composer-round-radius) !important;
+  color: var(--foreground);
+  background: var(--bb-composer-face) !important;
+  backdrop-filter: blur(14px) saturate(1.25);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  box-shadow: 0 12px 32px -14px var(--bb-composer-shadow), inset 0 1px 3px var(--bb-composer-edge);
+}
+@supports (corner-shape: squircle) {
+  .bb-independent-composer.bb-independent-composer [data-promptbox]:not([data-promptbox-compact]) {
+    corner-shape: squircle;
+    border-radius: var(--bb-composer-squircle-radius) !important;
+  }
+  .bb-independent-composer [data-promptbox]::before,
+  .bb-independent-composer [data-promptbox]::after {
+    corner-shape: inherit;
+    border-radius: inherit;
+  }
+}
+/* 접힌 한 줄 입력 상자는 기존 둥근 pill 모양을 유지한다. */
+.bb-independent-composer.bb-independent-composer [data-promptbox][data-promptbox-compact] {
+  corner-shape: round;
+  border-radius: 25px !important;
+}
+.bb-independent-composer [data-promptbox]:focus-within {
+  border-color: transparent !important;
+  box-shadow: 0 18px 44px -16px var(--bb-composer-shadow), inset 0 1px 3px var(--bb-composer-edge);
+}

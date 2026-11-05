@@ -50,6 +50,10 @@
 
 ## 이 플러그인만의 규칙
 
-- plugin id: `bb-plugin-composer`
+- plugin id: `composer`
 - 확인 명령: `npm run typecheck`, `npm test`
 - 이 플러그인의 제품 규칙은 이 절에 쓴다.
+- 공식 `experimental_composer` 슬롯으로 입력 상자 전체를 교체한다. BB 앱과 기존 Chat UI는 수정하지 않는다.
+- `src/`와 `vendor/shared/`의 원본은 `docs/upstream-source.json`으로 확인한다. 현재 로컬 수정은 popup/send 메뉴의 기기 판정과 별도 디자인에 한정한다.
+- 펼친 상자의 스쿼클은 기존 22px에 2.11배를 적용한 46.4px이며, 미지원은 22px, 접힌 pill은 기존 25px을 유지한다.
+- 데모는 제품 컴포저 코드를 직접 불러오고 합성 입력과 전송 콜백만 사용한다. 실제 메시지를 자동 전송하지 않는다.

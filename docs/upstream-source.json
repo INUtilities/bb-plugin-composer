@@ -1,0 +1,283 @@
+{
+  "repository": "https://github.com/get-bb/bb",
+  "ref": "desktop-v0.48.1",
+  "commit": "e003e9510cbfd3bb6c26a28630b46ffb1c242a44",
+  "files": [
+    {
+      "source": "plugins/composer/src/PromptBoxInternal.tsx",
+      "destination": "src/PromptBoxInternal.tsx",
+      "sha256": "51a37e4997479e0c379b97b1c539813918f78d9575675dfef1849a0ddc3c9760"
+    },
+    {
+      "source": "plugins/composer/src/mentions/find-active-trigger.ts",
+      "destination": "src/mentions/find-active-trigger.ts",
+      "sha256": "fe762f098f91ff483b3f8873a8f5f012a1d8ec4ab17f326a86da58210beacdd1"
+    },
+    {
+      "source": "plugins/composer/src/mentions/typeahead-suggestions.ts",
+      "destination": "src/mentions/typeahead-suggestions.ts",
+      "sha256": "5742ed0389baf3d6e740a9ee1bf16db1321265cb994aa1cce35ba4d24742b9d1"
+    },
+    {
+      "source": "plugins/composer/src/attachments.ts",
+      "destination": "src/attachments.ts",
+      "sha256": "4580d2dd7147a64fdc94d23b093af00eebc63ef15841ad3aaaed359f9b0f74a9"
+    },
+    {
+      "source": "plugins/composer/src/editor/composer-mentions.ts",
+      "destination": "src/editor/composer-mentions.ts",
+      "sha256": "7775f3e1119d24ec11cc181aa075fddf750ade670d692a21d6b444080d108b8c"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/button.tsx",
+      "destination": "vendor/shared/components/ui/button.tsx",
+      "sha256": "d0d2a75b3a22d2447cc8641ba74e97a2a1e21f31ebdba00443fe74f9a5c2851b"
+    },
+    {
+      "source": "packages/shared-ui/src/lib/utils.ts",
+      "destination": "vendor/shared/lib/utils.ts",
+      "sha256": "bebe9a50d46ab609e089ed578507363110ccec8990d73fa9b86c58f221f570ac"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/motion.ts",
+      "destination": "vendor/shared/components/ui/motion.ts",
+      "sha256": "c96650e4436a54f2280efef8a953b160beae30044f36f7af4a146296d5859f82"
+    },
+    {
+      "source": "packages/plugin-registry/flavors/components/ui/icon.tsx",
+      "destination": "vendor/shared/components/ui/icon.tsx",
+      "sha256": "ba4eccb410a1291c1d80aff126aa24f463b4af574c8cd535df30e6a817862f47"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/tooltip.tsx",
+      "destination": "vendor/shared/components/ui/tooltip.tsx",
+      "sha256": "a5f9f59e32f4420207c571752636fdef1d36389892b1f8c5d22efecc713ff6ae"
+    },
+    {
+      "source": "packages/shared-ui/src/lib/portal-scope.ts",
+      "destination": "vendor/shared/lib/portal-scope.ts",
+      "sha256": "cbf23e81c4436585a5e55a4893591d0cc22c189f54d004d70cb7e1a8cc72f988"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/overlay-trigger.ts",
+      "destination": "vendor/shared/components/ui/overlay-trigger.ts",
+      "sha256": "d6801ffff8340db9b203b22a9c23b2cf9d8b0a4c5945b7c66fe8ff1f131d7d8b"
+    },
+    {
+      "source": "plugins/composer/src/ComposerPopupHost.tsx",
+      "destination": "src/ComposerPopupHost.tsx",
+      "sha256": "04621fe66f38f44488298a7ffd49de6903218a0b3740879ab9c7dda178c30a39"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/hooks/use-compact-viewport.tsx",
+      "destination": "vendor/shared/components/ui/hooks/use-compact-viewport.tsx",
+      "sha256": "56c7e82a62e3f0f35e6ffbaa1611569479de7f193ad20daef9f9466a44bce9e9"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/hooks/use-media-query.ts",
+      "destination": "vendor/shared/components/ui/hooks/use-media-query.ts",
+      "sha256": "868447cb0ac0fbdf0715adb8b9f05f0a9b2c9272234285984d77b0239232714a"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/responsive-overlay.tsx",
+      "destination": "vendor/shared/components/ui/responsive-overlay.tsx",
+      "sha256": "f40ae1e494d30b3344015b77f57115c10d8e37199dbfe8aadf4981fcb2686fca"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/hooks/use-pointer-coarse.ts",
+      "destination": "vendor/shared/components/ui/hooks/use-pointer-coarse.ts",
+      "sha256": "29936c113eca630b26af167bb694920a034216cfdcb408daef13512b9e0e9a9e"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/coarse-pointer-sizing.ts",
+      "destination": "vendor/shared/components/ui/coarse-pointer-sizing.ts",
+      "sha256": "31f20d42c88b52bbefeaa32f2358b8eb3a1d5851407e32ba80a09f0b0c0d4384"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/chrome-style-tokens.ts",
+      "destination": "vendor/shared/components/ui/chrome-style-tokens.ts",
+      "sha256": "0b1f9c43338b7c223bf8547e138ab46716f7043d5fd34bf0a2a7cd6e5be415da"
+    },
+    {
+      "source": "plugins/composer/src/AttachmentPreview.tsx",
+      "destination": "src/AttachmentPreview.tsx",
+      "sha256": "6519f7623148e280bcff37e37f0cbd942d0d78567638cf207c5c2837fc3c9f7e"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/video-thumbnail.tsx",
+      "destination": "vendor/shared/components/ui/video-thumbnail.tsx",
+      "sha256": "3cd4969f356dea3a80eca68b06ce95efd89926607baad87122bf2b6bed93d7c9"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/video.tsx",
+      "destination": "vendor/shared/components/ui/video.tsx",
+      "sha256": "9f84e75dfafe28e16f9773f2f9f01a154ad67b543727a9f45ee58d16d49af4e8"
+    },
+    {
+      "source": "plugins/composer/src/composer-draft.ts",
+      "destination": "src/composer-draft.ts",
+      "sha256": "949604465d5d13fe16d237ce2143d8bece2e2be58002e477a9ff3f165b79d976"
+    },
+    {
+      "source": "plugins/composer/src/PromptBoxActionsMenu.tsx",
+      "destination": "src/PromptBoxActionsMenu.tsx",
+      "sha256": "2fa7bb67031107dac587015374afacf02d4f191f248337594cc03ac6203884c2"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/dropdown-menu.tsx",
+      "destination": "vendor/shared/components/ui/dropdown-menu.tsx",
+      "sha256": "ba5400b16b03ede153d28f0cfec3415e729c9d91ec2eb334e52b2a173dbf9ef9"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/overlay-anchor.ts",
+      "destination": "vendor/shared/components/ui/overlay-anchor.ts",
+      "sha256": "ea1401f4cfdfa87c1125d61e5c0a378441fe77b0595016784d22b00532284eca"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/menu-item-hover.tsx",
+      "destination": "vendor/shared/components/ui/menu-item-hover.tsx",
+      "sha256": "025a793f2babc01fce1a81193b68d27a86e3684ad1e9443f518a2c36602de20d"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-decoration-extension.ts",
+      "destination": "src/editor/prompt-decoration-extension.ts",
+      "sha256": "6ae5ee1f7777a7900ecdc54bdbfa461b283cf7ffb716aca1f3c89e6fccd65a74"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-editor-serialization.ts",
+      "destination": "src/editor/prompt-editor-serialization.ts",
+      "sha256": "633f2cee9ab61c3e576defcfde45db23c4b62e1fc74ab78bcf318862b32a5928"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-editor-extensions.ts",
+      "destination": "src/editor/prompt-editor-extensions.ts",
+      "sha256": "d9666e9b1857300fcbc89177776987fbc493749f2ea0be3c0e2c27abe400e514"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-mention-extension.ts",
+      "destination": "src/editor/prompt-mention-extension.ts",
+      "sha256": "2e37737b96ed25e8ac3a723508847bb552ddde82f38789ebb33c194fe850cc63"
+    },
+    {
+      "source": "plugins/composer/src/editor/PromptMentionPillNodeView.tsx",
+      "destination": "src/editor/PromptMentionPillNodeView.tsx",
+      "sha256": "8037e743e2d27afa03ac1b9576f2c5b8c4d4168aa4c6b2e0b6505a7aa2933f25"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-mention-link.ts",
+      "destination": "src/editor/prompt-mention-link.ts",
+      "sha256": "5bbf365ed200ba694ed6fff77c452de68b4911a731fa9d8e3a446b31b005d938"
+    },
+    {
+      "source": "plugins/composer/src/editor/attachment-history.ts",
+      "destination": "src/editor/attachment-history.ts",
+      "sha256": "5afd71535714912a3a7a1e60e001e016243169e7b7536fd843e6c8d0de393081"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-thread-link-paste.ts",
+      "destination": "src/editor/prompt-thread-link-paste.ts",
+      "sha256": "144ba4b288cbca49daca2059104b8355a16f67345894383e89b5444cb94cf98a"
+    },
+    {
+      "source": "plugins/composer/src/mentions/pasted-thread-link-candidates.ts",
+      "destination": "src/mentions/pasted-thread-link-candidates.ts",
+      "sha256": "5c3eb1918f33586edb8f33ddb9ecb581e501be52311a3a4cf88bc5499c5e35a7"
+    },
+    {
+      "source": "plugins/composer/src/mentions/pasted-thread-links.ts",
+      "destination": "src/mentions/pasted-thread-links.ts",
+      "sha256": "c2fb06218b7749d07c0eeb29431b1152831046459fa1289a13f7cdd7d2ec42a1"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-editor-blockquote.ts",
+      "destination": "src/editor/prompt-editor-blockquote.ts",
+      "sha256": "b0515ba35b6720826ea08efab8eb464bb82db0da4d1fdf88c70200b50d2fb3b0"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-editor-transaction.ts",
+      "destination": "src/editor/prompt-editor-transaction.ts",
+      "sha256": "a7b585ae9095515a9a50ac003489a81538dd878f48ebe2d2f7ac52f16d353df9"
+    },
+    {
+      "source": "plugins/composer/src/editor/prompt-editor-paragraph.ts",
+      "destination": "src/editor/prompt-editor-paragraph.ts",
+      "sha256": "4d5fe11b252295747223f385f5e448f52a08dd9fbe1c3ecd82fd31cc2c35e695"
+    },
+    {
+      "source": "plugins/composer/src/mentions/MentionMenu.tsx",
+      "destination": "src/mentions/MentionMenu.tsx",
+      "sha256": "13db5d01a36104ae30309a990916071b328261e0c1aaa666050d46e75343862d"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/pill.tsx",
+      "destination": "vendor/shared/components/ui/pill.tsx",
+      "sha256": "138774af672318dc3621131b315fa019d9966fb3d72004d0da3d411d7f322240"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/truncate-start.tsx",
+      "destination": "vendor/shared/components/ui/truncate-start.tsx",
+      "sha256": "b878b420cd871006e2230ed128a00f3e5979fa7c11f59358e21858c6afd70f6a"
+    },
+    {
+      "source": "plugins/composer/src/useTypeaheadMenuMaxHeight.ts",
+      "destination": "src/useTypeaheadMenuMaxHeight.ts",
+      "sha256": "60085e0e65c808381cdc9bc96c767c9e3ce7cba5c52090578251ed011b56da90"
+    },
+    {
+      "source": "plugins/composer/src/ComposerEditorSlot.tsx",
+      "destination": "src/ComposerEditorSlot.tsx",
+      "sha256": "6ba053a19e652abeaf834a9e44022fd4639cae4bcc3a7f9f52c32011ae8970cd"
+    },
+    {
+      "source": "plugins/composer/src/modifier-submit-key.ts",
+      "destination": "src/modifier-submit-key.ts",
+      "sha256": "68774d52a49fb9d80d13cd92bb3baea8aa244f4f62324bfe68820058e41bcea3"
+    },
+    {
+      "source": "plugins/composer/src/composer-submit-gate.ts",
+      "destination": "src/composer-submit-gate.ts",
+      "sha256": "5f2f98823e9adc781e726c87b3be30b40946c857cdf426aa140248ad89cceb46"
+    },
+    {
+      "source": "plugins/composer/src/ComposerSendMenu.tsx",
+      "destination": "src/ComposerSendMenu.tsx",
+      "sha256": "e16c1a532eccee76e4899d250cb728719e985951b2219426af371398d45ba3e8"
+    },
+    {
+      "source": "packages/shared-ui/src/components/ui/compact-long-press-menu.tsx",
+      "destination": "vendor/shared/components/ui/compact-long-press-menu.tsx",
+      "sha256": "aaf098e1dc50c93a234693e63fa03ff3650d597c28292303589f5ed41667ff8d"
+    },
+    {
+      "source": "plugins/composer/src/composer.css",
+      "destination": "src/composer.css",
+      "sha256": "0eef0a4c5bad31f4c077fa70ba43e01252b505a448c342f979df31aa1e83b368"
+    }
+  ],
+  "externalDependencies": [
+    "@get-bb/plugin-sdk",
+    "@radix-ui/react-dropdown-menu",
+    "@radix-ui/react-slot",
+    "@radix-ui/react-tooltip",
+    "@tiptap/core",
+    "@tiptap/extension-blockquote",
+    "@tiptap/extension-document",
+    "@tiptap/extension-hard-break",
+    "@tiptap/extension-mention",
+    "@tiptap/extension-paragraph",
+    "@tiptap/extension-text",
+    "@tiptap/extensions",
+    "@tiptap/pm",
+    "@tiptap/react",
+    "class-variance-authority",
+    "clsx",
+    "mdast",
+    "nanoid",
+    "react",
+    "react-dom",
+    "remark-parse",
+    "tailwind-merge",
+    "unified",
+    "zod"
+  ]
+}

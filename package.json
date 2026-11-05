@@ -42,7 +42,10 @@
     "@tiptap/extension-hard-break": "^3.26.0",
     "@tiptap/extension-paragraph": "^3.26.0",
     "@tiptap/extension-text": "^3.26.0",
-    "@tiptap/extension-mention": "^3.26.0"
+    "@tiptap/extension-mention": "^3.26.0",
+    "@types/mdast": "^4.0.4",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@get-bb/plugin-sdk": "0.6.104",
