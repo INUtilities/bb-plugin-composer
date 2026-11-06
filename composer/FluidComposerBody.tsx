@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_MORPH_MS } from '../lib/fluid-composer-height';
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_LINE_MS, FLUID_COMPOSER_MORPH_MS } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
@@ -29,13 +29,14 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const multilineRef = useRef(false), layoutFrame = useRef<number | null>(null);
   const previousDraft = useRef({ text: draftText, voiceMode });
   const previousPosition = useRef<{ x: number; y: number } | null>(null);
+  const inputPosition = useRef<{ x: number; y: number } | null>(null);
   const layoutAnimation = useRef<Animation | null>(null);
   const actionAnimation = useRef<Animation | null>(null);
   const actionPosition = useRef<{ x: number; y: number } | null>(null);
   const previousVoiceMode = useRef(voiceMode);
   const voicePane = useRef<HTMLElement | null>(null);
-  const layoutProbe = useRef(() => {});
-  layoutProbe.current = () => {
+  const layoutProbe = useRef((_beforeInput?: { x: number; y: number }) => {});
+  layoutProbe.current = beforeInput => {
     if (voiceMode) {
       const element = viewport.current, pane = voicePane.current;
       if (!element || !pane) return;
@@ -51,7 +52,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!draftText && !voiceMode) actionPosition.current = actionColumn.current.getBoundingClientRect();
     const next = voiceMode || needsFullWidthComposer(row.current, input, optionColumn.current, actionColumn.current);
     if (next === multilineRef.current) return;
-    previousPosition.current = input.getBoundingClientRect();
+    previousPosition.current = beforeInput ?? input.getBoundingClientRect();
     layoutAnimation.current?.cancel();
     multilineRef.current = next; setMultiline(next);
   };
@@ -70,6 +71,10 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const stopScroll = bindComposerScrollBoundary(element.closest<HTMLElement>('[data-bb-chat-ui-fluid-composer]') ?? element);
     const interruptPosition = (event: Event) => {
       if (!(event.target instanceof win.Element) || !event.target.closest('[data-bb-chat-ui-fluid-editor]')) return;
+      if (!multilineRef.current) {
+        // 좁은 열에서 이미 줄바꿈된 좌표를 모션 시작점으로 삼지 않는다.
+        inputPosition.current = editorColumn.current?.querySelector<HTMLElement>('.ProseMirror')?.getBoundingClientRect() ?? null;
+      }
       if (layoutAnimation.current?.playState !== 'running') return;
       if (element.getAttribute('data-bb-chat-ui-fluid-view') !== 'input') return;
       layoutAnimation.current?.cancel();
@@ -114,7 +119,16 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
       element.style.removeProperty('--bb-chat-ui-voice-backdrop-width'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-left'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-bottom');
     };
   }, [!!voice, voiceMode, scheduleLayout]);
-  useEffect(scheduleLayout, [draftText, editorReady, panelOpen, voiceMode, scheduleLayout]);
+  useLayoutEffect(() => {
+    // 입력이 좁은 열에서 먼저 줄바꿈된 한 프레임을 그리지 않게 한다.
+    if (layoutFrame.current !== null) {
+      viewport.current?.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current);
+      layoutFrame.current = null;
+    }
+    const beforeInput = previousDraft.current.text !== draftText ? inputPosition.current : null;
+    inputPosition.current = null;
+    layoutProbe.current(beforeInput ?? undefined);
+  }, [draftText, editorReady, panelOpen, voiceMode]);
   useLayoutEffect(() => {
     const column = actionColumn.current, previous = actionPosition.current;
     const changed = previousVoiceMode.current !== voiceMode;
@@ -149,7 +163,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!previous || !column?.animate || column.ownerDocument.defaultView!.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const next = (column.querySelector('[data-bb-chat-ui-voice-transcript], .ProseMirror') ?? column).getBoundingClientRect(), dx = previous.x - next.x, dy = previous.y - next.y;
     if (!dx && !dy) return;
-    layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_MORPH_MS, easing: multiline ? EASE.droplet : EASE.out });
+    layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: multiline ? FLUID_COMPOSER_LINE_MS : FLUID_COMPOSER_MORPH_MS, easing: EASE.out });
   }, [multiline]);
   useLayoutEffect(() => {
     const win = viewport.current?.ownerDocument.defaultView;

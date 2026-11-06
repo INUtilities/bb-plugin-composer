@@ -11,7 +11,37 @@ beforeEach(()=>{
  vi.stubGlobal('matchMedia',()=>({get matches(){return reduced;},addEventListener:(_type:string,fn:()=>void)=>listeners.add(fn),removeEventListener:(_type:string,fn:()=>void)=>listeners.delete(fn)}));
 });
 afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();});
-it('keeps the reference text movement and easing for a focused editor without replacing its selection',()=>{
+it('starts the full-width layout and its transition in the input commit before another animation frame',()=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const x=editor?(full?20:52):0,y=editor?(full?16:lines>1?48:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
+ const animate=vi.fn(()=>({cancel:vi.fn(),playState:'running'}));
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('한 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const editor=v.container.querySelector('.ProseMirror');
+  const before=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});
+  editor!.dispatchEvent(before);
+  lines=2;v.rerender(draw('줄 경계를 넘는 입력'));
+  // No rAF/timer advance: the narrow wrapped layout must never reach paint.
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
+  expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+  expect(before.defaultPrevented).toBe(false);
+  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(32px, 44px)'},{transform:'translate(0, 0)'}],{duration:120,easing:EASE.out});
+ }finally{
+  v.unmount();bounds.mockRestore();
+  if(descriptor)Object.defineProperty(HTMLElement.prototype,'animate',descriptor);
+  else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
+ }
+});
+it('moves the real focused editor with the input height curve without replacing its selection',()=>{
  let lines=1;
  const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
   const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
@@ -29,7 +59,7 @@ it('keeps the reference text movement and easing for a focused editor without re
   lines=2;v.rerender(draw('첫 줄\n다음 줄'));
   act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
-  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(32px, 44px)'},{transform:'translate(0, 0)'}],{duration:320,easing:EASE.droplet});
+  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(32px, 44px)'},{transform:'translate(0, 0)'}],{duration:120,easing:EASE.out});
   expect(document.activeElement).toBe(editor);
   expect(editor.contains(selection.anchorNode)).toBe(true);expect(v.container.querySelector('.ProseMirror')).toBe(editor);
  }finally{v.unmount();bounds.mockRestore();if(oldAnimate)Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:oldAnimate});else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
@@ -54,7 +84,7 @@ it('keeps the height curve but releases the moving caret immediately when typing
   act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
-  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.droplet});
+  expect(animations.at(-1)!.options).toEqual({duration:120,easing:EASE.out});
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
   const bubbled=vi.fn();v.container.addEventListener('beforeinput',bubbled);
   const input=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});

@@ -2,7 +2,7 @@ import { EASE } from './motion.ts';
 
 export const FLUID_COMPOSER_MORPH_MS = 320;
 export const FLUID_COMPOSER_INPUT_MS = 320;
-const FLUID_COMPOSER_LINE_MS = 120;
+export const FLUID_COMPOSER_LINE_MS = 120;
 
 // 줄 높이는 짧게 잇고 큰 배치 전환과 빈 초안의 접힘은 기존 곡선을 유지한다.
 export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement): () => void {
