@@ -25,10 +25,11 @@ it('uses the new line layout immediately without animating a focused editor or r
  try{
   act(()=>vi.advanceTimersByTime(20));const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!;editor.focus();
   const selection=document.getSelection()!;selection.selectAllChildren(editor);selection.collapseToEnd();
+  const heightBeforeInput=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height;
   lines=2;v.rerender(draw('첫 줄\n다음 줄'));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('136px');
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toBe('none');
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe(heightBeforeInput);
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 320ms');
   expect(animate).not.toHaveBeenCalled();expect(document.activeElement).toBe(editor);
   expect(editor.contains(selection.anchorNode)).toBe(true);expect(v.container.querySelector('.ProseMirror')).toBe(editor);
  }finally{v.unmount();bounds.mockRestore();if(oldAnimate)Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:oldAnimate});else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}

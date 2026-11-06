@@ -51,11 +51,7 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     const nextMultiline = viewport.getAttribute('data-multiline') === 'true';
     const reset = nextInputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true';
     if (next === height && !reset) { inputView = nextInputView; multiline = nextMultiline; return; }
-    const active = viewport.ownerDocument.activeElement;
-    // 입력 중 배치 전환은 새 커서를 이전 clip에 가두지 않도록 즉시 공간을 확보한다.
-    const typingLayoutChange = inputView && nextInputView && multiline !== nextMultiline
-      && active && viewport.contains(active) && active.closest('[data-bb-chat-ui-fluid-editor]');
-    duration = reset ? FLUID_COMPOSER_INPUT_MS : typingLayoutChange ? 0 : inputView && nextInputView && multiline && nextMultiline ? FLUID_COMPOSER_LINE_MS
+    duration = reset ? FLUID_COMPOSER_INPUT_MS : inputView && nextInputView && multiline && nextMultiline ? FLUID_COMPOSER_LINE_MS
       : nextInputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
     inputView = nextInputView; multiline = nextMultiline;
     height = next;

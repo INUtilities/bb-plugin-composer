@@ -146,15 +146,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   useLayoutEffect(() => {
     const previous = previousPosition.current, column = editorColumn.current;
     previousPosition.current = null;
-    if (column?.contains(column.ownerDocument.activeElement)) {
-      const element = viewport.current, body = content.current;
-      // 첫 줄의 커서 공간은 ResizeObserver를 기다리지 않고 같은 배치에서 확보한다.
-      if (element && body && !element.hasAttribute('data-bb-chat-ui-fluid-reset')) {
-        element.style.transition = 'none';
-        element.style.height = `${body.getBoundingClientRect().height}px`;
-      }
-      return;
-    }
+    if (column?.contains(column.ownerDocument.activeElement)) return;
     if (!previous || !column?.animate || column.ownerDocument.defaultView!.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const next = content.current ? readFluidEditorPosition(column, content.current) : null;
     if (!next) return;

@@ -77,14 +77,14 @@ test('newline resizing leaves the native editor in place while the surface heigh
   } finally { f.stop(); f.dom.window.close(); }
 });
 
-test('a focused newline makes room for its caret before paint while later line changes and clearing keep motion', async () => {
+test('a focused newline retains the initial growth transition while later line changes and clearing keep motion', async () => {
   const f = fixture();
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     const editor = f.dom.window.document.querySelector<HTMLElement>('.ProseMirror')!;
     editor.parentElement!.setAttribute('data-bb-chat-ui-fluid-editor', '');editor.tabIndex=0;editor.focus();
     f.viewport.setAttribute('data-multiline', 'true');f.resize(116);
-    assert.match(f.viewport.style.transition, /height 0ms/);
+    assert.match(f.viewport.style.transition, /height 320ms/);
     assert.equal(f.viewport.style.height, '116px');
     f.resize(140);assert.match(f.viewport.style.transition, /height 120ms/);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-reset','true');f.viewport.setAttribute('data-multiline','false');f.resize(52);

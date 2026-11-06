@@ -40,6 +40,8 @@ html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-de
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --bb-chat-ui-fluid-input-radius:26px; --bb-chat-ui-fluid-control-size:36px; --bb-chat-ui-fluid-device-max:35dvh; }
 .dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face], .dark [data-bb-chat-ui-fluid-details-face], .dark [data-bb-chat-ui-fluid-details] { background:${DARK_GLASS_FACE}; box-shadow:0 8px 24px -12px color-mix(in oklab,var(--background) 60%,transparent),inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
 [data-bb-chat-ui-fluid-height] { position:relative; display:flex; flex-direction:column; justify-content:flex-end; overflow:clip; border-radius:var(--bb-chat-ui-fluid-input-radius); }
+/* 입력 중 커서는 높이 전환의 이전 경계로 자르지 않고 내부 scroller를 사용한다. */
+[data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="input"]:focus-within { overflow:visible; }
 [data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] { border-radius:26px; }
 [data-bb-chat-ui-fluid-toggle] { position:absolute; left:8px; bottom:8px; z-index:1; display:flex; border-radius:999px; }
 [data-bb-chat-ui-fluid-toggle-face] { inset:4px; opacity:0; transition:opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
