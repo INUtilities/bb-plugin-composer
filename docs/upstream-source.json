@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "e162144dc14772e57e9130c7ca6dcd648b0b31b5",
+  "integratedCommit": "baccdb704f73bd8f70a75f01d61d9b432cd89b9d",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -34,12 +34,12 @@
     {
       "source": "composer/FluidComposerBody.test.tsx",
       "destination": "composer/FluidComposerBody.test.tsx",
-      "sha256": "09cc26703b23ff034d2628d148f188e0479b3da05d26dc0e8ef936a43392a45b"
+      "sha256": "e96ebd374e8b7ef56025c3e79a0782415961db53b82e16eeaa1956c7850ae815"
     },
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "c14622d7ab6704056c821c04e22c5b20815ed3399761e8f371249abc9c64c3a0"
+      "sha256": "6fd2659f3c0f1263053326c07476e797b0dbe718f3649759bcd8e0f482e51785"
     },
     {
       "source": "composer/FluidComposerDetails.tsx",
@@ -515,12 +515,12 @@
     {
       "source": "lib/fluid-composer-height.ts",
       "destination": "lib/fluid-composer-height.ts",
-      "sha256": "6ed4884bc5c30e6ab51cb6f370a4e2b9d52b920aacc06011ed1d4a73de5ef376"
+      "sha256": "8b0918d705d732495b272df8efbd7282cec3365a02e5f1e006bb0c4b7b15c424"
     },
     {
       "source": "lib/fluid-composer-height.test.ts",
       "destination": "lib/fluid-composer-height.test.ts",
-      "sha256": "afa53497722b70aee788a5da12479f11bb97a050cb9d51428b03e449359f09a5"
+      "sha256": "c92d472125771a72932798e722c285e3433303bf99874550239ba4e5479a0b04"
     },
     {
       "source": "lib/fluid-composer-layout.ts",

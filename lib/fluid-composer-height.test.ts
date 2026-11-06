@@ -131,6 +131,25 @@ test('expanded input applies subsequent line heights immediately while layout an
   } finally { f.stop(); f.dom.window.close(); }
 });
 
+// 초기화할 때 실제 남은 내용 높이와 옵션 전환의 수명을 확인한다.
+test('host-cleared input cancels shrink and corner motion and uses the actual remaining content height', async () => {
+  const f=fixture(true);
+  try{
+    await new Promise(resolve=>f.dom.window.requestAnimationFrame(resolve));
+    f.viewport.setAttribute('data-multiline','true');f.resize(148);
+    const count=f.animations.length;
+    f.viewport.setAttribute('data-bb-chat-ui-fluid-reset','true');
+    f.resize(76);
+    assert.equal(f.viewport.style.height,'76px');
+    assert.equal(f.viewport.style.transition,'none');
+    assert.equal(f.animations.length,count);assert.equal(f.animations[0].cancelled,true);
+    f.viewport.setAttribute('data-multiline','false');f.resize(52);
+    assert.equal(f.viewport.style.transition,'none');assert.equal(f.animations.length,count);
+    f.viewport.setAttribute('data-bb-chat-ui-fluid-view','options');f.resize(212);
+    assert.match(f.viewport.style.transition,/height 320ms/);
+  }finally{f.stop();f.dom.window.close();}
+});
+
 test('reduced motion changes immediately and resumes for later height changes', async () => {
   const f = fixture();
   try {

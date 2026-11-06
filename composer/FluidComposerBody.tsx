@@ -27,6 +27,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const optionColumn = useRef<HTMLDivElement>(null), actionColumn = useRef<HTMLDivElement>(null);
   const [multiline, setMultiline] = useState(false);
   const multilineRef = useRef(false), layoutFrame = useRef<number | null>(null);
+  const previousDraft = useRef({ text: draftText, voiceMode });
   const previousPosition = useRef<{ x: number; y: number } | null>(null);
   const layoutAnimation = useRef<Animation | null>(null);
   const actionAnimation = useRef<Animation | null>(null);
@@ -131,6 +132,22 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const dx = previous.x - next.x, dy = previous.y - next.y;
     if (dx || dy) actionAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_MORPH_MS, easing: EASE.out });
   }, [voiceMode]);
+  // 호스트가 초안을 비웠을 때만 대기 중인 배치·위치 모션 없이 접힌 입력으로 복귀한다.
+  useLayoutEffect(() => {
+    const cleared = !previousDraft.current.voiceMode && previousDraft.current.text !== undefined && previousDraft.current.text !== '' && draftText === '';
+    previousDraft.current = { text: draftText, voiceMode };
+    const element = viewport.current;
+    if (!element) return;
+    if (draftText !== '' || panelOpen || voiceMode) { element.removeAttribute('data-bb-chat-ui-fluid-reset'); return; }
+    if (!cleared) return;
+    element.setAttribute('data-bb-chat-ui-fluid-reset', 'true');
+    element.style.transition = 'none';
+    layoutAnimation.current?.cancel(); layoutAnimation.current = null;
+    previousPosition.current = null;
+    for (const animation of editorColumn.current?.getAnimations?.() ?? []) if (animation.id === FLUID_EDITOR_FOLLOW_ANIMATION) animation.cancel();
+    if (layoutFrame.current !== null) { element.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current); layoutFrame.current = null; }
+    multilineRef.current = false; setMultiline(false);
+  }, [draftText, panelOpen, voiceMode]);
   useLayoutEffect(() => {
     const previous = previousPosition.current, column = editorColumn.current;
     previousPosition.current = null;

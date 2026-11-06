@@ -16,7 +16,7 @@ export function readFluidEditorPosition(editor: HTMLElement, content: HTMLElemen
     y: box.top + (Number.parseFloat(style.paddingTop) || 0) - parent.top - offset, offsetY: offset };
 }
 
-// 배치 전환은 부드럽게 잇고 이미 펼친 입력의 줄 높이는 즉시 맞춘다.
+// 배치 전환은 부드럽게 잇고 줄 높이와 비워진 초안은 즉시 맞춘다.
 export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement, getEditor?: () => HTMLElement | null): () => void {
   const win = viewport.ownerDocument.defaultView;
   if (!win?.ResizeObserver) return () => {};
@@ -36,7 +36,7 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
   const updateMotion = () => {
     if (motion.matches) { editorMotion?.cancel(); editorMotion = null; }
     const properties = duration > 0 ? ['height', 'border-radius', 'corner-shape'] : ['border-radius', 'corner-shape'];
-    viewport.style.transition = ready && !motion.matches
+    viewport.style.transition = ready && !motion.matches && !(inputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true')
       ? properties.map(property => `${property} ${duration || FLUID_COMPOSER_INPUT_MS}ms ${EASE.out}`).join(', ')
       : 'none';
   };
@@ -57,8 +57,9 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     const nextPosition = nextMoving ? readFluidEditorPosition(nextMoving, content) : null;
     const nextInputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode');
     const nextMultiline = viewport.getAttribute('data-multiline') === 'true';
-    if (next === height) { moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; return; }
-    duration = inputView && nextInputView && multiline && nextMultiline ? 0
+    const reset = nextInputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true';
+    if (next === height && !reset) { moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; return; }
+    duration = reset || (inputView && nextInputView && multiline && nextMultiline) ? 0
       : nextInputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
     const follow = ready && !motion.matches && duration > 0 && inputView && nextInputView && nextMoving === moving && nextPosition;
     const delta = follow && nextPosition ? next - height + (position?.y ?? nextPosition.y) - nextPosition.y + nextPosition.offsetY : 0;

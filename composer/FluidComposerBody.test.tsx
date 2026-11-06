@@ -58,6 +58,48 @@ it('keeps the height curve but releases the moving caret immediately when typing
 });
 // 합성 초안과 옵션을 사용해 입력 영역의 수명을 확인한다.
 const view=(open=false)=><FluidComposerBody panelOpen={open} panel={<div role="region" aria-label="옵션"><button>선택</button></div>} editor={<textarea defaultValue="보존할 초안"/>} options={<button>＋</button>} actions={<button>전송</button>} attachments={null}/>;
+// 빈 초안의 접힘과 호스트가 보존·복구한 초안을 같은 입력 노드에서 확인한다.
+it('resets a host-cleared draft before the next frame without losing a retained or restored draft',()=>{
+ let lines=3;
+ const cancel=vi.fn(),animate=vi.fn(()=>({cancel,playState:'running'}));
+ const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ // 줄 수와 펼침 상태만으로 입력 영역의 배치를 재현한다.
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  return {left:editor?(full?20:52):0,top:0,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ // 호스트가 보존하거나 비우거나 복구한 초안만 입력 본문에 전달한다.
+ const draw=(text:string,open=false)=><FluidComposerBody draftText={text} panelOpen={open} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('보존할\n초안'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const viewport=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!;
+  expect(viewport.dataset.multiline).toBe('true');
+  const editor=v.container.querySelector('.ProseMirror'),count=animate.mock.calls.length;
+  v.rerender(draw('보존할\n초안'));
+  expect(viewport.dataset.multiline).toBe('true');
+  lines=1;v.rerender(draw(''));
+  expect(viewport.dataset.multiline).toBe('false');
+  expect(viewport.getAttribute('data-bb-chat-ui-fluid-reset')).toBe('true');
+  expect(viewport.style.transition).toBe('none');
+  expect(animate).toHaveBeenCalledTimes(count);expect(cancel).toHaveBeenCalled();
+  expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+  v.rerender(draw('',true));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
+  v.rerender(draw(''));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
+  lines=3;v.rerender(draw('보존할\n초안'));act(()=>vi.advanceTimersByTime(20));
+  expect(viewport.dataset.multiline).toBe('true');
+  expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
+ }finally{v.unmount();bounds.mockRestore();if(descriptor)Object.defineProperty(HTMLElement.prototype,'animate',descriptor);else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
+});
+// 음성 미리보기의 종료를 전송 후 텍스트 초기화로 오인하지 않는지 확인한다.
+it('preserves voice exit motion when its preview returns to an empty text draft',()=>{
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const v=render(<FluidComposerBody draftText="음성 미리보기" voiceMode editor={<textarea/>} options={null} actions={null} attachments={null}/>);
+ v.rerender(<FluidComposerBody draftText="" editor={<textarea/>} options={null} actions={null} attachments={null}/>);
+ expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
+});
 it('releases vertical-only following on further input without cancelling unrelated editor animation',()=>{
  const v=render(view()),input=v.container.querySelector('textarea')!;
  const column=input.closest<HTMLElement>('[data-bb-chat-ui-fluid-editor]')!;
