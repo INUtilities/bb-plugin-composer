@@ -2220,7 +2220,7 @@ export function PromptBoxInternal({
     formElement.style.overflow = "hidden";
     formElement.style.willChange = "height";
     formElement.style.transition =
-      `${surfaceTransition}, height 240ms cubic-bezier(0.22, 1, 0.36, 1)`;
+      `${surfaceTransition}, height 320ms cubic-bezier(0.36, 0, 0.18, 1)`;
     formElement.style.height = `${toHeight}px`;
 
     let isCleanedUp = false;
@@ -2238,7 +2238,7 @@ export function PromptBoxInternal({
       if (event.propertyName !== "height") return;
       cleanup();
     };
-    const fallbackTimeout = window.setTimeout(cleanup, 320);
+    const fallbackTimeout = window.setTimeout(cleanup, 400);
     formElement.addEventListener("transitionend", handleTransitionEnd);
 
     return cleanup;
