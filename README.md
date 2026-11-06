@@ -20,6 +20,14 @@ Chat UI의 원격 experiment/fluid-composer에서 시작한 Fluid 입력·옵션
 옵션 카드와 원형 버튼, Fluid의 높이·음성 동작은 원본을 유지한다. 이 배율은 시각적 비교값이며 정확한 곡선 환산식은 아니다.
 초안·첨부·전송 상태는 공개 SDK를 통해 BB가 관리한다.
 
+## 독립 Composer의 모션 보정
+
+`composer-baseline-2026-11-06`의 `ffde1882`를 기준으로 입력 중 세로 모션 중단과
+빈 초안의 즉시 접힘을 보정했다. 후속 입력은 가로 위치 전환만 끝내고 높이와 글의
+세로 이동은 계속 잇는다. 전체 삭제는 높이·모서리를 같은 320ms 곡선으로 접는다.
+일반 줄 수 변화의 120ms 전환과 reduced motion은 유지한다.
+이 부분은 사용자 요청에 따른 독립 저장소의 변경이며 가져온 원본 SHA 기록은 보존한다.
+
 ## 설치와 검증
 
 npm ci, npm run typecheck, npm test, bb plugin build .으로 확인한다.

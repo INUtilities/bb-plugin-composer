@@ -17,7 +17,7 @@ export function readFluidEditorPosition(editor: HTMLElement, content: HTMLElemen
     y: box.top + (Number.parseFloat(style.paddingTop) || 0) - parent.top - offset, offsetY: offset };
 }
 
-// 줄 높이는 짧게 잇고 큰 배치 전환과 빈 초안의 즉시 복귀를 구분한다.
+// 줄 높이는 짧게 잇고 큰 배치 전환과 빈 초안의 접힘은 기존 곡선을 유지한다.
 export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement, getEditor?: () => HTMLElement | null): () => void {
   const win = viewport.ownerDocument.defaultView;
   if (!win?.ResizeObserver) return () => {};
@@ -36,7 +36,7 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
   // 높이·반지름·곡선의 전환 시간을 한 번에 설정한다.
   const updateMotion = () => {
     if (motion.matches) { editorMotion?.cancel(); editorMotion = null; }
-    viewport.style.transition = ready && !motion.matches && !(inputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true')
+    viewport.style.transition = ready && !motion.matches
       ? ['height', 'border-radius', 'corner-shape'].map(property => `${property} ${duration}ms ${EASE.out}`).join(', ')
       : 'none';
   };
@@ -59,7 +59,7 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     const nextMultiline = viewport.getAttribute('data-multiline') === 'true';
     const reset = nextInputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true';
     if (next === height && !reset) { moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; return; }
-    duration = reset ? 0 : inputView && nextInputView && multiline && nextMultiline ? FLUID_COMPOSER_LINE_MS
+    duration = reset ? FLUID_COMPOSER_INPUT_MS : inputView && nextInputView && multiline && nextMultiline ? FLUID_COMPOSER_LINE_MS
       : nextInputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
     const follow = ready && !motion.matches && duration > 0 && inputView && nextInputView && nextMoving === moving && nextPosition;
     const delta = follow && nextPosition ? next - height + (position?.y ?? nextPosition.y) - nextPosition.y + nextPosition.offsetY : 0;

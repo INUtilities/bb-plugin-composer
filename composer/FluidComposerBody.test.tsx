@@ -34,10 +34,11 @@ it('keeps the height curve but releases the moving caret immediately when typing
   expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
   const bubbled=vi.fn();v.container.addEventListener('beforeinput',bubbled);
+  const heightBeforeInput=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height;
   const input=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});
   editor!.dispatchEvent(input);
   expect(animations.at(-1)!.cancel).toHaveBeenCalled();
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe(heightBeforeInput);
   expect(input.defaultPrevented).toBe(false);expect(bubbled).toHaveBeenCalledOnce();
   expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 320ms');
   lines=1;v.rerender(draw('한 줄'));act(()=>vi.advanceTimersByTime(20));
@@ -46,7 +47,7 @@ it('keeps the height curve but releases the moving caret immediately when typing
   expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
   Object.defineProperty(animate.mock.results.at(-1)!.value,'playState',{value:'finished'});
   editor!.dispatchEvent(new InputEvent('beforeinput',{inputType:'insertText',bubbles:true}));
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe(heightBeforeInput);
   lines=3;v.rerender(draw('다시 세 줄'));act(()=>vi.advanceTimersByTime(20));
   const enter=new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});editor!.dispatchEvent(enter);
   expect(animations.at(-1)!.cancel).toHaveBeenCalled();expect(enter.defaultPrevented).toBe(false);
@@ -59,7 +60,7 @@ it('keeps the height curve but releases the moving caret immediately when typing
 // 합성 초안과 옵션을 사용해 입력 영역의 수명을 확인한다.
 const view=(open=false)=><FluidComposerBody panelOpen={open} panel={<div role="region" aria-label="옵션"><button>선택</button></div>} editor={<textarea defaultValue="보존할 초안"/>} options={<button>＋</button>} actions={<button>전송</button>} attachments={null}/>;
 // 빈 초안의 접힘과 호스트가 보존·복구한 초안을 같은 입력 노드에서 확인한다.
-it('resets a host-cleared draft before the next frame without losing a retained or restored draft',()=>{
+it('returns a cleared draft to the compact layout while retaining its height and corner transition',()=>{
  let lines=3;
  const cancel=vi.fn(),animate=vi.fn(()=>({cancel,playState:'running'}));
  const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
@@ -80,11 +81,14 @@ it('resets a host-cleared draft before the next frame without losing a retained 
   const editor=v.container.querySelector('.ProseMirror'),count=animate.mock.calls.length;
   v.rerender(draw('보존할\n초안'));
   expect(viewport.dataset.multiline).toBe('true');
+  viewport.style.transition=`height 120ms ${EASE.out}, border-radius 120ms ${EASE.out}`;
   lines=1;v.rerender(draw(''));
   expect(viewport.dataset.multiline).toBe('false');
   expect(viewport.getAttribute('data-bb-chat-ui-fluid-reset')).toBe('true');
-  expect(viewport.style.transition).toBe('none');
-  expect(animate).toHaveBeenCalledTimes(count);expect(cancel).toHaveBeenCalled();
+  expect(viewport.style.transition).toContain('height 320ms');
+  expect(viewport.style.transition).toContain('border-radius 320ms');
+  expect(viewport.style.transition).toContain('corner-shape 320ms');
+  expect(animate.mock.calls.length).toBeGreaterThan(count);expect(cancel).toHaveBeenCalled();
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
   v.rerender(draw('',true));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
   v.rerender(draw(''));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
@@ -93,6 +97,12 @@ it('resets a host-cleared draft before the next frame without losing a retained 
   expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
  }finally{v.unmount();bounds.mockRestore();if(descriptor)Object.defineProperty(HTMLElement.prototype,'animate',descriptor);else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
 });
+it('keeps clearing immediate when reduced motion is enabled',()=>{
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<textarea/>} options={null} actions={null} attachments={null}/>;
+ const v=render(draw('지울 초안'));act(()=>{vi.advanceTimersByTime(20);reduced=true;for(const change of listeners)change();});
+ v.rerender(draw(''));expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toBe('none');
+});
 // 음성 미리보기의 종료를 전송 후 텍스트 초기화로 오인하지 않는지 확인한다.
 it('preserves voice exit motion when its preview returns to an empty text draft',()=>{
  vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
@@ -100,24 +110,26 @@ it('preserves voice exit motion when its preview returns to an empty text draft'
  v.rerender(<FluidComposerBody draftText="" editor={<textarea/>} options={null} actions={null} attachments={null}/>);
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
 });
-it('releases vertical-only following on further input without cancelling unrelated editor animation',()=>{
+it.each(['insertText','insertParagraph','insertCompositionText','deleteContentBackward'])('keeps text and height moving together during %s without cancelling native input',inputType=>{
  const v=render(view()),input=v.container.querySelector('textarea')!;
  const column=input.closest<HTMLElement>('[data-bb-chat-ui-fluid-editor]')!;
  const content=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-content]')!;
  const cancel=vi.fn(),unrelated=vi.fn();
+ const viewport=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!;
+ viewport.style.height='80px';viewport.style.transition=`height 120ms ${EASE.out}`;
  const bounds=vi.spyOn(content,'getBoundingClientRect').mockReturnValue({height:140} as DOMRect);
  Object.defineProperty(column,'getAnimations',{value:()=>[
   {id:FLUID_EDITOR_FOLLOW_ANIMATION,playState:'running',cancel},
   {id:'unrelated',playState:'running',cancel:unrelated},
  ]});
  try{
-  const event=new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType:'insertText'});
+  const event=new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType});
   input.dispatchEvent(event);
-  expect(cancel).toHaveBeenCalledOnce();expect(unrelated).not.toHaveBeenCalled();
+  expect(cancel).not.toHaveBeenCalled();expect(unrelated).not.toHaveBeenCalled();
   expect(event.defaultPrevented).toBe(false);
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
+  expect(viewport.style.height).toBe('80px');expect(viewport.style.transition).toBe(`height 120ms ${EASE.out}`);
   input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
-  expect(cancel).toHaveBeenCalledTimes(2);
+  expect(cancel).not.toHaveBeenCalled();
  }finally{bounds.mockRestore();}
 });
 it('sizes the voice backdrop to its pane and updates it without widening the composer',()=>{

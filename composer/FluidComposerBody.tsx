@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_MORPH_MS, FLUID_EDITOR_FOLLOW_ANIMATION, readFluidEditorPosition } from '../lib/fluid-composer-height';
+import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_MORPH_MS, readFluidEditorPosition } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
@@ -70,26 +70,15 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const element = viewport.current;
     const stopHeight = bindFluidComposerHeight(element, content.current, () => editorColumn.current);
     const stopScroll = bindComposerScrollBoundary(element.closest<HTMLElement>('[data-bb-chat-ui-fluid-composer]') ?? element);
-    // 후속 입력은 가로·세로 이동을 즉시 끝내고 입력 사건을 그대로 전달한다.
+    // 후속 입력은 가로 이동만 풀고 높이와 글의 세로 전환은 같은 곡선으로 잇는다.
     const interruptPosition = (event: Event) => {
       if (!(event.target instanceof win.Element) || !event.target.closest('[data-bb-chat-ui-fluid-editor]')) return;
-      const followers = editorColumn.current?.getAnimations?.().filter(animation => animation.id === FLUID_EDITOR_FOLLOW_ANIMATION && animation.playState === 'running') ?? [];
-      if (layoutAnimation.current?.playState !== 'running' && !followers.length) return;
+      if (layoutAnimation.current?.playState !== 'running') return;
       if (element.getAttribute('data-bb-chat-ui-fluid-view') !== 'input') return;
       layoutAnimation.current?.cancel();
       layoutAnimation.current = null;
-      for (const animation of followers) animation.cancel();
-      // 연속 입력 때는 커서를 즉시 풀고, 아직 작은 창에 새 줄이 잘리지 않게 한다.
-      const height = content.current?.getBoundingClientRect().height;
-      if (height !== undefined && Number.isFinite(height) && height > 0) {
-        const transition = element.style.transition;
-        element.style.transition = 'none';
-        element.style.height = `${height}px`;
-        void element.offsetHeight;
-        element.style.transition = transition;
-      }
     };
-    // 줄바꿈 키도 새 입력 전에 진행 중인 위치 보정을 끝낸다.
+    // 줄바꿈 키도 새 입력 전에 가로 위치 보정만 끝낸다.
     const interruptEnter = (event: KeyboardEvent) => { if (event.key === 'Enter') interruptPosition(event); };
     element.addEventListener('beforeinput', interruptPosition, true);
     element.addEventListener('keydown', interruptEnter, true);
@@ -132,7 +121,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const dx = previous.x - next.x, dy = previous.y - next.y;
     if (dx || dy) actionAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_MORPH_MS, easing: EASE.out });
   }, [voiceMode]);
-  // 호스트가 초안을 비웠을 때만 대기 중인 배치·위치 모션 없이 접힌 입력으로 복귀한다.
+  // 빈 초안은 최종 배치를 바로 정하되, 표면과 placeholder는 같은 접힘 곡선으로 잇는다.
   useLayoutEffect(() => {
     const cleared = !previousDraft.current.voiceMode && previousDraft.current.text !== undefined && previousDraft.current.text !== '' && draftText === '';
     previousDraft.current = { text: draftText, voiceMode };
@@ -141,10 +130,11 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (draftText !== '' || panelOpen || voiceMode) { element.removeAttribute('data-bb-chat-ui-fluid-reset'); return; }
     if (!cleared) return;
     element.setAttribute('data-bb-chat-ui-fluid-reset', 'true');
-    element.style.transition = 'none';
+    // 모서리는 다음 layout부터 바뀌므로 높이 observer보다 먼저 접힘 시간을 맞춘다.
+    element.style.transition = element.ownerDocument.defaultView!.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none'
+      : ['height', 'border-radius', 'corner-shape'].map(property => `${property} ${FLUID_COMPOSER_INPUT_MS}ms ${EASE.out}`).join(', ');
+    previousPosition.current = editorColumn.current && content.current ? readFluidEditorPosition(editorColumn.current, content.current) : null;
     layoutAnimation.current?.cancel(); layoutAnimation.current = null;
-    previousPosition.current = null;
-    for (const animation of editorColumn.current?.getAnimations?.() ?? []) if (animation.id === FLUID_EDITOR_FOLLOW_ANIMATION) animation.cancel();
     if (layoutFrame.current !== null) { element.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current); layoutFrame.current = null; }
     multilineRef.current = false; setMultiline(false);
   }, [draftText, panelOpen, voiceMode]);

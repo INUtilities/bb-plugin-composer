@@ -135,7 +135,7 @@ test('expanded input briefly follows subsequent line heights while layout and op
 });
 
 // 초기화할 때 실제 남은 내용 높이와 옵션 전환의 수명을 확인한다.
-test('host-cleared input cancels shrink and corner motion and uses the actual remaining content height', async () => {
+test('cleared input shrinks the box and carries the placeholder on the same curve without dropping remaining content', async () => {
   const f=fixture(true);
   try{
     await new Promise(resolve=>f.dom.window.requestAnimationFrame(resolve));
@@ -144,10 +144,13 @@ test('host-cleared input cancels shrink and corner motion and uses the actual re
     f.viewport.setAttribute('data-bb-chat-ui-fluid-reset','true');
     f.resize(76);
     assert.equal(f.viewport.style.height,'76px');
-    assert.equal(f.viewport.style.transition,'none');
-    assert.equal(f.animations.length,count);assert.equal(f.animations[0].cancelled,true);
+    assert.match(f.viewport.style.transition,/height 320ms/);
+    assert.match(f.viewport.style.transition,/border-radius 320ms/);
+    assert.equal(f.animations.length,count+1);assert.equal(f.animations[0].cancelled,true);
+    assert.equal(f.animations.at(-1)?.options.duration,320);
+    assert.equal(f.animations.at(-1)?.options.easing,EASE.out);
     f.viewport.setAttribute('data-multiline','false');f.resize(52);
-    assert.equal(f.viewport.style.transition,'none');assert.equal(f.animations.length,count);
+    assert.match(f.viewport.style.transition,/height 320ms/);assert.equal(f.animations.length,count+2);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view','options');f.resize(212);
     assert.match(f.viewport.style.transition,/height 320ms/);
   }finally{f.stop();f.dom.window.close();}
