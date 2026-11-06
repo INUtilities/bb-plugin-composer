@@ -32,10 +32,10 @@
 .bb-independent-composer [data-promptbox-send-menu] {
   border-radius: 999px !important;
 }
-/* kit의 물방울 곡선으로 높이와 모서리가 천천히 출발하고 부드럽게 멈춘다. */
+/* kit의 감속 곡선으로 높이와 모서리가 바로 움직이고 부드럽게 멈춘다. */
 @media (prefers-reduced-motion: no-preference) {
   .bb-independent-composer.bb-independent-composer [data-composer-promptbox] {
-    transition: border-radius 200ms cubic-bezier(0.36, 0, 0.18, 1), corner-shape 200ms cubic-bezier(0.36, 0, 0.18, 1);
+    transition: border-radius 120ms cubic-bezier(0.22, 1, 0.36, 1), corner-shape 120ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 @supports (corner-shape: squircle) {
