@@ -5,7 +5,7 @@ import { bindFluidComposerHeight } from './fluid-composer-height.ts';
 import { EASE } from './motion.ts';
 
 // 자연 높이와 실제 표시 높이를 분리해 진행 중인 전환도 재현한다.
-function fixture(withEditor = false) {
+function fixture() {
   const dom = new JSDOM('<div id="viewport"><div id="content"><div id="moving"><div class="ProseMirror"></div></div></div></div>', { pretendToBeVisual: true });
   const win = dom.window;
   const viewport = win.document.getElementById('viewport')!;
@@ -39,7 +39,7 @@ function fixture(withEditor = false) {
       removeEventListener(_type: string, listener: () => void) { listeners.delete(listener); },
     }),
   });
-  const stop = bindFluidComposerHeight(viewport, content, withEditor ? () => moving : undefined);
+  const stop = bindFluidComposerHeight(viewport, content);
   return {
     viewport, content, dom, stop, animations,
     visible(height: number) { visibleHeight = height; },
@@ -63,28 +63,57 @@ test('fluid composer starts at its natural single-line height without an entranc
   } finally { f.stop(); f.dom.window.close(); }
 });
 
-test('every height change carries the editor with the visible box, including retargeting and padding changes', async () => {
-  const f = fixture(true);
+test('newline resizing leaves the native editor in place while the surface height transitions', async () => {
+  const f = fixture();
+  try {
+    await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
+    f.viewport.setAttribute('data-multiline', 'true');
+    for (const height of [100, 124, 148, 100]) {
+      f.resize(height);
+      assert.equal(f.viewport.style.height, `${height}px`);
+      assert.match(f.viewport.style.transition, /height (120|320)ms/);
+      assert.equal(f.animations.length, 0, 'resizing must not move the editor and its native caret after a newline');
+    }
+  } finally { f.stop(); f.dom.window.close(); }
+});
+
+test('a focused newline makes room for its caret before paint while later line changes and clearing keep motion', async () => {
+  const f = fixture();
+  try {
+    await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
+    const editor = f.dom.window.document.querySelector<HTMLElement>('.ProseMirror')!;
+    editor.parentElement!.setAttribute('data-bb-chat-ui-fluid-editor', '');editor.tabIndex=0;editor.focus();
+    f.viewport.setAttribute('data-multiline', 'true');f.resize(116);
+    assert.match(f.viewport.style.transition, /height 0ms/);
+    assert.equal(f.viewport.style.height, '116px');
+    f.resize(140);assert.match(f.viewport.style.transition, /height 120ms/);
+    f.viewport.setAttribute('data-bb-chat-ui-fluid-reset','true');f.viewport.setAttribute('data-multiline','false');f.resize(52);
+    assert.match(f.viewport.style.transition, /height 320ms/);assert.equal(f.animations.length,0);
+  } finally { f.stop(); f.dom.window.close(); }
+});
+
+test('height retargeting and padding changes preserve native editor positioning and reduced motion', async () => {
+  const f = fixture();
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.resize(100);
-    assert.deepEqual(f.animations.at(-1)?.frames, [{ translate: '0px 48px' }, { translate: '0px 0px' }]);
-    assert.equal(f.animations.at(-1)?.options.duration, 320);
-    assert.equal(f.animations.at(-1)?.options.easing, EASE.out);
+    assert.equal(f.animations.length, 0);
+    assert.match(f.viewport.style.transition, /height 320ms/);
     f.visible(80); f.offset(20); f.resize(124);
-    assert.equal(f.animations[0].cancelled, true);
-    assert.deepEqual(f.animations.at(-1)?.frames[0], { translate: '0px 44px' });
+    assert.equal(f.animations.length, 0);
+    assert.equal(f.viewport.style.height, '124px');
     f.visible(110); f.offset(14); f.inset(20); f.resize(148);
-    assert.deepEqual(f.animations.at(-1)?.frames[0], { translate: '0px 30px' });
+    assert.equal(f.animations.length, 0);
+    assert.equal(f.viewport.style.height, '148px');
     f.visible(148); f.offset(0); f.inset(12); f.resize(100);
-    assert.deepEqual(f.animations.at(-1)?.frames[0], { translate: '0px -40px' });
+    assert.equal(f.animations.length, 0);
+    assert.equal(f.viewport.style.height, '100px');
     const count = f.animations.length;
     f.reduce(true); f.resize(172);
-    assert.equal(f.animations.at(-1)?.cancelled, true);
     assert.equal(f.animations.length, count);
     assert.equal(f.viewport.style.transition, 'none');
     f.reduce(false); f.visible(160); f.resize(196); f.stop();
-    assert.equal(f.animations.at(-1)?.cancelled, true);
+    assert.equal(f.animations.length, 0);
   } finally { f.stop(); f.dom.window.close(); }
 });
 
@@ -104,21 +133,19 @@ test('fluid composer follows wrapping, newlines, deletion and rapid retargeting'
 
 // 여러 줄 입력은 짧게 이어 주고 배치·옵션·음성의 기존 전환을 유지하는지 확인한다.
 test('expanded input briefly follows subsequent line heights while layout and option changes retain motion', async () => {
-  const f = fixture(true);
+  const f = fixture();
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.viewport.setAttribute('data-multiline', 'true'); f.resize(100);
     assert.match(f.viewport.style.transition, /height 320ms/);
     const count = f.animations.length;
-    for (const [index,height] of [124, 148, 100].entries()) {
+    for (const height of [124, 148, 100]) {
       f.resize(height);
       assert.equal(f.viewport.style.height, `${height}px`);
       assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 120ms ${EASE.out}`).join(', '));
-      assert.equal(f.animations.length, count+index+1);
-      assert.equal(f.animations.at(-1)?.options.duration,120);
-      assert.equal(f.animations.at(-1)?.options.easing,EASE.out);
+      assert.equal(f.animations.length, count);
     }
-    assert.equal(f.animations[0].cancelled, true);
+    assert.equal(f.animations.length, 0);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'options'); f.resize(212);
     assert.match(f.viewport.style.transition, /height 320ms/);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'input'); f.resize(100);
@@ -135,8 +162,8 @@ test('expanded input briefly follows subsequent line heights while layout and op
 });
 
 // 초기화할 때 실제 남은 내용 높이와 옵션 전환의 수명을 확인한다.
-test('cleared input shrinks the box and carries the placeholder on the same curve without dropping remaining content', async () => {
-  const f=fixture(true);
+test('cleared input smoothly shrinks the box without moving the editor or dropping remaining content', async () => {
+  const f=fixture();
   try{
     await new Promise(resolve=>f.dom.window.requestAnimationFrame(resolve));
     f.viewport.setAttribute('data-multiline','true');f.resize(148);
@@ -146,11 +173,9 @@ test('cleared input shrinks the box and carries the placeholder on the same curv
     assert.equal(f.viewport.style.height,'76px');
     assert.match(f.viewport.style.transition,/height 320ms/);
     assert.match(f.viewport.style.transition,/border-radius 320ms/);
-    assert.equal(f.animations.length,count+1);assert.equal(f.animations[0].cancelled,true);
-    assert.equal(f.animations.at(-1)?.options.duration,320);
-    assert.equal(f.animations.at(-1)?.options.easing,EASE.out);
+    assert.equal(f.animations.length,count);
     f.viewport.setAttribute('data-multiline','false');f.resize(52);
-    assert.match(f.viewport.style.transition,/height 320ms/);assert.equal(f.animations.length,count+2);
+    assert.match(f.viewport.style.transition,/height 320ms/);assert.equal(f.animations.length,count);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view','options');f.resize(212);
     assert.match(f.viewport.style.transition,/height 320ms/);
   }finally{f.stop();f.dom.window.close();}

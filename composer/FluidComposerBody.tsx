@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_MORPH_MS, readFluidEditorPosition } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
@@ -68,9 +68,9 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!viewport.current || !content.current) return;
     const win = viewport.current.ownerDocument.defaultView!;
     const element = viewport.current;
-    const stopHeight = bindFluidComposerHeight(element, content.current, () => editorColumn.current);
+    const stopHeight = bindFluidComposerHeight(element, content.current);
     const stopScroll = bindComposerScrollBoundary(element.closest<HTMLElement>('[data-bb-chat-ui-fluid-composer]') ?? element);
-    // 후속 입력은 가로 이동만 풀고 높이와 글의 세로 전환은 같은 곡선으로 잇는다.
+    // 입력을 시작하면 남은 가로 이동만 풀고 native 커서 위치를 유지한다.
     const interruptPosition = (event: Event) => {
       if (!(event.target instanceof win.Element) || !event.target.closest('[data-bb-chat-ui-fluid-editor]')) return;
       if (layoutAnimation.current?.playState !== 'running') return;
@@ -109,7 +109,12 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
       element.style.removeProperty('--bb-chat-ui-voice-backdrop-width'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-left'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-bottom');
     };
   }, [!!voice, voiceMode, scheduleLayout]);
-  useEffect(scheduleLayout, [draftText, editorReady, panelOpen, voiceMode, scheduleLayout]);
+  // 입력 후 줄 배치는 다음 frame을 기다리지 않고 화면을 그리기 전에 확정한다.
+  useLayoutEffect(() => {
+    const win = viewport.current?.ownerDocument.defaultView;
+    if (layoutFrame.current !== null && win) { win.cancelAnimationFrame(layoutFrame.current); layoutFrame.current = null; }
+    layoutProbe.current();
+  }, [draftText, editorReady, panelOpen, voiceMode]);
   useLayoutEffect(() => {
     const column = actionColumn.current, previous = actionPosition.current;
     const changed = previousVoiceMode.current !== voiceMode;
@@ -141,6 +146,15 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   useLayoutEffect(() => {
     const previous = previousPosition.current, column = editorColumn.current;
     previousPosition.current = null;
+    if (column?.contains(column.ownerDocument.activeElement)) {
+      const element = viewport.current, body = content.current;
+      // 첫 줄의 커서 공간은 ResizeObserver를 기다리지 않고 같은 배치에서 확보한다.
+      if (element && body && !element.hasAttribute('data-bb-chat-ui-fluid-reset')) {
+        element.style.transition = 'none';
+        element.style.height = `${body.getBoundingClientRect().height}px`;
+      }
+      return;
+    }
     if (!previous || !column?.animate || column.ownerDocument.defaultView!.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const next = content.current ? readFluidEditorPosition(column, content.current) : null;
     if (!next) return;
