@@ -21,9 +21,16 @@
   border-radius: var(--bb-composer-round-radius) !important;
   color: var(--foreground);
   background: var(--bb-composer-face) !important;
-  backdrop-filter: blur(14px) saturate(1.25);
+  /* 빌드 후에도 Chrome이 읽는 표준 블러 선언을 마지막에 유지한다. */
   -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  backdrop-filter: blur(14px) saturate(1.25);
   box-shadow: 0 12px 32px -14px var(--bb-composer-shadow), inset 0 1px 3px var(--bb-composer-edge);
+}
+/* 입력기의 조작 버튼과 전송 메뉴는 기존 원형·pill 모양을 유지한다. */
+.bb-independent-composer [data-promptbox-action-row] :is(button, [role="button"]),
+.bb-independent-composer [data-promptbox-standard-actions] button,
+.bb-independent-composer [data-promptbox-send-menu] {
+  border-radius: 999px !important;
 }
 /* kit의 물방울 곡선으로 높이와 모서리가 천천히 출발하고 부드럽게 멈춘다. */
 @media (prefers-reduced-motion: no-preference) {
