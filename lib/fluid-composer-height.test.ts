@@ -102,6 +102,35 @@ test('fluid composer follows wrapping, newlines, deletion and rapid retargeting'
   } finally { f.stop(); f.dom.window.close(); }
 });
 
+test('expanded input applies subsequent line heights immediately while layout and option changes retain motion', async () => {
+  const f = fixture(true);
+  try {
+    await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
+    f.viewport.setAttribute('data-multiline', 'true'); f.resize(100);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+    const count = f.animations.length;
+    for (const height of [124, 148, 100]) {
+      f.resize(height);
+      assert.equal(f.viewport.style.height, `${height}px`);
+      assert.equal(f.viewport.style.transition, ['border-radius', 'corner-shape'].map(property => `${property} 320ms ${EASE.out}`).join(', '));
+      assert.equal(f.animations.length, count);
+    }
+    assert.equal(f.animations[0].cancelled, true);
+    f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'options'); f.resize(212);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+    f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'input'); f.resize(100);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+    f.viewport.setAttribute('data-voice-mode', 'true'); f.resize(140);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+    f.resize(172);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+    f.viewport.removeAttribute('data-voice-mode'); f.resize(100);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+    f.viewport.setAttribute('data-multiline', 'false'); f.resize(52);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+  } finally { f.stop(); f.dom.window.close(); }
+});
+
 test('reduced motion changes immediately and resumes for later height changes', async () => {
   const f = fixture();
   try {

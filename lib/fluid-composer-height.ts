@@ -16,7 +16,7 @@ export function readFluidEditorPosition(editor: HTMLElement, content: HTMLElemen
     y: box.top + (Number.parseFloat(style.paddingTop) || 0) - parent.top - offset, offsetY: offset };
 }
 
-// 자연 높이와 모서리를 같은 속도로 전환하고 입력 중에는 감속 곡선을 쓴다.
+// 배치 전환은 부드럽게 잇고 이미 펼친 입력의 줄 높이는 즉시 맞춘다.
 export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement, getEditor?: () => HTMLElement | null): () => void {
   const win = viewport.ownerDocument.defaultView;
   if (!win?.ResizeObserver) return () => {};
@@ -29,13 +29,15 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
   let duration = FLUID_COMPOSER_INPUT_MS;
   let moving = getEditor?.() ?? null;
   let position = moving ? readFluidEditorPosition(moving, content) : null;
-  let inputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options';
+  let inputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode');
+  let multiline = viewport.getAttribute('data-multiline') === 'true';
   let editorMotion: Animation | null = null;
   // 높이·반지름·곡선의 전환 시간을 한 번에 설정한다.
   const updateMotion = () => {
     if (motion.matches) { editorMotion?.cancel(); editorMotion = null; }
+    const properties = duration > 0 ? ['height', 'border-radius', 'corner-shape'] : ['border-radius', 'corner-shape'];
     viewport.style.transition = ready && !motion.matches
-      ? ['height', 'border-radius', 'corner-shape'].map(property => `${property} ${duration}ms ${EASE.out}`).join(', ')
+      ? properties.map(property => `${property} ${duration || FLUID_COMPOSER_INPUT_MS}ms ${EASE.out}`).join(', ')
       : 'none';
   };
   viewport.style.height = `${height}px`;
@@ -53,13 +55,15 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     if (!Number.isFinite(next) || next < 0) return;
     const nextMoving = getEditor?.() ?? null;
     const nextPosition = nextMoving ? readFluidEditorPosition(nextMoving, content) : null;
-    const nextInputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options';
-    if (next === height) { moving = nextMoving; position = nextPosition; inputView = nextInputView; return; }
-    const follow = ready && !motion.matches && inputView && nextInputView && nextMoving === moving && nextPosition;
+    const nextInputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode');
+    const nextMultiline = viewport.getAttribute('data-multiline') === 'true';
+    if (next === height) { moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; return; }
+    duration = inputView && nextInputView && multiline && nextMultiline ? 0
+      : nextInputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
+    const follow = ready && !motion.matches && duration > 0 && inputView && nextInputView && nextMoving === moving && nextPosition;
     const delta = follow && nextPosition ? next - height + (position?.y ?? nextPosition.y) - nextPosition.y + nextPosition.offsetY : 0;
     editorMotion?.cancel(); editorMotion = null;
-    moving = nextMoving; position = nextPosition; inputView = nextInputView;
-    duration = viewport.getAttribute('data-bb-chat-ui-fluid-view') === 'options' ? FLUID_COMPOSER_MORPH_MS : FLUID_COMPOSER_INPUT_MS;
+    moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline;
     height = next;
     updateMotion();
     viewport.style.height = `${height}px`;
