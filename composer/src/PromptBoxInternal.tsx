@@ -6,7 +6,6 @@ import { FluidComposerBody } from "../FluidComposerBody";
 import { FluidComposerToggle } from "../FluidComposerToggle";
 import { FluidOptionsPanel } from "../FluidOptionsPanel";
 import { FluidComposerDetails } from "../FluidComposerDetails";
-import { useDeviceChrome } from "../../lib/use-device";
 import {
   experimental_ComposerRoot as ComposerRoot,
   experimental_FailedVoiceRecordings as FailedVoiceRecordings,
@@ -1081,18 +1080,10 @@ export function PromptBoxInternal({
     projectId: attachmentProjectId,
   } = attachmentConfig;
   const isPointerCoarse = usePointerCoarse();
-  const { device } = useDeviceChrome();
   const isCompactViewport = useIsCompactViewport();
   const blurOnPointerSubmit =
     surface === "thread" && isCompactViewport && isPointerCoarse;
   const isIPadOSWebKitDevice = useMemo(isIPadOSWebKit, []);
-  const isPhoneWebKitDevice = useMemo(
-    () =>
-      device === "phone" &&
-      /Apple Computer/u.test(navigator.vendor) &&
-      /\bAppleWebKit\//u.test(navigator.userAgent),
-    [device],
-  );
   const editorEnterKeyHint = isPointerCoarse ? "enter" : "send";
   const formRef = useRef<HTMLFormElement>(null);
   const typeaheadMenuRef = useRef<HTMLDivElement>(null);
@@ -1797,16 +1788,9 @@ export function PromptBoxInternal({
               event.key.toLowerCase() === "v";
             const isIPadHardwareEnter =
               isIPadOSWebKitDevice && isIPadHardwareEnterCandidate(event);
-            const isPhoneEnter =
-              isPhoneWebKitDevice &&
-              isPointerCoarse &&
-              event.key === "Enter" &&
-              !event.metaKey &&
-              !event.altKey &&
-              !event.ctrlKey;
             if (
               !_view.editable ||
-              (!isIPadHardwareEnter && !isPhoneEnter) ||
+              !isIPadHardwareEnter ||
               _view.composing ||
               event.isComposing ||
               event.keyCode === 229
@@ -1823,8 +1807,9 @@ export function PromptBoxInternal({
               return false;
             }
 
-            // iOS can omit insertParagraph after Korean input. Handle this Enter
-            // before ProseMirror's 200ms fallback so the next character follows it.
+            // Only hardware iPad Enter needs this early submit route. Let the
+            // iPhone keyboard commit Korean text and insert its native paragraph:
+            // cancelling keydown before beforeinput can disrupt its IME state.
             return handleEditorKeyDownRef.current(event, isIPadHardwareEnter);
           },
           keyup: () => {
