@@ -1004,6 +1004,7 @@ function isIPadHardwareEnterCandidate(event: KeyboardEvent): boolean {
   );
 }
 
+// 초안 편집과 첨부·음성·전송 동작을 포함한 입력 상자를 그린다.
 export function PromptBoxInternal({
   id,
   onEscape,
@@ -2195,6 +2196,7 @@ export function PromptBoxInternal({
     resetHistorySession();
   }, [activeHistoryIndex, history, recalledHistoryDraft, resetHistorySession]);
 
+  // CSS 모서리 전환을 유지하면서 접힘·펼침 높이를 움직인다.
   useLayoutEffect(() => {
     const fromHeight = lastObservedHeightRef.current;
     const formElement = formRef.current;
@@ -2202,10 +2204,11 @@ export function PromptBoxInternal({
     if (getMediaQuerySnapshot(REDUCED_MOTION_QUERY)) return;
 
     const previousTransition = formElement.style.transition;
+    const surfaceTransition = getComputedStyle(formElement).transition;
     const previousWillChange = formElement.style.willChange;
     const previousOverflow = formElement.style.overflow;
 
-    formElement.style.transition = "none";
+    formElement.style.transition = surfaceTransition;
     formElement.style.height = "";
     const toHeight = formElement.getBoundingClientRect().height;
     if (Math.abs(toHeight - fromHeight) < 0.5) {
@@ -2217,7 +2220,7 @@ export function PromptBoxInternal({
     formElement.style.overflow = "hidden";
     formElement.style.willChange = "height";
     formElement.style.transition =
-      "height 240ms cubic-bezier(0.22, 1, 0.36, 1)";
+      `${surfaceTransition}, height 240ms cubic-bezier(0.22, 1, 0.36, 1)`;
     formElement.style.height = `${toHeight}px`;
 
     let isCleanedUp = false;
