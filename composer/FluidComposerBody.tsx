@@ -4,7 +4,7 @@ import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
-// 입력 엔진과 분리한 레이아웃에서 내용 높이와 한 줄·여러 줄 모서리 상태를 전달한다.
+// 입력 높이와 모서리를 유지하고 옵션 필을 입력창 위에 독립적으로 표시한다.
 export function FluidComposerBody({ editor, options, actions, attachments, voice, voiceMode = false, decoration, auxiliary, panel, panelOpen = false, toggle, draftText, editorReady = true }: {
   editor: ReactNode;
   options: ReactNode;
@@ -22,7 +22,6 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
-  const panelLayer = useRef<HTMLDivElement>(null);
   const row = useRef<HTMLDivElement>(null), editorColumn = useRef<HTMLDivElement>(null);
   const optionColumn = useRef<HTMLDivElement>(null), actionColumn = useRef<HTMLDivElement>(null);
   const [multiline, setMultiline] = useState(false);
@@ -48,7 +47,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
       return;
     }
     const input = editorColumn.current?.querySelector<HTMLElement>('[data-bb-chat-ui-voice-transcript], .ProseMirror');
-    if (panelOpen || !input || !row.current || !optionColumn.current || !actionColumn.current || !editorColumn.current || !content.current) return;
+    if (!input || !row.current || !optionColumn.current || !actionColumn.current || !editorColumn.current || !content.current) return;
     if (!draftText && !voiceMode) actionPosition.current = actionColumn.current.getBoundingClientRect();
     const next = voiceMode || needsFullWidthComposer(row.current, input, optionColumn.current, actionColumn.current);
     if (next === multilineRef.current) return;
@@ -62,8 +61,6 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!win || layoutFrame.current !== null) return;
     layoutFrame.current = win.requestAnimationFrame(() => { layoutFrame.current = null; layoutProbe.current(); });
   }, []);
-  const [retainedPanel, setRetainedPanel] = useState(false);
-  const [entered, setEntered] = useState(false);
   useLayoutEffect(() => {
     if (!viewport.current || !content.current) return;
     const win = viewport.current.ownerDocument.defaultView!;
@@ -120,7 +117,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
       element.style.removeProperty('--bb-chat-ui-voice-backdrop-width'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-left'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-bottom');
     };
   }, [!!voice, voiceMode, scheduleLayout]);
-  useEffect(scheduleLayout, [draftText, editorReady, panelOpen, voiceMode, scheduleLayout]);
+  useEffect(scheduleLayout, [draftText, editorReady, voiceMode, scheduleLayout]);
   useLayoutEffect(() => {
     const column = actionColumn.current, previous = actionPosition.current;
     const changed = previousVoiceMode.current !== voiceMode;
@@ -138,7 +135,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     previousDraft.current = { text: draftText, voiceMode };
     const element = viewport.current;
     if (!element) return;
-    if (draftText !== '' || panelOpen || voiceMode) { element.removeAttribute('data-bb-chat-ui-fluid-reset'); return; }
+    if (draftText !== '' || voiceMode) { element.removeAttribute('data-bb-chat-ui-fluid-reset'); return; }
     if (!cleared) return;
     element.setAttribute('data-bb-chat-ui-fluid-reset', 'true');
     element.style.transition = 'none';
@@ -147,7 +144,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     for (const animation of editorColumn.current?.getAnimations?.() ?? []) if (animation.id === FLUID_EDITOR_FOLLOW_ANIMATION) animation.cancel();
     if (layoutFrame.current !== null) { element.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current); layoutFrame.current = null; }
     multilineRef.current = false; setMultiline(false);
-  }, [draftText, panelOpen, voiceMode]);
+  }, [draftText, voiceMode]);
   useLayoutEffect(() => {
     const previous = previousPosition.current, column = editorColumn.current;
     previousPosition.current = null;
@@ -158,33 +155,14 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!dx) return;
     layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, 0px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_INPUT_MS, easing: EASE.out });
   }, [multiline]);
-  useLayoutEffect(() => {
-    const win = viewport.current?.ownerDocument.defaultView;
-    if (!win) return;
-    if (panelOpen) {
-      setRetainedPanel(true);
-      if (!entered && panelLayer.current) {
-        // Establish the incoming layer's initial style once; reversals use the live CSS transition.
-        void win.getComputedStyle(panelLayer.current).opacity;
-        setEntered(true);
-      }
-      return;
-    }
-    if (!retainedPanel) return;
-    const motion = win.matchMedia('(prefers-reduced-motion: reduce)');
-    const finish = () => { setRetainedPanel(false); setEntered(false); };
-    if (motion.matches) { finish(); return; }
-    const timer = win.setTimeout(finish, FLUID_COMPOSER_MORPH_MS);
-    const reduce = () => { if (motion.matches) finish(); };
-    motion.addEventListener('change', reduce);
-    return () => { win.clearTimeout(timer); motion.removeEventListener('change', reduce); };
-  }, [panelOpen, retainedPanel, entered]);
-  return <div ref={viewport} data-bb-chat-ui-fluid-height="" data-multiline={multiline} data-bb-chat-ui-fluid-view={panelOpen ? 'options' : 'input'} data-voice-mode={voiceMode || undefined}>
+  return <>
+    {panelOpen ? <div data-bb-chat-ui-fluid-panel-layer="">{panel}</div> : null}
+    <div ref={viewport} data-bb-chat-ui-fluid-height="" data-multiline={multiline} data-bb-chat-ui-fluid-view="input" data-voice-mode={voiceMode || undefined}>
     <div data-bb-chat-ui-fluid-surface="" aria-hidden="true"/>
     {decoration}
     <div ref={content} data-bb-chat-ui-fluid-content="">
       <div data-bb-chat-ui-fluid-auxiliary="" hidden={voiceMode}>{auxiliary}</div>
-      <div data-bb-chat-ui-fluid-input="" inert={panelOpen || undefined} aria-hidden={panelOpen || undefined}>
+      <div data-bb-chat-ui-fluid-input="">
       <div data-bb-chat-ui-fluid-attachments="" hidden={voiceMode}>{attachments}</div>
       {voice ? <div data-bb-chat-ui-fluid-voice="">{voice}</div> : <div ref={row} data-bb-chat-ui-fluid-row="" data-multiline={multiline} data-voice-mode={voiceMode || undefined}>
         <div ref={optionColumn} data-bb-chat-ui-fluid-options="" hidden={voiceMode}>{options}</div>
@@ -192,9 +170,8 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
         <div ref={actionColumn} data-bb-chat-ui-fluid-actions="">{actions}</div>
       </div>}
       </div>
-      {panelOpen || retainedPanel ? <div ref={panelLayer} data-bb-chat-ui-fluid-panel-layer="" data-entered={panelOpen && entered}
-        inert={!panelOpen || undefined} aria-hidden={!panelOpen || undefined}>{panel}</div> : null}
     </div>
     {toggle ? <div data-bb-chat-ui-fluid-toggle="" hidden={voiceMode}>{toggle}</div> : null}
-  </div>;
+    </div>
+  </>;
 }

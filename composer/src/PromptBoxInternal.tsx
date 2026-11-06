@@ -1015,6 +1015,7 @@ function isIPadHardwareEnterCandidate(event: KeyboardEvent): boolean {
   );
 }
 
+// 호스트 초안과 입력 기능을 유지하며 Fluid 입력과 상단 옵션 필을 연결한다.
 export function PromptBoxInternal({
   id,
   fluid = false,
@@ -1395,7 +1396,8 @@ export function PromptBoxInternal({
   const decorationSourcesRef = useRef(decorationSources);
   decorationSourcesRef.current = decorationSources;
   const focusScopeKey = history?.resetKey;
-  useLayoutEffect(() => { setFluidOptionsOpen(false); fluidPluginSelection.current = null; }, [composerScopeKey, composerKey, composerInputLocked, showVoiceActionGroup]);
+  // 입력 대상·잠금·음성 단계가 바뀌면 이전 옵션과 선택 복원을 정리한다.
+  useLayoutEffect(() => { setFluidOptionsOpen(false); fluidPluginSelection.current = null; }, [composerScopeKey, composerKey, composerInputLocked, showVoiceActionGroup, fluidVoiceActive]);
   const onChangeRef = useRef(onChange);
 
   useEffect(() => {
@@ -2061,9 +2063,10 @@ export function PromptBoxInternal({
     [],
   );
 
+  // 상단 옵션이 열려 있어도 입력을 유지하고 호스트 잠금과 음성 상태만 반영한다.
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    const editable = !composerInputLocked && !voiceInteractionActive && !fluidOptionsOpen;
+    const editable = !composerInputLocked && !voiceInteractionActive;
     if (editor.isEditable !== editable) editor.setEditable(editable);
     editor.view.dom.tabIndex = editable ? 0 : -1;
     if (editable) {
@@ -2071,14 +2074,14 @@ export function PromptBoxInternal({
     } else {
       editor.view.dom.setAttribute("aria-readonly", "true");
     }
-  }, [composerInputLocked, editor, voiceInteractionActive, fluidOptionsOpen]);
+  }, [composerInputLocked, editor, voiceInteractionActive]);
 
   useEffect(() => {
     if (fluidOptionsOpen) return;
     const pending = fluidPluginSelection.current;
     fluidPluginSelection.current = null;
     if (!pending || pending.scope !== composerScopeKey || pending.key !== composerKey) return;
-    // The effect above unlocks the editor before the host restores its focus.
+    // 플러그인이 다른 화면으로 옮긴 포커스는 유지하고 입력 복구만 호스트에 맡긴다.
     const active = document.activeElement;
     const moved = active && active !== document.body && active !== pending.selection.selectedElement && active.isConnected && !formRef.current?.contains(active);
     if (!moved) pending.selection.restoreComposerFocus();
@@ -2979,10 +2982,12 @@ export function PromptBoxInternal({
       ? submitDisabledReason
       : submitTitle;
 
+  // 전송할 때 상단 옵션을 닫고 실제 전송과 초안 처리를 호스트에 맡긴다.
   const dispatchSubmit = useCallback(() => {
     if (editorRef.current) cancelPromptThreadLinkPaste(editorRef.current);
+    if (fluid) setFluidOptionsOpen(false);
     onSubmit?.();
-  }, [onSubmit]);
+  }, [onSubmit, fluid]);
 
   const submitPrompt = useCallback(() => {
     const shouldBlurAfterSubmit = blurAfterPointerSubmitRef.current;
@@ -3088,14 +3093,15 @@ export function PromptBoxInternal({
     [attachFilesWithHistory],
   );
 
+  // 옵션 표시 여부와 무관하게 기존 전송 가능 조건으로 form 전송을 처리한다.
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!fluidOptionsOpen) submitPrompt();
+    submitPrompt();
   };
 
+  // 옵션 필 바깥의 입력창 여백을 누르면 기존 editor 끝으로 포커스를 옮긴다.
   const handlePromptBoxMouseDown = useCallback(
     (event: PromptBoxMouseDownEvent) => {
-      if (fluidOptionsOpen) return;
       if (!isPromptBoxChromeTarget(event.target)) return;
 
       const currentEditor = editorRef.current;
@@ -3105,7 +3111,7 @@ export function PromptBoxInternal({
       focusEditorAtEnd(currentEditor);
       scheduleRevealEditorSelection();
     },
-    [scheduleRevealEditorSelection, fluidOptionsOpen],
+    [scheduleRevealEditorSelection],
   );
 
   const handleEditorKeyDown = useCallback(
@@ -3352,10 +3358,10 @@ export function PromptBoxInternal({
     setFluidOptionsOpen(true);
   };
   if (fluid) return (
-    <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-chat-ui-fluid-view={fluidOptionsOpen ? "options" : "input"} data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
+    <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-chat-ui-fluid-view="input" data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
       onSubmit={handleSubmit} onKeyDown={event => {
         if (fluidOptionsOpen && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeFluidOptions(); }
-        else if (!fluidOptionsOpen) handleComposerMenuKeyDown(event.nativeEvent);
+        else handleComposerMenuKeyDown(event.nativeEvent);
       }}
       onMouseDown={handlePromptBoxMouseDown}
       onDragOver={event => { if (onAttachFiles) event.preventDefault(); }}

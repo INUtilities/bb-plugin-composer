@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "3dbed839d38d6f2ac78bed6f1e9d77b3f19fae4f",
+  "integratedCommit": "049aa2dd3a22c51ab381ce281e819f32496b3c4f",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -19,7 +19,7 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "aada59c5113171ed2e47f4864e89f489f43c00ff8ee6e3ffb81076746d466c95"
+      "sha256": "d028674cb230712a48535488c57aaaaec525c88efbab431cd602c6126e6fef6d"
     },
     {
       "source": "composer/FluidComposer.tsx",
@@ -34,12 +34,12 @@
     {
       "source": "composer/FluidComposerBody.test.tsx",
       "destination": "composer/FluidComposerBody.test.tsx",
-      "sha256": "e96ebd374e8b7ef56025c3e79a0782415961db53b82e16eeaa1956c7850ae815"
+      "sha256": "bba08ecf09a47774c455f840ec4be3e5c6cf7539ceefc8b673a65e317de722a3"
     },
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "6fd2659f3c0f1263053326c07476e797b0dbe718f3649759bcd8e0f482e51785"
+      "sha256": "2aefd058f5df0be66615a052a7d426163d6ad71f97c0139ed8c2b50d89a315aa"
     },
     {
       "source": "composer/FluidComposerDetails.tsx",
@@ -54,12 +54,12 @@
     {
       "source": "composer/FluidOptionsPanel.test.tsx",
       "destination": "composer/FluidOptionsPanel.test.tsx",
-      "sha256": "576dc8b4c5469e9d70d6338aeb6ffb905114da8bdce106f3043727518a6c5342"
+      "sha256": "625dce6739e47d43dafc0bbdcaf4c587bdc8723e5329e3f89ddc67ac3377191e"
     },
     {
       "source": "composer/FluidOptionsPanel.tsx",
       "destination": "composer/FluidOptionsPanel.tsx",
-      "sha256": "b97a95c4949bb55b4392fb738227501b90b5eab91984a26e2b364d9effebe70c"
+      "sha256": "a809be5817714d6c9ff881aae3bd69968b504ff38b3e14baf3b8c1164a0c2ef8"
     },
     {
       "source": "composer/FluidVoiceControl.test.tsx",
@@ -235,7 +235,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "12509bce5b0f10d6d1a719a42b011bc70e7f503e49949611ba1191eb22769cb7"
+      "sha256": "0c40af197013918a465e04ec2d54de80568bc6b8c03e1218e43ccd4bdf1fb56a"
     },
     {
       "source": "composer/src/PromptBoxInternal.unit.test.ts",
@@ -510,7 +510,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "a6b26dc6c1868718aae4358abd8b550ba44e4cef86f8574aea25552936d43fca"
+      "sha256": "307ef9f864bf5ad9ada7a3859c99b4c0ba1b3430d945bcd6ad331fdd93d38cc8"
     },
     {
       "source": "lib/fluid-composer-height.ts",

@@ -86,8 +86,8 @@ it('resets a host-cleared draft before the next frame without losing a retained 
   expect(viewport.style.transition).toBe('none');
   expect(animate).toHaveBeenCalledTimes(count);expect(cancel).toHaveBeenCalled();
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
-  v.rerender(draw('',true));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
-  v.rerender(draw(''));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
+  v.rerender(draw('',true));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(true);
+  v.rerender(draw(''));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(true);
   lines=3;v.rerender(draw('보존할\n초안'));act(()=>vi.advanceTimersByTime(20));
   expect(viewport.dataset.multiline).toBe('true');
   expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
@@ -157,34 +157,43 @@ it('moves the real action column into voice mode and cancels its motion for redu
   v.unmount();expect(listeners.size).toBe(0);
  }finally{bounds.mockRestore();HTMLElement.prototype.animate=oldAnimate;v.unmount();}
 });
-it('mounts the options lazily and retains both real views only during the closing morph',()=>{
+// 옵션 필을 실제 입력 밖에 필요할 때만 만들고 입력 노드는 유지한다.
+it('mounts options above the input without hiding or replacing the editor',()=>{
  const v=render(view());const editor=v.container.querySelector('textarea')!;
  expect(v.queryByRole('region',{name:'옵션'})).toBeNull();
  v.rerender(view(true));const panel=v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')!;
  expect(v.container.querySelector('textarea')).toBe(editor);
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-input]')!.hasAttribute('hidden')).toBe(false);
- expect(v.container.querySelector('[data-bb-chat-ui-fluid-input]')!.hasAttribute('inert')).toBe(true);
- v.rerender(view());expect(panel.isConnected).toBe(true);expect(panel.hasAttribute('inert')).toBe(true);expect(panel.getAttribute('aria-hidden')).toBe('true');
+ expect(v.container.querySelector('[data-bb-chat-ui-fluid-input]')!.hasAttribute('inert')).toBe(false);
+ const viewport=v.container.querySelector('[data-bb-chat-ui-fluid-height]')!;
+ expect(viewport.contains(panel)).toBe(false);expect(viewport.getAttribute('data-bb-chat-ui-fluid-view')).toBe('input');
+ expect(panel.compareDocumentPosition(viewport)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+ v.rerender(view());expect(panel.isConnected).toBe(false);
  expect(v.queryByRole('region',{name:'옵션'})).toBeNull();
- act(()=>vi.advanceTimersByTime(319));expect(panel.isConnected).toBe(true);
- act(()=>vi.advanceTimersByTime(1));expect(panel.isConnected).toBe(false);expect(v.container.querySelector('textarea')).toBe(editor);expect(editor.value).toBe('보존할 초안');
+ act(()=>vi.advanceTimersByTime(320));expect(panel.isConnected).toBe(false);expect(v.container.querySelector('textarea')).toBe(editor);expect(editor.value).toBe('보존할 초안');
 });
-it('reverses a closing morph without letting its old timer remove the reopened menu',()=>{
+// 빠르게 닫고 다시 열어도 새 필 목록과 원래 입력이 남는지 확인한다.
+it('reopens the pill tray without a stale closing timer or a replacement editor',()=>{
  const v=render(view());v.rerender(view(true));const panel=v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')!;
- v.rerender(view());act(()=>vi.advanceTimersByTime(120));v.rerender(view(true));
- act(()=>vi.advanceTimersByTime(500));expect(panel.isConnected).toBe(true);expect(panel.hasAttribute('inert')).toBe(false);expect(panel.getAttribute('data-entered')).toBe('true');
+ const editor=v.container.querySelector('textarea');
+ v.rerender(view());expect(panel.isConnected).toBe(false);act(()=>vi.advanceTimersByTime(120));v.rerender(view(true));
+ const reopened=v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')!;
+ act(()=>vi.advanceTimersByTime(500));expect(reopened.isConnected).toBe(true);expect(reopened.hasAttribute('inert')).toBe(false);expect(v.container.querySelector('textarea')).toBe(editor);
 });
 it('removes the outgoing menu immediately with reduced motion enabled',()=>{
  const v=render(view(true));reduced=true;v.rerender(view());expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).toBeNull();
 });
-it('finishes a closing morph when reduced motion changes and releases all local resources on unmount',()=>{
- const v=render(view(true));act(()=>vi.advanceTimersByTime(20));v.rerender(view());
+// 동작 줄이기는 열린 상태를 바꾸지 않고 해제 때 모든 자체 자원을 정리한다.
+it('preserves the open tray on reduced motion changes and releases local resources on unmount',()=>{
+ const v=render(view(true));act(()=>vi.advanceTimersByTime(20));
  reduced=true;act(()=>{for(const listener of [...listeners])listener();});
+ expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).not.toBeNull();v.rerender(view());
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).toBeNull();
  v.unmount();expect(listeners.size).toBe(0);expect(vi.getTimerCount()).toBe(0);
 });
-it('cleans up a pending closing timer when the composer unmounts',()=>{
- const v=render(view(true));v.rerender(view());v.unmount();expect(listeners.size).toBe(0);expect(vi.getTimerCount()).toBe(0);
+// 필 닫기에 지연 타이머를 만들지 않고 컴포저 해제 때 리스너도 제거한다.
+it('closes the tray without a closing timer and cleans up on unmount',()=>{
+ const v=render(view(true));act(()=>vi.advanceTimersByTime(20));v.rerender(view());expect(vi.getTimerCount()).toBe(0);v.unmount();expect(listeners.size).toBe(0);expect(vi.getTimerCount()).toBe(0);
 });
 it('keeps native wheel scrolling inside the composer without blocking zoom and removes its listener on unmount',()=>{
  const v=render(view()),host=v.container,viewport=host.querySelector('[data-bb-chat-ui-fluid-height]')!,editor=host.querySelector('textarea')!;

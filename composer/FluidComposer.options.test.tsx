@@ -21,6 +21,30 @@ function mount(){
  const v=renderSlot({component:()=> <PromptBoxInternal {...renderer.input} fluid/>},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
  return{v,renderer,run};
 }
+// 옵션 필을 열어도 같은 입력과 전송을 사용할 수 있는지 확인한다.
+it('opens options above the unchanged input and allows editing and submitting while they remain open',async()=>{
+ const{v,run}=mount();
+ await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+ const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!;
+ const viewport=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!;
+ const toggle=screen.getByRole('button',{name:'Prompt actions'});
+ fireEvent.click(toggle);
+ const panel=await screen.findByRole('region',{name:'컴포저 옵션'});
+ expect(viewport.contains(panel)).toBe(false);
+ expect(panel.compareDocumentPosition(viewport)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+ expect(viewport.getAttribute('data-bb-chat-ui-fluid-view')).toBe('input');
+ expect(editor.closest('[inert],[aria-hidden="true"]')).toBeNull();
+ expect(editor.getAttribute('contenteditable')).toBe('true');
+ expect(screen.getByRole('button',{name:'Prompt actions'})).toBe(toggle);
+ await v.setComposerText('계속 작성한 초안');
+ await waitFor(()=>expect(editor.textContent).toBe('계속 작성한 초안'));
+ expect(screen.getByRole('region',{name:'컴포저 옵션'})).toBe(panel);
+ fireEvent.submit(v.container.querySelector('form')!);
+ expect(run).toHaveBeenCalledOnce();
+ expect(screen.queryByRole('region',{name:'컴포저 옵션'})).toBeNull();
+ expect(v.inspection.composer.text).toBe('계속 작성한 초안');
+ v.unmount();
+});
 it('keeps the expanded desktop send controls inside one rounded pill and preserves its menu',async()=>{
  const stop=injectFluidComposer(document),{v,renderer}=mount();
  try{
@@ -89,7 +113,8 @@ it('asks a collapsed host to mount its footer without leaving focus on the edito
   expect(v.container.querySelector('form')!.getAttribute('data-bb-chat-ui-fluid-view')).toBe('input');
  }finally{v.unmount();shell.remove();stop();}
 });
-it('replaces the input view with options inside the same composer and restores the mounted editor on Escape',async()=>{
+// 같은 form의 입력과 옵션 필을 유지하고 Escape는 전송 없이 필만 닫는다.
+it('keeps the input and options in the same form and returns to the mounted editor on Escape',async()=>{
  const {v,run}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
  const form=v.container.querySelector('form')!,editor=v.container.querySelector('.ProseMirror')!;
  fireEvent.click(screen.getByRole('button',{name:'Prompt actions'}));
@@ -97,9 +122,9 @@ it('replaces the input view with options inside the same composer and restores t
  expect(form.contains(panel)).toBe(true);expect(v.container.querySelector('form')).toBe(form);
  expect(v.container.querySelector('.ProseMirror')).toBe(editor);
  expect(screen.queryByRole('button',{name:'모델 선택'})).toBeNull();
- expect(screen.queryByRole('button',{name:'Submit (Enter)'})).toBeNull();
+ expect(screen.getByRole('button',{name:'Submit (Enter)'})).toBeTruthy();
  expect(document.querySelector('[data-persistent-drawer-content],[data-radix-popper-content-wrapper]')).toBeNull();
- fireEvent.submit(form);expect(run).not.toHaveBeenCalled();
+ expect(run).not.toHaveBeenCalled();
  fireEvent.keyDown(panel,{key:'Escape'});
  await waitFor(()=>expect(screen.queryByRole('region',{name:'컴포저 옵션'})).toBeNull());
  expect(v.container.querySelector('.ProseMirror')).toBe(editor);expect(v.inspection.composer.text).toBe('보관할 초안');

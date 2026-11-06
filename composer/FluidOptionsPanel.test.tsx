@@ -38,6 +38,15 @@ it('focuses the first choice, navigates enabled buttons, and handles Escape loca
  fireEvent.keyDown(attach,{key:'End'});expect(document.activeElement).toBe(plan);
  fireEvent.keyDown(panel,{key:'Escape'});expect(props.onClose).toHaveBeenCalledTimes(1);
 });
+// 가로 필 목록에서도 비활성 항목을 건너뛰고 양방향으로 이동하는지 확인한다.
+it('navigates the wrapping pill menu with left and right arrows',()=>{
+ mount({onAttach:vi.fn(),actions:[{kind:'plan',text:'/plan '}]},[plugin(true)]);
+ expect(screen.getByRole('menu',{name:'추가 옵션'}).getAttribute('aria-orientation')).toBe('horizontal');
+ const attach=screen.getByRole('menuitem',{name:'Attach files'}),plan=screen.getByRole('menuitem',{name:'Plan'});
+ fireEvent.keyDown(attach,{key:'ArrowRight'});expect(document.activeElement).toBe(plan);
+ fireEvent.keyDown(plan,{key:'ArrowRight'});expect(document.activeElement).toBe(attach);
+ fireEvent.keyDown(attach,{key:'ArrowLeft'});expect(document.activeElement).toBe(plan);
+});
 it('keeps host items inline as real buttons without a Radix root, portal or drawer',()=>{
  const{NativeEntry}=mount({},[plugin()]);
  expect(NativeEntry).toHaveBeenCalled();expect(screen.getByRole('menuitem',{name:'Plugin option'}).tagName).toBe('BUTTON');

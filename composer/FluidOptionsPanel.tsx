@@ -19,14 +19,16 @@ export interface FluidOptionsPanelProps {
 }
 
 const ENABLED_OPTIONS = '[role="menuitem"]:not(:disabled):not([data-disabled])';
+// phone 옵션의 실제 선택에 기존 selection 햅틱을 전달한다.
 function pulse(): void {
   if (document.documentElement.getAttribute('data-bb-chat-ui-root-device') === 'phone') postHaptic(readHapticBridge(window), 'selection');
 }
 
-/** 입력과 다른 모드로 같은 면에 배치하고 플러그인 항목의 공개 host renderer 소유권을 유지한다. */
+// 입력창 위의 옵션 필을 그리고 플러그인 항목은 공개 host renderer에 맡긴다.
 export function FluidOptionsPanel({ active = true, actions = [], plugins, onAttach, onAction, onClose, onPluginSelected }: FluidOptionsPanelProps) {
   const root = useRef<HTMLDivElement>(null);
   const entering = useRef<Animation[]>([]);
+  // 직접 조작과 해제 때 목록의 진입 효과를 끝낸다.
   const stopEntering = useCallback(() => { for (const animation of entering.current) animation.cancel(); entering.current = []; }, []);
   const visible = orderedPromptActions(actions).filter(action => action.text.length > 0);
   useLayoutEffect(() => {
@@ -50,6 +52,7 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
     if (active && root.current) return bindComposerScrollBoundary(root.current, stopEntering);
   }, [active, stopEntering]);
 
+  // 플러그인 선택의 포커스 소유권을 호스트에 전달한다.
   const selectedPlugin = (selection: ExperimentalComposerMenuSelection) => {
     pulse(); onPluginSelected(selection);
   };
@@ -59,15 +62,16 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
     onKeyDown={event => {
       stopEntering();
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(); return; }
-      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+      if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
       const buttons = Array.from(root.current?.querySelectorAll<HTMLElement>(ENABLED_OPTIONS) ?? []);
       if (!buttons.length) return;
       const index = buttons.indexOf(document.activeElement as HTMLElement);
-      const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : index < 0 ? (event.key === 'ArrowDown' ? 0 : buttons.length - 1) : (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
+      const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight';
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : index < 0 ? (forward ? 0 : buttons.length - 1) : (index + (forward ? 1 : -1) + buttons.length) % buttons.length;
       event.preventDefault(); event.stopPropagation(); buttons[next].focus();
     }}>
     <InlineDropdownMenuItems>
-      <div data-bb-chat-ui-fluid-panel-list="" role="menu" aria-label="추가 옵션">
+      <div data-bb-chat-ui-fluid-panel-list="" role="menu" aria-label="추가 옵션" aria-orientation="horizontal">
         {onAttach ? <Button type="button" variant="ghost" role="menuitem" data-bb-chat-ui-fluid-option="" onClick={() => { pulse(); onAttach(); }}><Icon name="Paperclip" className="size-4"/>Attach files</Button> : null}
         {visible.map(action => <Button key={action.kind} type="button" variant="ghost" role="menuitem" data-bb-chat-ui-fluid-option="" onClick={() => { pulse(); onAction(action); }}><Icon name={PROMPT_ACTION_PRESENTATION[action.kind].icon} className="size-4"/>{PROMPT_ACTION_PRESENTATION[action.kind].label}</Button>)}
         {plugins.plusMenuItems.map(contribution => <plugins.MenuEntry key={contribution.key} kind="plus" contribution={contribution} onSelected={selectedPlugin}/>)}
