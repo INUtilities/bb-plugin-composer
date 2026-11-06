@@ -102,18 +102,21 @@ test('fluid composer follows wrapping, newlines, deletion and rapid retargeting'
   } finally { f.stop(); f.dom.window.close(); }
 });
 
-test('expanded input applies subsequent line heights immediately while layout and option changes retain motion', async () => {
+// 여러 줄 입력은 짧게 이어 주고 배치·옵션·음성의 기존 전환을 유지하는지 확인한다.
+test('expanded input briefly follows subsequent line heights while layout and option changes retain motion', async () => {
   const f = fixture(true);
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.viewport.setAttribute('data-multiline', 'true'); f.resize(100);
     assert.match(f.viewport.style.transition, /height 320ms/);
     const count = f.animations.length;
-    for (const height of [124, 148, 100]) {
+    for (const [index,height] of [124, 148, 100].entries()) {
       f.resize(height);
       assert.equal(f.viewport.style.height, `${height}px`);
-      assert.equal(f.viewport.style.transition, ['border-radius', 'corner-shape'].map(property => `${property} 320ms ${EASE.out}`).join(', '));
-      assert.equal(f.animations.length, count);
+      assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 120ms ${EASE.out}`).join(', '));
+      assert.equal(f.animations.length, count+index+1);
+      assert.equal(f.animations.at(-1)?.options.duration,120);
+      assert.equal(f.animations.at(-1)?.options.easing,EASE.out);
     }
     assert.equal(f.animations[0].cancelled, true);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'options'); f.resize(212);

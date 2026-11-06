@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "baccdb704f73bd8f70a75f01d61d9b432cd89b9d",
+  "integratedCommit": "3dbed839d38d6f2ac78bed6f1e9d77b3f19fae4f",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -515,12 +515,12 @@
     {
       "source": "lib/fluid-composer-height.ts",
       "destination": "lib/fluid-composer-height.ts",
-      "sha256": "8b0918d705d732495b272df8efbd7282cec3365a02e5f1e006bb0c4b7b15c424"
+      "sha256": "de2c49f07df5b1ef8ff1a6897723f03dd9a574c4fc26cdbd4c2d8de2951c9afd"
     },
     {
       "source": "lib/fluid-composer-height.test.ts",
       "destination": "lib/fluid-composer-height.test.ts",
-      "sha256": "c92d472125771a72932798e722c285e3433303bf99874550239ba4e5479a0b04"
+      "sha256": "ad0fa38d53564756fb07de80227fd6c25b040354d641ea2f193368fc319418a9"
     },
     {
       "source": "lib/fluid-composer-layout.ts",
