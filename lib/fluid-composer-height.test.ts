@@ -4,12 +4,24 @@ import { JSDOM } from 'jsdom';
 import { bindFluidComposerHeight } from './fluid-composer-height.ts';
 import { EASE } from './motion.ts';
 
-function fixture() {
-  const dom = new JSDOM('<div id="viewport"><div id="content"></div></div>', { pretendToBeVisual: true });
+// 자연 높이와 실제 표시 높이를 분리해 진행 중인 전환도 재현한다.
+function fixture(withEditor = false) {
+  const dom = new JSDOM('<div id="viewport"><div id="content"><div id="moving"><div class="ProseMirror"></div></div></div></div>', { pretendToBeVisual: true });
   const win = dom.window;
   const viewport = win.document.getElementById('viewport')!;
   const content = win.document.getElementById('content')!;
+  const moving = win.document.getElementById('moving')!;
   let naturalHeight = 52;
+  let visibleHeight = 52, editorInset = 12, editorOffset = 0;
+  const animations: { frames: Keyframe[]; options: KeyframeAnimationOptions; cancelled: boolean; id: string }[] = [];
+  viewport.getBoundingClientRect = () => ({ height: visibleHeight } as DOMRect);
+  content.getBoundingClientRect = () => ({ top: 0, left: 0 } as DOMRect);
+  moving.querySelector<HTMLElement>('.ProseMirror')!.getBoundingClientRect = () => ({ top: editorInset + editorOffset, left: 0 } as DOMRect);
+  moving.animate = (frames, options) => {
+    const record = { frames: frames as Keyframe[], options: options as KeyframeAnimationOptions, cancelled: false, id: '' };
+    animations.push(record);
+    return { get id() { return record.id; }, set id(value) { record.id = value; }, cancel() { record.cancelled = true; } } as Animation;
+  };
   Object.defineProperty(content, 'offsetHeight', { get: () => naturalHeight });
   let deliver: ResizeObserverCallback;
   let disconnected = false;
@@ -27,9 +39,12 @@ function fixture() {
       removeEventListener(_type: string, listener: () => void) { listeners.delete(listener); },
     }),
   });
-  const stop = bindFluidComposerHeight(viewport, content);
+  const stop = bindFluidComposerHeight(viewport, content, withEditor ? () => moving : undefined);
   return {
-    viewport, content, dom, stop,
+    viewport, content, dom, stop, animations,
+    visible(height: number) { visibleHeight = height; },
+    inset(value: number) { editorInset = value; },
+    offset(value: number) { editorOffset = value; moving.style.translate = `0px ${value}px`; },
     get disconnected() { return disconnected; },
     get listeners() { return listeners.size; },
     resize(height: number) {
@@ -45,6 +60,31 @@ test('fluid composer starts at its natural single-line height without an entranc
   try {
     assert.equal(f.viewport.style.height, '52px');
     assert.equal(f.viewport.style.transition, 'none');
+  } finally { f.stop(); f.dom.window.close(); }
+});
+
+test('every height change carries the editor with the visible box, including retargeting and padding changes', async () => {
+  const f = fixture(true);
+  try {
+    await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
+    f.resize(100);
+    assert.deepEqual(f.animations.at(-1)?.frames, [{ translate: '0px 48px' }, { translate: '0px 0px' }]);
+    assert.equal(f.animations.at(-1)?.options.duration, 320);
+    assert.equal(f.animations.at(-1)?.options.easing, EASE.out);
+    f.visible(80); f.offset(20); f.resize(124);
+    assert.equal(f.animations[0].cancelled, true);
+    assert.deepEqual(f.animations.at(-1)?.frames[0], { translate: '0px 44px' });
+    f.visible(110); f.offset(14); f.inset(20); f.resize(148);
+    assert.deepEqual(f.animations.at(-1)?.frames[0], { translate: '0px 30px' });
+    f.visible(148); f.offset(0); f.inset(12); f.resize(100);
+    assert.deepEqual(f.animations.at(-1)?.frames[0], { translate: '0px -40px' });
+    const count = f.animations.length;
+    f.reduce(true); f.resize(172);
+    assert.equal(f.animations.at(-1)?.cancelled, true);
+    assert.equal(f.animations.length, count);
+    assert.equal(f.viewport.style.transition, 'none');
+    f.reduce(false); f.visible(160); f.resize(196); f.stop();
+    assert.equal(f.animations.at(-1)?.cancelled, true);
   } finally { f.stop(); f.dom.window.close(); }
 });
 

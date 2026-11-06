@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { FluidComposerBody } from './FluidComposerBody';
 import { EASE } from '../lib/motion';
+import { FLUID_EDITOR_FOLLOW_ANIMATION } from '../lib/fluid-composer-height';
 
 let reduced=false;
 const listeners=new Set<()=>void>();
@@ -55,7 +56,28 @@ it('keeps the height curve but releases the moving caret immediately when typing
   expect(animations.at(-1)!.cancel).toHaveBeenCalledTimes(cancels);
  }finally{bounds.mockRestore();delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
 });
+// 합성 초안과 옵션을 사용해 입력 영역의 수명을 확인한다.
 const view=(open=false)=><FluidComposerBody panelOpen={open} panel={<div role="region" aria-label="옵션"><button>선택</button></div>} editor={<textarea defaultValue="보존할 초안"/>} options={<button>＋</button>} actions={<button>전송</button>} attachments={null}/>;
+it('releases vertical-only following on further input without cancelling unrelated editor animation',()=>{
+ const v=render(view()),input=v.container.querySelector('textarea')!;
+ const column=input.closest<HTMLElement>('[data-bb-chat-ui-fluid-editor]')!;
+ const content=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-content]')!;
+ const cancel=vi.fn(),unrelated=vi.fn();
+ const bounds=vi.spyOn(content,'getBoundingClientRect').mockReturnValue({height:140} as DOMRect);
+ Object.defineProperty(column,'getAnimations',{value:()=>[
+  {id:FLUID_EDITOR_FOLLOW_ANIMATION,playState:'running',cancel},
+  {id:'unrelated',playState:'running',cancel:unrelated},
+ ]});
+ try{
+  const event=new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType:'insertText'});
+  input.dispatchEvent(event);
+  expect(cancel).toHaveBeenCalledOnce();expect(unrelated).not.toHaveBeenCalled();
+  expect(event.defaultPrevented).toBe(false);
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
+  input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+  expect(cancel).toHaveBeenCalledTimes(2);
+ }finally{bounds.mockRestore();}
+});
 it('sizes the voice backdrop to its pane and updates it without widening the composer',()=>{
  let paneWidth=800,paneHeight=800,composerLeft=316;
  const observers:{callback:ResizeObserverCallback;targets:Element[];disconnect:ReturnType<typeof vi.fn>}[]=[];
