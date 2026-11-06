@@ -77,14 +77,14 @@ test('newline resizing leaves the native editor in place while the surface heigh
   } finally { f.stop(); f.dom.window.close(); }
 });
 
-test('a focused newline retains the initial growth transition while later line changes and clearing keep motion', async () => {
+test('input growth catches the reference text quickly while clearing keeps its full transition', async () => {
   const f = fixture();
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     const editor = f.dom.window.document.querySelector<HTMLElement>('.ProseMirror')!;
     editor.parentElement!.setAttribute('data-bb-chat-ui-fluid-editor', '');editor.tabIndex=0;editor.focus();
     f.viewport.setAttribute('data-multiline', 'true');f.resize(116);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 120ms/);
     assert.equal(f.viewport.style.height, '116px');
     f.resize(140);assert.match(f.viewport.style.transition, /height 120ms/);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-reset','true');f.viewport.setAttribute('data-multiline','false');f.resize(52);
@@ -98,7 +98,7 @@ test('height retargeting and padding changes preserve native editor positioning 
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.resize(100);
     assert.equal(f.animations.length, 0);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 120ms/);
     f.visible(80); f.offset(20); f.resize(124);
     assert.equal(f.animations.length, 0);
     assert.equal(f.viewport.style.height, '124px');
@@ -121,10 +121,10 @@ test('fluid composer follows wrapping, newlines, deletion and rapid retargeting'
   const f = fixture();
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
-    for (const height of [76, 100, 124, 76, 52]) {
+    for (const [height,duration] of [[76,120], [100,120], [124,120], [76,320], [52,320]]) {
       f.resize(height);
       assert.equal(f.viewport.style.height, `${height}px`);
-      assert.match(f.viewport.style.transition, /height 320ms/);
+      assert.ok(f.viewport.style.transition.includes(`height ${duration}ms`));
     }
     f.resize(52);
     assert.equal(f.viewport.style.height, '52px');
@@ -137,7 +137,7 @@ test('expanded input briefly follows subsequent line heights while layout and op
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.viewport.setAttribute('data-multiline', 'true'); f.resize(100);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 120ms/);
     const count = f.animations.length;
     for (const height of [124, 148, 100]) {
       f.resize(height);
@@ -202,7 +202,7 @@ test('typing synchronizes height and corners while option morphs retain their ex
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'input');
     for (const height of [76, 100, 148]) {
       f.resize(height);
-      assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 320ms ${EASE.out}`).join(', '));
+      assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 120ms ${EASE.out}`).join(', '));
     }
     f.resize(52);
     assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 320ms ${EASE.out}`).join(', '));

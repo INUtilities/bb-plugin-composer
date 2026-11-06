@@ -11,11 +11,12 @@ beforeEach(()=>{
  vi.stubGlobal('matchMedia',()=>({get matches(){return reduced;},addEventListener:(_type:string,fn:()=>void)=>listeners.add(fn),removeEventListener:(_type:string,fn:()=>void)=>listeners.delete(fn)}));
 });
 afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();});
-it('uses the new line layout immediately without animating a focused editor or replacing its selection',()=>{
+it('keeps the reference text movement and easing for a focused editor without replacing its selection',()=>{
  let lines=1;
  const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
   const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
-  return {left:editor?(full?20:52):0,top:0,width:400,height:editor?lines*24:136} as DOMRect;
+  const x=editor?(full?20:52):0,y=editor?(full?16:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
  });
  const oldAnimate=HTMLElement.prototype.animate,animate=vi.fn(()=>({cancel:vi.fn(),playState:'running'}));
  Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
@@ -25,12 +26,11 @@ it('uses the new line layout immediately without animating a focused editor or r
  try{
   act(()=>vi.advanceTimersByTime(20));const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!;editor.focus();
   const selection=document.getSelection()!;selection.selectAllChildren(editor);selection.collapseToEnd();
-  const heightBeforeInput=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height;
   lines=2;v.rerender(draw('첫 줄\n다음 줄'));
+  act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe(heightBeforeInput);
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 320ms');
-  expect(animate).not.toHaveBeenCalled();expect(document.activeElement).toBe(editor);
+  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(32px, 44px)'},{transform:'translate(0, 0)'}],{duration:320,easing:EASE.droplet});
+  expect(document.activeElement).toBe(editor);
   expect(editor.contains(selection.anchorNode)).toBe(true);expect(v.container.querySelector('.ProseMirror')).toBe(editor);
  }finally{v.unmount();bounds.mockRestore();if(oldAnimate)Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:oldAnimate});else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
 });
@@ -51,18 +51,16 @@ it('keeps the height curve but releases the moving caret immediately when typing
  try{
   act(()=>vi.advanceTimersByTime(20));
   lines=3;v.rerender(draw('세 줄'));
-  expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
   act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
-  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
+  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.droplet});
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
   const bubbled=vi.fn();v.container.addEventListener('beforeinput',bubbled);
-  const heightBeforeInput=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height;
   const input=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});
   editor!.dispatchEvent(input);
   expect(animations.at(-1)!.cancel).toHaveBeenCalled();
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe(heightBeforeInput);
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
   expect(input.defaultPrevented).toBe(false);expect(bubbled).toHaveBeenCalledOnce();
   expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 320ms');
   lines=1;v.rerender(draw('한 줄'));act(()=>vi.advanceTimersByTime(20));
@@ -71,7 +69,7 @@ it('keeps the height curve but releases the moving caret immediately when typing
   expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
   Object.defineProperty(animate.mock.results.at(-1)!.value,'playState',{value:'finished'});
   editor!.dispatchEvent(new InputEvent('beforeinput',{inputType:'insertText',bubbles:true}));
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe(heightBeforeInput);
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
   lines=3;v.rerender(draw('다시 세 줄'));act(()=>vi.advanceTimersByTime(20));
   const enter=new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});editor!.dispatchEvent(enter);
   expect(animations.at(-1)!.cancel).toHaveBeenCalled();expect(enter.defaultPrevented).toBe(false);
@@ -93,7 +91,7 @@ it('returns a cleared draft to the compact layout while retaining its height and
  // 줄 수와 펼침 상태만으로 입력 영역의 배치를 재현한다.
  const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
   const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
-  return {left:editor?(full?20:52):0,top:0,width:400,height:editor?lines*24:136} as DOMRect;
+  const x=editor?(full?20:52):0;return {x,y:0,left:x,top:0,width:400,height:editor?lines*24:136} as DOMRect;
  });
  // 호스트가 보존하거나 비우거나 복구한 초안만 입력 본문에 전달한다.
  const draw=(text:string,open=false)=><FluidComposerBody draftText={text} panelOpen={open} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;

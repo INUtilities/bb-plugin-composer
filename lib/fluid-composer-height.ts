@@ -4,17 +4,6 @@ export const FLUID_COMPOSER_MORPH_MS = 320;
 export const FLUID_COMPOSER_INPUT_MS = 320;
 const FLUID_COMPOSER_LINE_MS = 120;
 
-// 본문의 로컬 위치를 읽어 포커스 없는 입력의 가로 이동에 쓴다.
-export function readFluidEditorPosition(editor: HTMLElement, content: HTMLElement): { x: number; y: number } | null {
-  const win = editor.ownerDocument.defaultView;
-  if (!win) return null;
-  const anchor = editor.querySelector<HTMLElement>('[data-promptbox-editor-scroll], [data-bb-chat-ui-voice-transcript], .ProseMirror') ?? editor;
-  const box = anchor.getBoundingClientRect(), parent = content.getBoundingClientRect();
-  const style = win.getComputedStyle(anchor);
-  return { x: box.left + (Number.parseFloat(style.paddingLeft) || 0) - parent.left,
-    y: box.top + (Number.parseFloat(style.paddingTop) || 0) - parent.top };
-}
-
 // 줄 높이는 짧게 잇고 큰 배치 전환과 빈 초안의 접힘은 기존 곡선을 유지한다.
 export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement): () => void {
   const win = viewport.ownerDocument.defaultView;
@@ -51,7 +40,7 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     const nextMultiline = viewport.getAttribute('data-multiline') === 'true';
     const reset = nextInputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true';
     if (next === height && !reset) { inputView = nextInputView; multiline = nextMultiline; return; }
-    duration = reset ? FLUID_COMPOSER_INPUT_MS : inputView && nextInputView && multiline && nextMultiline ? FLUID_COMPOSER_LINE_MS
+    duration = reset ? FLUID_COMPOSER_INPUT_MS : inputView && nextInputView && (next > height || multiline && nextMultiline) ? FLUID_COMPOSER_LINE_MS
       : nextInputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
     inputView = nextInputView; multiline = nextMultiline;
     height = next;
