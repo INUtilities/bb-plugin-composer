@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "a417cb2104e72d6619393a851df2cccb37f1f492",
+  "integratedCommit": "fe9687eb2baa7b1f029f0652f0c16502f25eaf67",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -34,7 +34,7 @@
     {
       "source": "composer/FluidComposerBody.test.tsx",
       "destination": "composer/FluidComposerBody.test.tsx",
-      "sha256": "e9743df271968fbb73687f09c2cae8e47426948b5b89f574d2a401c59a467783"
+      "sha256": "99ef901779b268df71c190de2a93d41784d4f40f6a5d9e78aba744b1efffc56b"
     },
     {
       "source": "composer/FluidComposerBody.tsx",
@@ -89,7 +89,7 @@
     {
       "source": "composer/README.md",
       "destination": "composer/README.md",
-      "sha256": "39860c5c0666cca204df29208f0143a1a2e284d9f11ee62c44dd0f6d26eb0f14",
+      "sha256": "fb50a6a70e57bfdcda0fb4dd3dc33cb31d2825a30ae6d4fe8bc4eb50b05a3334",
       "checkoutNote": "Git checkout line endings differ from the source; normalized UTF-8 text is identical"
     },
     {
@@ -515,12 +515,12 @@
     {
       "source": "lib/fluid-composer-height.ts",
       "destination": "lib/fluid-composer-height.ts",
-      "sha256": "eb384b5f249e663fbd2f61f689b2136e0b8a4c7173d634f37394acd4fae6be8c"
+      "sha256": "83b5eebab5a37f1d0a7c9b396000db9d670088b34750e3f5009af5b4c00d1ee3"
     },
     {
       "source": "lib/fluid-composer-height.test.ts",
       "destination": "lib/fluid-composer-height.test.ts",
-      "sha256": "f047591137cfacd945aaf0123e964461c0259f4799e191109d33d2eb217bdc5f"
+      "sha256": "7a2e58c87b4673b6458a8c99f74e40ca66791ddb2279e1840f2cd61800200739"
     },
     {
       "source": "lib/fluid-composer-layout.ts",

@@ -22,7 +22,7 @@ SDK 연결을 유지하고 배치와 높이 전환은 `FluidComposerBody`가 소
 - `FluidComposer.tsx`: 공식 slot 진입점. kit `useDeviceChrome()`으로 phone을 판정한다.
 - `FluidComposerBody.tsx`: 새 배치 및 로컬 크기 관찰 수명.
 - `../lib/fluid-composer-height.ts`: 내용 크기가 바뀔 때만 높이를 갱신한다. kit의
-  `EASE.out`으로 입력 높이·모서리는 120ms, 옵션은 320ms를 사용하며 reduced motion 변경을 즉시 반영한다.
+  `EASE.out`으로 입력 높이·모서리는 320ms, 옵션은 320ms를 사용하며 reduced motion 변경을 즉시 반영한다.
 - `../lib/fluid-composer.ts`: 실험 전용 표면·글자·버튼 배치와 숨김 규칙.
 - `src`: 공식 Composer 엔진. fluid 배치·높이 관찰 제외와 음성·내부 옵션 모드 연결을 추가했다.
 - `components`, `lib`: 같은 upstream revision의 공식 UI registry 구성요소.
@@ -127,7 +127,7 @@ BB 변환은 `useSdk().system.transcribeVoice`를 사용한다. 실패한 녹음
 소유한다. 중지 뒤에는 마지막 구 모양을 잠시 보존해 fade한다. reduced motion에서는
 정적인 구이며 연결부·면의 모션 없이 버튼 모양을 즉시 바꾼다. 새 녹음·motion 변경·
 시간 역행·긴 공백은 음량 기록을 초기화하며 분석 실패 때도 정적인 구와 녹음을 유지한다.
-일반 입력 높이·위치 morph는 120ms 감속 곡선을 사용한다.
+일반 입력 높이·위치 morph는 320ms 감속 곡선을 사용한다.
 
 브라우저가 SpeechRecognition을 지원하면 녹음 중 받아쓰기 미리보기를 수집하지만
 음성모드에서는 표시하지 않는다. 실제 editor는 mount한 채 초안을 보존하고
@@ -180,7 +180,7 @@ Arrow 키와 Home·End로 활성 항목을
 아닌 바깥 box의 폭으로 판단한다. `draftText`·입력 준비 변화와 현재 row·버튼의 크기
 변화만 한 frame에 묶어 측정하며 transcript를 관찰하지 않는다.
 
-입력 배치가 바뀌면 같은 실제 editor의 위치 차이만 120ms·kit 감속 easing으로 옮긴다.
+입력 배치가 바뀌면 같은 실제 editor의 위치 차이만 320ms·kit 감속 easing으로 옮긴다.
 여러 줄로 펼칠 때는 바깥 높이와 같은 감속 곡선으로 이동해 커서가 표면보다 먼저
 올라가지 않게 한다. 한 줄로 축소할 때는 기존 감속 곡선을 유지한다.
 문자·버튼의 scale이나 복제는 없으며, 빠른 역전은 현재 보이는 위치에서 이어간다.
@@ -188,7 +188,7 @@ reduced motion·해제 시 위치 전환과 예약 frame을 취소한다.
 
 위치 전환 중 후속 Enter나 `beforeinput`이 들어오면 실제 editor의 이동 모션을 즉시
 끝낸다. 진행 중인 높이 transition도 그때만 마쳐 커서가 작은 창 위로 잘리지 않게 한다.
-입력 사건은 취소하거나 지연하지 않는다. 후속 입력이 없는 기본 120ms 감속 모션과 이미
+입력 사건은 취소하거나 지연하지 않는다. 후속 입력이 없는 기본 320ms 감속 모션과 이미
 펼쳐진 입력의 이후 높이 전환은 유지하며 두 listener는 해당 컴포저에만 연결한다.
 
 여러 줄 본문은 좌우 20px·위 16px를 비운다. padding이 바뀌어도 실제 글자 위치를
@@ -243,7 +243,7 @@ Ctrl+wheel·pinch는 그대로 전달하고 listener는 해당 컴포저와 메�
 한 번만 적용한다. 항목별 반동·translate·scale·지연은 두지 않으며 비활성 글자의
 흐림도 유지한다. 데이터 갱신마다 다시 실행하지 않는다. 닫기·해제·reduced motion은
 즉시 취소하고, 포인터·wheel·touch scroll·키보드 조작도 fade를 끝내 실제 조작을
-우선한다. 입력 높이는 120ms이며 옵션 전환과 퇴장 레이어 보관은 기존 320ms를 유지한다.
+우선한다. 입력 높이는 320ms이며 옵션 전환과 퇴장 레이어 보관은 기존 320ms를 유지한다.
 
 `+`·`×`·모델·전송 옵션의 실제 활성화는 phone의 haptic capability가 있을 때
 selection 햅틱을 한 번 낸다. 기존 음성·메뉴 선택·전송 햅틱에 중복 pulse를 붙이지 않는다.
@@ -251,7 +251,7 @@ selection 햅틱을 한 번 낸다. 기존 음성·메뉴 선택·전송 햅틱�
 입력 글자는 desktop 14px·phone 16px이고 줄 높이는 24px다. 한 줄 기본 배치와
 모션은 이 글자 크기를 줄이지 않는다.
 
-여러 줄 입력의 확장·축소는 120ms·kit 감속 곡선으로 바로 출발한다.
+여러 줄 입력의 확장·축소는 320ms·kit 감속 곡선으로 바로 출발한다.
 실제 clip의 높이·반지름·corner-shape를 같은 시간·곡선으로 전환한다. 옵션은 기존 320ms를 유지한다.
 기존 높이 ResizeObserver만 재사용하고 빠른 추가 입력은 현재 보이는 높이에서
 이어 간다. 하단 버튼과 높이 상한·reduced motion 처리는 유지한다.

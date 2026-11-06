@@ -1,9 +1,9 @@
 import { EASE } from './motion.ts';
 
 export const FLUID_COMPOSER_MORPH_MS = 320;
-export const FLUID_COMPOSER_INPUT_MS = 120;
+export const FLUID_COMPOSER_INPUT_MS = 320;
 
-// 자연 높이와 모서리를 같은 속도로 전환하고 입력 중에는 빠른 감속 곡선을 쓴다.
+// 자연 높이와 모서리를 같은 속도로 전환하고 입력 중에는 감속 곡선을 쓴다.
 export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement): () => void {
   const win = viewport.ownerDocument.defaultView;
   if (!win?.ResizeObserver) return () => {};
