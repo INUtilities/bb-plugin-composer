@@ -1,31 +1,31 @@
 # Composer
 
-BB 컴포저 전체를 공식 `experimental_composer` 슬롯으로 교체하는 별도 플러그인이다.
-기본 입력기의 편집·멘션·첨부·음성·전송 연결을 가져오고 현재 Chat UI의 frost 디자인을 유지한다.
-BB 앱 파일과 기존 Chat UI 플러그인은 수정하지 않는다.
+BB의 공식 experimental_composer 슬롯으로 입력 상자 전체를 교체하는 독립 플러그인이다.
+Chat UI의 원격 experiment/fluid-composer에서 시작한 Fluid 입력·옵션·음성 UI와 승인된 스쿼클을 사용한다.
+현재 Chat UI와 같은 입력 코드를 별도 저장소에 준비한 단계이며, 메시지·인용·목차·정보 카드의 실제 역할 분리는 이후 작업이다.
 
-## 디자인
+## 코드 기준
 
-- 펼친 입력 상자: 기존 22px, CSS 스쿼클 지원 시 46.4px(22 × 2.11 반올림).
-- 미지원 브라우저: 기존 22px 둥근 모서리.
-- 접힌 한 줄 입력 상자: 기존 25px 둥근 pill 유지.
-- 접힘·펼침: 높이와 모서리 반경·곡선을 kit의 감속 easing으로 120ms 동안 함께 전환한다. 바로 움직이고 부드럽게 멈추며, 동작 줄이기 설정에서는 전환하지 않는다.
-- 입력 상자는 전용 `data-composer-promptbox` 표식을 사용해 기존 Chat UI의 입력기 전환과 분리한다.
-- 배경은 14px 블러를 쓰는 frost 표면이며, 도구·전송 버튼은 기존 원형·pill 모양을 유지한다.
-- 글자·도구·전송·초안·업로드는 기본 컴포저 기능을 유지한다.
-- CSS 스쿼클은 Apple continuous corner의 정확한 복제가 아니다.
+- 원격 기준: INUtilities/bb-chat-ui, experiment/fluid-composer, 7ad97e54c514aac6527a408305989c3996b8ff07.
+- 가져온 통합 기준: bb-chat-ui의 88b073be2adc0ea83c9cf9ffa11f178a1ad06a04.
+- composer/와 직접 필요한 lib/는 수정 없이 복사했다. 파일별 SHA와 엔진 원본은 docs/upstream-source.json, composer/UPSTREAM.json으로 확인한다.
+- 이전 독립 Composer와 120ms 모션은 기존 Git 이력에 보존한다. 두 입력기를 함께 유지하지 않는다.
+- 실제 분리 전까지 변경 정본은 bb-chat-ui다. 이 저장소는 검증된 버전의 사본으로 유지하며 자동 동기화는 하지 않는다.
+- Chat UI의 MIT 고지는 docs/CHAT_UI_LICENSE와 배포 번들의 thirdPartyChatUiNotice에 보존한다. 선택적 Tiptap 메뉴 패키지도 입력 엔진과 같은 3.26.0으로 고정한다.
 
-## 설치와 선택
+## 동작과 모서리
 
-`npm install`, `npm run typecheck`, `npm test`, `bb plugin build .`로 확인한다.
-`bb plugin install path:<이 폴더의 절대 경로> --yes`로 설치한다.
-Settings → Appearance → Composer에서 `Composer · Frost Squircle`을 고를 수 있다.
-기본 Composer를 다시 고르면 원래 입력기로 돌아간다.
+한 줄 입력에서 시작해 내용이 늘면 높이를 확장하고, +는 같은 상자의 옵션으로 전환한다.
+스쿼클 지원 시 desktop 입력은 50.6px, phone 입력은 54.9px이다. 미지원은 24px·26px을 유지한다.
+옵션 카드와 원형 버튼, Fluid의 높이·음성 동작은 원본을 유지한다. 이 배율은 시각적 비교값이며 정확한 곡선 환산식은 아니다.
+초안·첨부·전송 상태는 공개 SDK를 통해 BB가 관리한다.
 
-## 원본과 작업 범위
+## 설치와 검증
 
-`src/`와 `vendor/shared/`는 BB `desktop-v0.48.1`의 필요한 소스만 복사한 것이다.
-출처와 원본 SHA는 `docs/upstream-source.json`에 있다. MIT 라이선스를 보존한다.
-로컬 디자인은 `app.tsx`와 `lib/composer-skin.css`에 둔다.
-기기 판정은 kit의 수정하지 않은 `lib/device.ts`, `lib/use-device.ts`를 쓴다.
-새 스레드에서 디자인과 동작을 계속 검수한다. 실제 phone·IME·음성·업로드·모든 메뉴의 검수는 별도로 필요하다.
+npm ci, npm run typecheck, npm test, bb plugin build .으로 확인한다.
+plugin id는 composer, 교체 슬롯은 composer/composer이며 UI 이름은 Composer · Fluid Squircle이다.
+선택된 컴포저가 mount될 때만 스타일과 기기 bridge를 연결한다. 전역 content script는 등록하지 않는다.
+현재 선택된 Chat UI 컴포저는 이 코드 동기화 작업에서 변경하지 않는다. 원격 등록과 push도 별도다.
+
+큰 paste 성능 검사 3개는 원본의 PROMPTBOX_PERF=1 조건을 유지한다.
+실제 phone·IME·마이크·업로드·외부 전송과 최종 화면 판정은 별도 검수가 필요하다.

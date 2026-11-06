@@ -1,283 +1,560 @@
 {
-  "repository": "https://github.com/get-bb/bb",
-  "ref": "desktop-v0.48.1",
-  "commit": "e003e9510cbfd3bb6c26a28630b46ffb1c242a44",
+  "repository": "https://github.com/INUtilities/bb-chat-ui",
+  "ref": "experiment/fluid-composer",
+  "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
+  "integratedCommit": "88b073be2adc0ea83c9cf9ffa11f178a1ad06a04",
+  "engineOrigin": "composer/UPSTREAM.json",
+  "previousStandaloneCommit": "826d2c8",
+  "notes": [
+    "Fluid source and direct helpers copied without editing their bytes",
+    "Integrated source includes the approved input-only squircle",
+    "No Chat UI message, TOC or information-card controller is included"
+  ],
   "files": [
     {
-      "source": "plugins/composer/src/PromptBoxInternal.tsx",
-      "destination": "src/PromptBoxInternal.tsx",
-      "sha256": "51a37e4997479e0c379b97b1c539813918f78d9575675dfef1849a0ddc3c9760"
+      "source": "composer/FluidComposer.newline.test.tsx",
+      "destination": "composer/FluidComposer.newline.test.tsx",
+      "sha256": "8b25e1f2aa23a60dff28a08ed3ca4900f84dfecc19bf6bd9d6a2ccacd92986fd"
     },
     {
-      "source": "plugins/composer/src/mentions/find-active-trigger.ts",
-      "destination": "src/mentions/find-active-trigger.ts",
-      "sha256": "fe762f098f91ff483b3f8873a8f5f012a1d8ec4ab17f326a86da58210beacdd1"
+      "source": "composer/FluidComposer.options.test.tsx",
+      "destination": "composer/FluidComposer.options.test.tsx",
+      "sha256": "aada59c5113171ed2e47f4864e89f489f43c00ff8ee6e3ffb81076746d466c95"
     },
     {
-      "source": "plugins/composer/src/mentions/typeahead-suggestions.ts",
-      "destination": "src/mentions/typeahead-suggestions.ts",
-      "sha256": "5742ed0389baf3d6e740a9ee1bf16db1321265cb994aa1cce35ba4d24742b9d1"
+      "source": "composer/FluidComposer.tsx",
+      "destination": "composer/FluidComposer.tsx",
+      "sha256": "dbe0f04828fce5207aa70489a6e6f6acbc9f090b7e533f3c089c412b6793162f"
     },
     {
-      "source": "plugins/composer/src/attachments.ts",
-      "destination": "src/attachments.ts",
-      "sha256": "4580d2dd7147a64fdc94d23b093af00eebc63ef15841ad3aaaed359f9b0f74a9"
+      "source": "composer/FluidComposer.voice.test.tsx",
+      "destination": "composer/FluidComposer.voice.test.tsx",
+      "sha256": "5e1b1d9cb9b8d0dee6168985d6322af1b207993dd345b1e975ccc3eff1abf4ec"
     },
     {
-      "source": "plugins/composer/src/editor/composer-mentions.ts",
-      "destination": "src/editor/composer-mentions.ts",
-      "sha256": "7775f3e1119d24ec11cc181aa075fddf750ade670d692a21d6b444080d108b8c"
+      "source": "composer/FluidComposerBody.test.tsx",
+      "destination": "composer/FluidComposerBody.test.tsx",
+      "sha256": "faab6e9caefb4087c1685f6959be33d1e46c11e93fef467aa1d2938a6d366cb1"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/button.tsx",
-      "destination": "vendor/shared/components/ui/button.tsx",
-      "sha256": "d0d2a75b3a22d2447cc8641ba74e97a2a1e21f31ebdba00443fe74f9a5c2851b"
+      "source": "composer/FluidComposerBody.tsx",
+      "destination": "composer/FluidComposerBody.tsx",
+      "sha256": "ba3b4dbb61d47a71fd518fa0f9ccfaf708d676e72b7a38445d3521c51b2fa941"
     },
     {
-      "source": "packages/shared-ui/src/lib/utils.ts",
-      "destination": "vendor/shared/lib/utils.ts",
-      "sha256": "bebe9a50d46ab609e089ed578507363110ccec8990d73fa9b86c58f221f570ac"
+      "source": "composer/FluidComposerDetails.tsx",
+      "destination": "composer/FluidComposerDetails.tsx",
+      "sha256": "db38185e904f908232d88120efbc0b718c38b2ae36ef4e602c2473ed65b5ea3d"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/motion.ts",
-      "destination": "vendor/shared/components/ui/motion.ts",
-      "sha256": "c96650e4436a54f2280efef8a953b160beae30044f36f7af4a146296d5859f82"
+      "source": "composer/FluidComposerToggle.tsx",
+      "destination": "composer/FluidComposerToggle.tsx",
+      "sha256": "aeeac1466b0942231c847ed5fbb396cdf4d668914a7bed0a6f71dab2960416d1"
     },
     {
-      "source": "packages/plugin-registry/flavors/components/ui/icon.tsx",
-      "destination": "vendor/shared/components/ui/icon.tsx",
-      "sha256": "ba4eccb410a1291c1d80aff126aa24f463b4af574c8cd535df30e6a817862f47"
+      "source": "composer/FluidOptionsPanel.test.tsx",
+      "destination": "composer/FluidOptionsPanel.test.tsx",
+      "sha256": "576dc8b4c5469e9d70d6338aeb6ffb905114da8bdce106f3043727518a6c5342"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/tooltip.tsx",
-      "destination": "vendor/shared/components/ui/tooltip.tsx",
-      "sha256": "a5f9f59e32f4420207c571752636fdef1d36389892b1f8c5d22efecc713ff6ae"
+      "source": "composer/FluidOptionsPanel.tsx",
+      "destination": "composer/FluidOptionsPanel.tsx",
+      "sha256": "b97a95c4949bb55b4392fb738227501b90b5eab91984a26e2b364d9effebe70c"
     },
     {
-      "source": "packages/shared-ui/src/lib/portal-scope.ts",
-      "destination": "vendor/shared/lib/portal-scope.ts",
-      "sha256": "cbf23e81c4436585a5e55a4893591d0cc22c189f54d004d70cb7e1a8cc72f988"
+      "source": "composer/FluidVoiceControl.test.tsx",
+      "destination": "composer/FluidVoiceControl.test.tsx",
+      "sha256": "c98d2fb38ea6b0eae92e3255530915467d9965dde28ecb2559abaea226f6b3b0"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/overlay-trigger.ts",
-      "destination": "vendor/shared/components/ui/overlay-trigger.ts",
-      "sha256": "d6801ffff8340db9b203b22a9c23b2cf9d8b0a4c5945b7c66fe8ff1f131d7d8b"
+      "source": "composer/FluidVoiceControl.tsx",
+      "destination": "composer/FluidVoiceControl.tsx",
+      "sha256": "9deef3dfe060b4fce7c23829d11094510e7c1f5039fb27034ab0ac776a5c6efb"
     },
     {
-      "source": "plugins/composer/src/ComposerPopupHost.tsx",
-      "destination": "src/ComposerPopupHost.tsx",
-      "sha256": "04621fe66f38f44488298a7ffd49de6903218a0b3740879ab9c7dda178c30a39"
+      "source": "composer/FluidVoiceWaveform.test.tsx",
+      "destination": "composer/FluidVoiceWaveform.test.tsx",
+      "sha256": "e43df54f4e42a361c832c01cf7e90191f7018c9d8e2eadc121c1d8e20c485a22"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/hooks/use-compact-viewport.tsx",
-      "destination": "vendor/shared/components/ui/hooks/use-compact-viewport.tsx",
-      "sha256": "56c7e82a62e3f0f35e6ffbaa1611569479de7f193ad20daef9f9466a44bce9e9"
+      "source": "composer/FluidVoiceWaveform.tsx",
+      "destination": "composer/FluidVoiceWaveform.tsx",
+      "sha256": "9faf32755b386a793e24226b28d629781ac4b1c368562a80829f37b96d13fe55"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/hooks/use-media-query.ts",
-      "destination": "vendor/shared/components/ui/hooks/use-media-query.ts",
-      "sha256": "868447cb0ac0fbdf0715adb8b9f05f0a9b2c9272234285984d77b0239232714a"
+      "source": "composer/LICENSE",
+      "destination": "composer/LICENSE",
+      "sha256": "04f5c2ae9675b940c2d029471d91cfaca94477e231bead653a852d4196ba6eab"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/responsive-overlay.tsx",
-      "destination": "vendor/shared/components/ui/responsive-overlay.tsx",
-      "sha256": "f40ae1e494d30b3344015b77f57115c10d8e37199dbfe8aadf4981fcb2686fca"
+      "source": "composer/README.md",
+      "destination": "composer/README.md",
+      "sha256": "5426f233170fad4849f52d88c260f78dbb0e275c1f441fa1f5d3be349da452f5"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/hooks/use-pointer-coarse.ts",
-      "destination": "vendor/shared/components/ui/hooks/use-pointer-coarse.ts",
-      "sha256": "29936c113eca630b26af167bb694920a034216cfdcb408daef13512b9e0e9a9e"
+      "source": "composer/UPSTREAM.json",
+      "destination": "composer/UPSTREAM.json",
+      "sha256": "dd84963f713477457b5d7bf5de8f5b508143423988af5fd612a33451fdee7410"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/coarse-pointer-sizing.ts",
-      "destination": "vendor/shared/components/ui/coarse-pointer-sizing.ts",
-      "sha256": "31f20d42c88b52bbefeaa32f2358b8eb3a1d5851407e32ba80a09f0b0c0d4384"
+      "source": "composer/components/ui/button.tsx",
+      "destination": "composer/components/ui/button.tsx",
+      "sha256": "af7d9c03a7bbffe3cae6e1a8010025dfaeac6e0c00132be4741c4c7fdaa65e9c"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/chrome-style-tokens.ts",
-      "destination": "vendor/shared/components/ui/chrome-style-tokens.ts",
-      "sha256": "0b1f9c43338b7c223bf8547e138ab46716f7043d5fd34bf0a2a7cd6e5be415da"
+      "source": "composer/components/ui/chrome-style-tokens.ts",
+      "destination": "composer/components/ui/chrome-style-tokens.ts",
+      "sha256": "365b054918f0a1405acc0848a8b28dc9b58975ff3666fa369cde1a6270f34922"
     },
     {
-      "source": "plugins/composer/src/AttachmentPreview.tsx",
-      "destination": "src/AttachmentPreview.tsx",
-      "sha256": "6519f7623148e280bcff37e37f0cbd942d0d78567638cf207c5c2837fc3c9f7e"
+      "source": "composer/components/ui/coarse-pointer-sizing.ts",
+      "destination": "composer/components/ui/coarse-pointer-sizing.ts",
+      "sha256": "7a3c5cc480bc07e0109ff0df4eb1d4724f45704645b37d2bcd3ddd9ec3157d1e"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/video-thumbnail.tsx",
-      "destination": "vendor/shared/components/ui/video-thumbnail.tsx",
-      "sha256": "3cd4969f356dea3a80eca68b06ce95efd89926607baad87122bf2b6bed93d7c9"
+      "source": "composer/components/ui/compact-long-press-menu.tsx",
+      "destination": "composer/components/ui/compact-long-press-menu.tsx",
+      "sha256": "f3a19be9b0932d479997246ab9886f6bf5bdc9b90239a732599c0b609ff985b8"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/video.tsx",
-      "destination": "vendor/shared/components/ui/video.tsx",
-      "sha256": "9f84e75dfafe28e16f9773f2f9f01a154ad67b543727a9f45ee58d16d49af4e8"
+      "source": "composer/components/ui/dropdown-menu.tsx",
+      "destination": "composer/components/ui/dropdown-menu.tsx",
+      "sha256": "f5595ecc325edc9e1379c239bc250decbea43e631f835ffa1d2bea6394016009"
     },
     {
-      "source": "plugins/composer/src/composer-draft.ts",
-      "destination": "src/composer-draft.ts",
-      "sha256": "949604465d5d13fe16d237ce2143d8bece2e2be58002e477a9ff3f165b79d976"
+      "source": "composer/components/ui/hooks/use-compact-viewport.tsx",
+      "destination": "composer/components/ui/hooks/use-compact-viewport.tsx",
+      "sha256": "b3013333dc3f03f07b3c838684cec09fd4251cb227f4a17d1d992822596abeef"
     },
     {
-      "source": "plugins/composer/src/PromptBoxActionsMenu.tsx",
-      "destination": "src/PromptBoxActionsMenu.tsx",
-      "sha256": "2fa7bb67031107dac587015374afacf02d4f191f248337594cc03ac6203884c2"
+      "source": "composer/components/ui/hooks/use-media-query.ts",
+      "destination": "composer/components/ui/hooks/use-media-query.ts",
+      "sha256": "1535a5a98c5bd0d5af3851881e125d3a769431aa1b16a16b43712d61534ba05b"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/dropdown-menu.tsx",
-      "destination": "vendor/shared/components/ui/dropdown-menu.tsx",
-      "sha256": "ba5400b16b03ede153d28f0cfec3415e729c9d91ec2eb334e52b2a173dbf9ef9"
+      "source": "composer/components/ui/hooks/use-pointer-coarse.ts",
+      "destination": "composer/components/ui/hooks/use-pointer-coarse.ts",
+      "sha256": "0bbf586e94f0e33d3fff7f7f2a5cce06f51615e4824823bba5d1b1038550cf80"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/overlay-anchor.ts",
-      "destination": "vendor/shared/components/ui/overlay-anchor.ts",
-      "sha256": "ea1401f4cfdfa87c1125d61e5c0a378441fe77b0595016784d22b00532284eca"
+      "source": "composer/components/ui/icon.tsx",
+      "destination": "composer/components/ui/icon.tsx",
+      "sha256": "f15e92f43a70f69c65dd2e215f3a3f5b29cf49e05f53210fd4d2f1934fbf2f2b"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/menu-item-hover.tsx",
-      "destination": "vendor/shared/components/ui/menu-item-hover.tsx",
-      "sha256": "025a793f2babc01fce1a81193b68d27a86e3684ad1e9443f518a2c36602de20d"
+      "source": "composer/components/ui/menu-item-hover.tsx",
+      "destination": "composer/components/ui/menu-item-hover.tsx",
+      "sha256": "ce480f5a811e864fe9dc910eaa58e69b0433c731db039fb1bb86b8bddbd763d6"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-decoration-extension.ts",
-      "destination": "src/editor/prompt-decoration-extension.ts",
-      "sha256": "6ae5ee1f7777a7900ecdc54bdbfa461b283cf7ffb716aca1f3c89e6fccd65a74"
+      "source": "composer/components/ui/motion.ts",
+      "destination": "composer/components/ui/motion.ts",
+      "sha256": "3af25e23ecf7c2966fd6b83060ae6046d4791fd74b78eeb023e90fbbe3fff0d8"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-editor-serialization.ts",
-      "destination": "src/editor/prompt-editor-serialization.ts",
-      "sha256": "633f2cee9ab61c3e576defcfde45db23c4b62e1fc74ab78bcf318862b32a5928"
+      "source": "composer/components/ui/overlay-anchor.ts",
+      "destination": "composer/components/ui/overlay-anchor.ts",
+      "sha256": "d260f374909f46f91427f8c0ea529cbb8c4e3ea10947d9b0b1dcf58418227455"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-editor-extensions.ts",
-      "destination": "src/editor/prompt-editor-extensions.ts",
-      "sha256": "d9666e9b1857300fcbc89177776987fbc493749f2ea0be3c0e2c27abe400e514"
+      "source": "composer/components/ui/overlay-trigger.ts",
+      "destination": "composer/components/ui/overlay-trigger.ts",
+      "sha256": "55c0b4127e0b6118b8ba0e9a3eaadf5c58a9851b829c4e709a37a2cffb1c3e0c"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-mention-extension.ts",
-      "destination": "src/editor/prompt-mention-extension.ts",
-      "sha256": "2e37737b96ed25e8ac3a723508847bb552ddde82f38789ebb33c194fe850cc63"
+      "source": "composer/components/ui/pill.tsx",
+      "destination": "composer/components/ui/pill.tsx",
+      "sha256": "f21c1dfffd91307dfc77b104fe376b4c73ac88fe8d607d1a9fb1cd6254ba5ed2"
     },
     {
-      "source": "plugins/composer/src/editor/PromptMentionPillNodeView.tsx",
-      "destination": "src/editor/PromptMentionPillNodeView.tsx",
-      "sha256": "8037e743e2d27afa03ac1b9576f2c5b8c4d4168aa4c6b2e0b6505a7aa2933f25"
+      "source": "composer/components/ui/responsive-overlay.tsx",
+      "destination": "composer/components/ui/responsive-overlay.tsx",
+      "sha256": "a5973e3e93a64566b043740d2246cd58e64a7017dbd958e74777512556419ff7"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-mention-link.ts",
-      "destination": "src/editor/prompt-mention-link.ts",
-      "sha256": "5bbf365ed200ba694ed6fff77c452de68b4911a731fa9d8e3a446b31b005d938"
+      "source": "composer/components/ui/tooltip.tsx",
+      "destination": "composer/components/ui/tooltip.tsx",
+      "sha256": "4c8e0836e7dbf5b355cfaabcbb9643b122cf9a480121d9e882f18448ec649d53"
     },
     {
-      "source": "plugins/composer/src/editor/attachment-history.ts",
-      "destination": "src/editor/attachment-history.ts",
-      "sha256": "5afd71535714912a3a7a1e60e001e016243169e7b7536fd843e6c8d0de393081"
+      "source": "composer/components/ui/truncate-start.tsx",
+      "destination": "composer/components/ui/truncate-start.tsx",
+      "sha256": "3d4408e33f26487fe2610848df1edefb61c9a89b21a0fc0bb2e21fc04fc15254"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-thread-link-paste.ts",
-      "destination": "src/editor/prompt-thread-link-paste.ts",
-      "sha256": "144ba4b288cbca49daca2059104b8355a16f67345894383e89b5444cb94cf98a"
+      "source": "composer/components/ui/video-thumbnail.tsx",
+      "destination": "composer/components/ui/video-thumbnail.tsx",
+      "sha256": "f974ca2d799ccf2aea88176a0a798302ce01123aa72a17e8173aead01985412d"
     },
     {
-      "source": "plugins/composer/src/mentions/pasted-thread-link-candidates.ts",
-      "destination": "src/mentions/pasted-thread-link-candidates.ts",
-      "sha256": "5c3eb1918f33586edb8f33ddb9ecb581e501be52311a3a4cf88bc5499c5e35a7"
+      "source": "composer/components/ui/video.tsx",
+      "destination": "composer/components/ui/video.tsx",
+      "sha256": "4b95a1d8ed295362f75d8c3984d32b28c6e415e54c9d38112c388a7cb28d5f99"
     },
     {
-      "source": "plugins/composer/src/mentions/pasted-thread-links.ts",
-      "destination": "src/mentions/pasted-thread-links.ts",
-      "sha256": "c2fb06218b7749d07c0eeb29431b1152831046459fa1289a13f7cdd7d2ec42a1"
+      "source": "composer/lib/portal-scope.ts",
+      "destination": "composer/lib/portal-scope.ts",
+      "sha256": "c09f60f0bd973166d8bd0dd6537765c6efa8852292c28a918316224206049aae"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-editor-blockquote.ts",
-      "destination": "src/editor/prompt-editor-blockquote.ts",
-      "sha256": "b0515ba35b6720826ea08efab8eb464bb82db0da4d1fdf88c70200b50d2fb3b0"
+      "source": "composer/lib/utils.ts",
+      "destination": "composer/lib/utils.ts",
+      "sha256": "d41aaafa325f045738fcabd2944a4b6efd1dab62b922f9d56b59d831557c4c71"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-editor-transaction.ts",
-      "destination": "src/editor/prompt-editor-transaction.ts",
-      "sha256": "a7b585ae9095515a9a50ac003489a81538dd878f48ebe2d2f7ac52f16d353df9"
+      "source": "composer/notices.ts",
+      "destination": "composer/notices.ts",
+      "sha256": "eb9cff7c08449f5a76805cc51a1b6f85052e5d807fa260e2cda41af2340ffd3e"
     },
     {
-      "source": "plugins/composer/src/editor/prompt-editor-paragraph.ts",
-      "destination": "src/editor/prompt-editor-paragraph.ts",
-      "sha256": "4d5fe11b252295747223f385f5e448f52a08dd9fbe1c3ecd82fd31cc2c35e695"
+      "source": "composer/src/AttachmentPreview.tsx",
+      "destination": "composer/src/AttachmentPreview.tsx",
+      "sha256": "e6aefc29f430fef8baa7ab85da91ac2040a47880d59af8efe39009286b25ce12"
     },
     {
-      "source": "plugins/composer/src/mentions/MentionMenu.tsx",
-      "destination": "src/mentions/MentionMenu.tsx",
-      "sha256": "13db5d01a36104ae30309a990916071b328261e0c1aaa666050d46e75343862d"
+      "source": "composer/src/ComposerEditorSlot.tsx",
+      "destination": "composer/src/ComposerEditorSlot.tsx",
+      "sha256": "f4adc4f5d75430bd655b778313818625646dc6ad536d11595043fea4ad57dc42"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/pill.tsx",
-      "destination": "vendor/shared/components/ui/pill.tsx",
-      "sha256": "138774af672318dc3621131b315fa019d9966fb3d72004d0da3d411d7f322240"
+      "source": "composer/src/ComposerPopupHost.tsx",
+      "destination": "composer/src/ComposerPopupHost.tsx",
+      "sha256": "395741361a9cd9ce6ec290fa2c0dcae03fd6c0ade6b0335ef8c467090361df75"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/truncate-start.tsx",
-      "destination": "vendor/shared/components/ui/truncate-start.tsx",
-      "sha256": "b878b420cd871006e2230ed128a00f3e5979fa7c11f59358e21858c6afd70f6a"
+      "source": "composer/src/ComposerSendMenu.tsx",
+      "destination": "composer/src/ComposerSendMenu.tsx",
+      "sha256": "c29a0f00ce0d2422188273d9e685d3dea2c6c46d53c429df0bb704831aa7b878"
     },
     {
-      "source": "plugins/composer/src/useTypeaheadMenuMaxHeight.ts",
-      "destination": "src/useTypeaheadMenuMaxHeight.ts",
-      "sha256": "60085e0e65c808381cdc9bc96c767c9e3ce7cba5c52090578251ed011b56da90"
+      "source": "composer/src/PromptBoxActionsMenu.tsx",
+      "destination": "composer/src/PromptBoxActionsMenu.tsx",
+      "sha256": "a3a8d702444c02708253120e126ffd02a3143d89abd3fc6b384285eadf7ba359"
     },
     {
-      "source": "plugins/composer/src/ComposerEditorSlot.tsx",
-      "destination": "src/ComposerEditorSlot.tsx",
-      "sha256": "6ba053a19e652abeaf834a9e44022fd4639cae4bcc3a7f9f52c32011ae8970cd"
+      "source": "composer/src/PromptBoxInternal.tsx",
+      "destination": "composer/src/PromptBoxInternal.tsx",
+      "sha256": "12509bce5b0f10d6d1a719a42b011bc70e7f503e49949611ba1191eb22769cb7"
     },
     {
-      "source": "plugins/composer/src/modifier-submit-key.ts",
-      "destination": "src/modifier-submit-key.ts",
-      "sha256": "68774d52a49fb9d80d13cd92bb3baea8aa244f4f62324bfe68820058e41bcea3"
+      "source": "composer/src/PromptBoxInternal.unit.test.ts",
+      "destination": "composer/src/PromptBoxInternal.unit.test.ts",
+      "sha256": "5c6eeb274220fd46fc835dd1ae01c460ef982fb852aade3cf87b9810363a28fe"
     },
     {
-      "source": "plugins/composer/src/composer-submit-gate.ts",
-      "destination": "src/composer-submit-gate.ts",
-      "sha256": "5f2f98823e9adc781e726c87b3be30b40946c857cdf426aa140248ad89cceb46"
+      "source": "composer/src/attachments.ts",
+      "destination": "composer/src/attachments.ts",
+      "sha256": "aaf976db95bd669d23e6f8258e3ae3ff802cbbd51f28324edb7974ab1c76c6cc"
     },
     {
-      "source": "plugins/composer/src/ComposerSendMenu.tsx",
-      "destination": "src/ComposerSendMenu.tsx",
-      "sha256": "e16c1a532eccee76e4899d250cb728719e985951b2219426af371398d45ba3e8"
+      "source": "composer/src/composer-draft.ts",
+      "destination": "composer/src/composer-draft.ts",
+      "sha256": "c11629d281b08b50fb8572b1aaac87aac1021d097dce0a9050ad2e974b8c2b6d"
     },
     {
-      "source": "packages/shared-ui/src/components/ui/compact-long-press-menu.tsx",
-      "destination": "vendor/shared/components/ui/compact-long-press-menu.tsx",
-      "sha256": "aaf098e1dc50c93a234693e63fa03ff3650d597c28292303589f5ed41667ff8d"
+      "source": "composer/src/composer-submit-gate.ts",
+      "destination": "composer/src/composer-submit-gate.ts",
+      "sha256": "b7ea426d1a9e3a46cadbb8b31fcabce3e7a9130aadc5123a9d3c2a62aae2fbd3"
     },
     {
-      "source": "plugins/composer/src/composer.css",
-      "destination": "src/composer.css",
-      "sha256": "0eef0a4c5bad31f4c077fa70ba43e01252b505a448c342f979df31aa1e83b368"
+      "source": "composer/src/composer.css",
+      "destination": "composer/src/composer.css",
+      "sha256": "d60db97308777944bc9740e5843ce9235f0f1b72dea379f107913ce9dbccbad3"
+    },
+    {
+      "source": "composer/src/editor/PromptMentionPillNodeView.tsx",
+      "destination": "composer/src/editor/PromptMentionPillNodeView.tsx",
+      "sha256": "256f5c0bf5690687c0b740ce1e756902419e932fe0402100a598dc3ef29e5e70"
+    },
+    {
+      "source": "composer/src/editor/attachment-history.ts",
+      "destination": "composer/src/editor/attachment-history.ts",
+      "sha256": "b668d8a4dc884a5c77ab950ab0ab3ae28795acf52318dafda7e12943e280cfc8"
+    },
+    {
+      "source": "composer/src/editor/composer-mentions.ts",
+      "destination": "composer/src/editor/composer-mentions.ts",
+      "sha256": "47828c175df0a82d63dc9fe5c267173e87de4a9e864f8b487e16c00cb02a9f75"
+    },
+    {
+      "source": "composer/src/editor/minified-js-paste-fixture.ts",
+      "destination": "composer/src/editor/minified-js-paste-fixture.ts",
+      "sha256": "a3b18fc6716b503e525aa3bc1aa533e175a1346282cbc1fab42da2f4f30ef27c"
+    },
+    {
+      "source": "composer/src/editor/prompt-decoration-extension.test.ts",
+      "destination": "composer/src/editor/prompt-decoration-extension.test.ts",
+      "sha256": "ca48a048b2d687b9627a3c03fb90e28c4d60ae5dcb39cbd7a887db7d98c03c90"
+    },
+    {
+      "source": "composer/src/editor/prompt-decoration-extension.ts",
+      "destination": "composer/src/editor/prompt-decoration-extension.ts",
+      "sha256": "6672d050e36b278ddc37df570722e8db78ddf14bfb9e0619f6ad5527d6087a65"
+    },
+    {
+      "source": "composer/src/editor/prompt-editor-blockquote.test.ts",
+      "destination": "composer/src/editor/prompt-editor-blockquote.test.ts",
+      "sha256": "faf3ebf3b7424a1b90954a84db999b4903c01964234dde5b32803418bb8ca7ca"
+    },
+    {
+      "source": "composer/src/editor/prompt-editor-blockquote.ts",
+      "destination": "composer/src/editor/prompt-editor-blockquote.ts",
+      "sha256": "ce2fed0567ab2b783819808e5407fe3b5e204923a62949ea9056f2862031542b"
+    },
+    {
+      "source": "composer/src/editor/prompt-editor-extensions.ts",
+      "destination": "composer/src/editor/prompt-editor-extensions.ts",
+      "sha256": "f0797171f5ee51b4395973ac59178ae0fbdff20b903bddfd345574321301ffba"
+    },
+    {
+      "source": "composer/src/editor/prompt-editor-paragraph.test.ts",
+      "destination": "composer/src/editor/prompt-editor-paragraph.test.ts",
+      "sha256": "ae603c960b7d13e9c45f8779acf25054a4b63851b924cd3d23693046932e15ab"
+    },
+    {
+      "source": "composer/src/editor/prompt-editor-paragraph.ts",
+      "destination": "composer/src/editor/prompt-editor-paragraph.ts",
+      "sha256": "88f55ce7d0847409a4084e88493585c54eb7fb6e742a2202fd632748061d4f93"
+    },
+    {
+      "source": "composer/src/editor/prompt-editor-serialization.test.ts",
+      "destination": "composer/src/editor/prompt-editor-serialization.test.ts",
+      "sha256": "6cd1e63ea76fe9ee26577145095810ebbd35d734b72d624cc2e6d931c1badfec"
+    },
+    {
+      "source": "composer/src/editor/prompt-editor-serialization.ts",
+      "destination": "composer/src/editor/prompt-editor-serialization.ts",
+      "sha256": "285db3d16e57359b931eec9321d826de7591b65d0ea019dee5ebe35f345cfe51"
+    },
+    {
+      "source": "composer/src/editor/prompt-editor-transaction.ts",
+      "destination": "composer/src/editor/prompt-editor-transaction.ts",
+      "sha256": "3b7276a70d9882cc289e6cc094249a097512679cc94dbee474318c018d824db5"
+    },
+    {
+      "source": "composer/src/editor/prompt-mention-extension.ts",
+      "destination": "composer/src/editor/prompt-mention-extension.ts",
+      "sha256": "c8fc87df5c40021a9d5a449a0b4ffbe7d752a5d18b9fb54d497f6cf9b85a53cf"
+    },
+    {
+      "source": "composer/src/editor/prompt-mention-link.ts",
+      "destination": "composer/src/editor/prompt-mention-link.ts",
+      "sha256": "a2847cf0996bf1585b208cc6ad43e1b46c1f9107b7090be3adbedd9e116b4605"
+    },
+    {
+      "source": "composer/src/editor/prompt-paste-performance.test.ts",
+      "destination": "composer/src/editor/prompt-paste-performance.test.ts",
+      "sha256": "e80e322cb8fcddf85ffd68411f4b5d0997c0c0d620859cab3eb028d224b935ef"
+    },
+    {
+      "source": "composer/src/editor/prompt-thread-link-paste.test.ts",
+      "destination": "composer/src/editor/prompt-thread-link-paste.test.ts",
+      "sha256": "30b8d1c096e89fe061caaf785cd0e09f825465701f391c8ba7f8be17678ffaf8"
+    },
+    {
+      "source": "composer/src/editor/prompt-thread-link-paste.ts",
+      "destination": "composer/src/editor/prompt-thread-link-paste.ts",
+      "sha256": "d0dfcc405be6acdb73e6034f898a827530299a78404fae877016a5fd0710f086"
+    },
+    {
+      "source": "composer/src/mentions/MentionMenu.test.tsx",
+      "destination": "composer/src/mentions/MentionMenu.test.tsx",
+      "sha256": "cf8c0a170f5593b722212a892f75a0e9c422c9bb0dbf7187f343ba95ff703679"
+    },
+    {
+      "source": "composer/src/mentions/MentionMenu.tsx",
+      "destination": "composer/src/mentions/MentionMenu.tsx",
+      "sha256": "2c8574869b07aa431bc4c8936dd4ba796195bb962c2ef91c675b2c33c7e0466f"
+    },
+    {
+      "source": "composer/src/mentions/find-active-trigger.test.ts",
+      "destination": "composer/src/mentions/find-active-trigger.test.ts",
+      "sha256": "c40f75cabb60939ed78cac2a98cddab67f3347d792c60fe6c0c70efec92f4f82"
+    },
+    {
+      "source": "composer/src/mentions/find-active-trigger.ts",
+      "destination": "composer/src/mentions/find-active-trigger.ts",
+      "sha256": "3f0e1a37cdda42aab22656534a03c1a5f34f2ee37d36d7be471042150e6f0e06"
+    },
+    {
+      "source": "composer/src/mentions/pasted-thread-link-candidates.ts",
+      "destination": "composer/src/mentions/pasted-thread-link-candidates.ts",
+      "sha256": "24cebd55c3c0300fd90eeb8ab41b1fa100d81e85eb5d6e22132c44bbd5aad5eb"
+    },
+    {
+      "source": "composer/src/mentions/pasted-thread-links.test.ts",
+      "destination": "composer/src/mentions/pasted-thread-links.test.ts",
+      "sha256": "97a63f8f44046e70558f548cb82a1bd9d6deb79fd1c36828de9b05f6d3d8084e"
+    },
+    {
+      "source": "composer/src/mentions/pasted-thread-links.ts",
+      "destination": "composer/src/mentions/pasted-thread-links.ts",
+      "sha256": "c1fdee7db39757b25bb0d6eac4fbd3d9843c49298f3849082278c8579683e8ce"
+    },
+    {
+      "source": "composer/src/mentions/typeahead-suggestions.ts",
+      "destination": "composer/src/mentions/typeahead-suggestions.ts",
+      "sha256": "eb7f887043dcd64978c17bf86f133c7b4f6727302f4da19f5cf8cf08126da466"
+    },
+    {
+      "source": "composer/src/modifier-submit-key.test.ts",
+      "destination": "composer/src/modifier-submit-key.test.ts",
+      "sha256": "aeb348d977ce19735867532d476cb6cd5e80a058b3f682f88f69dff04819d7d9"
+    },
+    {
+      "source": "composer/src/modifier-submit-key.ts",
+      "destination": "composer/src/modifier-submit-key.ts",
+      "sha256": "53acb3ab0ff254761c18e631f78714e6d48e3fff16975dec5fb8749d695f07f0"
+    },
+    {
+      "source": "composer/src/styles.d.ts",
+      "destination": "composer/src/styles.d.ts",
+      "sha256": "9be7ea778895c94059af08e9d0386027594def4a9cd488504959de7fa7bd3590"
+    },
+    {
+      "source": "composer/src/useTypeaheadMenuMaxHeight.ts",
+      "destination": "composer/src/useTypeaheadMenuMaxHeight.ts",
+      "sha256": "9b0104bbc59c393d361262b93e470c616635d5b78ee9db4ed237d316d40cc05c"
+    },
+    {
+      "source": "composer/test-setup.ts",
+      "destination": "composer/test-setup.ts",
+      "sha256": "03f34c1e28be3e9f176ec7a994b0e0f2ddde84aba1a19411e34f1f9b6cd08a94"
+    },
+    {
+      "source": "composer/tiptap-blockquote/LICENSE.md",
+      "destination": "composer/tiptap-blockquote/LICENSE.md",
+      "sha256": "85c548940912bb068a2f9ed042fddc6c38c547cbbb7527cf1ab08a3eb3474624"
+    },
+    {
+      "source": "composer/tiptap-blockquote/UPSTREAM.json",
+      "destination": "composer/tiptap-blockquote/UPSTREAM.json",
+      "sha256": "07c48e2c1213b7ba2700fc1dd744da758557f887a9c7b85c215f5394c0566511"
+    },
+    {
+      "source": "composer/tiptap-blockquote/blockquote.tsx",
+      "destination": "composer/tiptap-blockquote/blockquote.tsx",
+      "sha256": "038ddecc8ced089e9ba99cc52e42727abbdf5fee9ce448ff015030a9a1fa4781"
+    },
+    {
+      "source": "composer/tiptap-blockquote/handleBackspace.ts",
+      "destination": "composer/tiptap-blockquote/handleBackspace.ts",
+      "sha256": "a8da43d610d606feae36d9729e6ed98eebd8c05b81323b7bea2113bedc672084"
+    },
+    {
+      "source": "composer/vitest.config.ts",
+      "destination": "composer/vitest.config.ts",
+      "sha256": "918eb16a2eead8987d9490729b7662fb486f0c49cbc26a0d0831351f531636b8"
+    },
+    {
+      "source": "composer/voice-bars-renderer.test.ts",
+      "destination": "composer/voice-bars-renderer.test.ts",
+      "sha256": "25f37036ca47ad24fdc33058b426c2d073fe1bc6b78b264ad2cba07f88634cdb"
+    },
+    {
+      "source": "composer/voice-bars-renderer.ts",
+      "destination": "composer/voice-bars-renderer.ts",
+      "sha256": "c889ec254bdfe2fd49d51e2d19c97870364ee7324ec1e1c0078c45d5ccc5a8e5"
+    },
+    {
+      "source": "composer/voice-glow-renderer.test.ts",
+      "destination": "composer/voice-glow-renderer.test.ts",
+      "sha256": "e0bfcb045fd91cd2427eff583eaf951acd2c60dacbd24084801330487b514a59"
+    },
+    {
+      "source": "composer/voice-glow-renderer.ts",
+      "destination": "composer/voice-glow-renderer.ts",
+      "sha256": "91ae32969ad1b87d6daaceffe9ca8c1dc0246eee43b1aa773d318d08421fb0be"
+    },
+    {
+      "source": "composer/voice-orb-renderer.test.ts",
+      "destination": "composer/voice-orb-renderer.test.ts",
+      "sha256": "2bbe3e56c9a9fd252a346c0482f0791248666246dbe5a3b858fc55b394858c32"
+    },
+    {
+      "source": "composer/voice-orb-renderer.ts",
+      "destination": "composer/voice-orb-renderer.ts",
+      "sha256": "1569ce73268f536dc5d836ca7f57fae32e47a2dfc6169a047262bddce0e9109d"
+    },
+    {
+      "source": "lib/device.ts",
+      "destination": "lib/device.ts",
+      "sha256": "b884b6cb236c3243904fd260b3c12e8ec5fffadff96478d34d7f146a15a4777d"
+    },
+    {
+      "source": "lib/use-device.ts",
+      "destination": "lib/use-device.ts",
+      "sha256": "05f83d67e2a937d1a9a7e45eed325a7dab33d60c7ee33cee4846173be03f6e1c"
+    },
+    {
+      "source": "lib/device-root.ts",
+      "destination": "lib/device-root.ts",
+      "sha256": "3c5de2b416027521401f0050afa74b6ce6248c8db82c8218cd95c5271600b769"
+    },
+    {
+      "source": "lib/device-chrome.ts",
+      "destination": "lib/device-chrome.ts",
+      "sha256": "ff7ea5666d2a2379bc67f2aaa7306a02aec090df36ff66f6ac16e26cf2c3f7f4"
+    },
+    {
+      "source": "lib/motion.ts",
+      "destination": "lib/motion.ts",
+      "sha256": "3bd4c9549956f316085f2365e697228ebd68a4652341e1cd01d24843d7378ba1"
+    },
+    {
+      "source": "lib/glass-surface.ts",
+      "destination": "lib/glass-surface.ts",
+      "sha256": "2799f2f01a563253aa6694736a06f047e7b3a3591fccbecbd7fe812b5f941822"
+    },
+    {
+      "source": "lib/fluid-composer.ts",
+      "destination": "lib/fluid-composer.ts",
+      "sha256": "0338428bdecf919c32f14cdc2dc2d1bf58b75f7df22153276f8f4f6c50f8bdec"
+    },
+    {
+      "source": "lib/fluid-composer-height.ts",
+      "destination": "lib/fluid-composer-height.ts",
+      "sha256": "4bcb1369283f2574b56030ecf5dbf069514f696c9d366a64c653febc47454dbf"
+    },
+    {
+      "source": "lib/fluid-composer-height.test.ts",
+      "destination": "lib/fluid-composer-height.test.ts",
+      "sha256": "f903773e5526caddd0630cdf446e07d2121bad4279898e902b2a3564a0f8c368"
+    },
+    {
+      "source": "lib/fluid-composer-layout.ts",
+      "destination": "lib/fluid-composer-layout.ts",
+      "sha256": "e9b8279854cddaf1d1110d331fcdb3fd886b9ef6637c3a67e36b17fb5fd4090e"
+    },
+    {
+      "source": "lib/fluid-composer-layout.test.ts",
+      "destination": "lib/fluid-composer-layout.test.ts",
+      "sha256": "8f6bf88f16a77bba392f49c20d1145462e8cc5df9e7f8cc462e8c0c6c0a7fc6f"
+    },
+    {
+      "source": "lib/composer-scroll-boundary.ts",
+      "destination": "lib/composer-scroll-boundary.ts",
+      "sha256": "b11c1a5de30ec470e00d623acc35cbc11ea9e4f471ea213a9680bfff36a45ec2"
+    },
+    {
+      "source": "lib/hold-voice.ts",
+      "destination": "lib/hold-voice.ts",
+      "sha256": "09ea8fa4b19b013c81cfecd079390df17068786d5a9f51408cfff20731b1998f"
+    },
+    {
+      "source": "lib/hold-voice.test.ts",
+      "destination": "lib/hold-voice.test.ts",
+      "sha256": "cc30077875a61496746c0e910cf4b17a06657ca5a675d183b7eae8ecf583de44"
+    },
+    {
+      "source": "lib/live-voice-preview.ts",
+      "destination": "lib/live-voice-preview.ts",
+      "sha256": "de7fbd29b459c3dc4aa659c44de93e90c36cc9f671210c9bcab8026e61a45907"
+    },
+    {
+      "source": "lib/send-haptic.ts",
+      "destination": "lib/send-haptic.ts",
+      "sha256": "8874bf049a4f869e1e3ad261fc6196f4498614b720d91e98fbb7c3a493e34ac4"
     }
-  ],
-  "externalDependencies": [
-    "@get-bb/plugin-sdk",
-    "@radix-ui/react-dropdown-menu",
-    "@radix-ui/react-slot",
-    "@radix-ui/react-tooltip",
-    "@tiptap/core",
-    "@tiptap/extension-blockquote",
-    "@tiptap/extension-document",
-    "@tiptap/extension-hard-break",
-    "@tiptap/extension-mention",
-    "@tiptap/extension-paragraph",
-    "@tiptap/extension-text",
-    "@tiptap/extensions",
-    "@tiptap/pm",
-    "@tiptap/react",
-    "class-variance-authority",
-    "clsx",
-    "mdast",
-    "nanoid",
-    "react",
-    "react-dom",
-    "remark-parse",
-    "tailwind-merge",
-    "unified",
-    "zod"
   ]
 }

@@ -10,25 +10,28 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "noEmit": true,
-    "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
     "types": [
       "node"
     ],
-    "paths": {
-      "@/*": [
-        "./vendor/shared/*"
-      ]
-    }
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true
   },
   "include": [
-    "app.tsx",
     "server.ts",
-    "src",
-    "lib",
-    "vendor",
-    "tests",
+    "app.tsx",
+    "lib/**/*.ts",
+    "composer/**/*.tsx",
+    "composer/**/*.ts",
+    "tests/**/*.tsx",
     "vitest.config.ts"
+  ],
+  "exclude": [
+    "lib/**/*.test.ts",
+    "composer/**/*.test.ts",
+    "composer/**/*.test.tsx",
+    "composer/**/*.stories.tsx",
+    "composer/test-setup.ts",
+    "composer/vitest.config.ts"
   ]
 }

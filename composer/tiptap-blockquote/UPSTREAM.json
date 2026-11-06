@@ -1,0 +1,10 @@
+{
+  "package": "@tiptap/extension-blockquote",
+  "version": "3.26.0",
+  "reason": "BB upstream patch와 동일하게 공유 @tiptap/pm/state를 사용한다. npm 배포 dist의 중복 ProseMirror state를 번들에 넣지 않는다.",
+  "sourceFiles": {
+    "src/blockquote.tsx": "89741c8c154f633848f80332a575d25261fe554e2d3164a5f9b71b412a37488a",
+    "src/handleBackspace.ts": "5a54358070ea1e11c0cbd9d13b27a5e0acf99e11a29c44ef49665aa3eba53c91",
+    "LICENSE.md": "c96e5ecb55ac593157ad1d21d1f44a611187f494a0f04c235a1ae692c88d6ba9"
+  }
+}
