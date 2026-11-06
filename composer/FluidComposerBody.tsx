@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { bindFluidComposerHeight, FLUID_COMPOSER_MORPH_MS } from '../lib/fluid-composer-height';
+import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_MORPH_MS } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
-/** 입력 엔진과 분리한 한 줄 기본 레이아웃. 내용의 자연 높이만 전환한다. */
+// 입력 엔진과 분리한 레이아웃에서 내용 높이와 한 줄·여러 줄 모서리 상태를 전달한다.
 export function FluidComposerBody({ editor, options, actions, attachments, voice, voiceMode = false, decoration, auxiliary, panel, panelOpen = false, toggle, draftText, editorReady = true }: {
   editor: ReactNode;
   options: ReactNode;
@@ -131,7 +131,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!previous || !column?.animate || column.ownerDocument.defaultView!.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const next = (column.querySelector('[data-bb-chat-ui-voice-transcript], .ProseMirror') ?? column).getBoundingClientRect(), dx = previous.x - next.x, dy = previous.y - next.y;
     if (!dx && !dy) return;
-    layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_MORPH_MS, easing: multiline ? EASE.droplet : EASE.out });
+    layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_INPUT_MS, easing: EASE.out });
   }, [multiline]);
   useLayoutEffect(() => {
     const win = viewport.current?.ownerDocument.defaultView;
@@ -154,7 +154,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     motion.addEventListener('change', reduce);
     return () => { win.clearTimeout(timer); motion.removeEventListener('change', reduce); };
   }, [panelOpen, retainedPanel, entered]);
-  return <div ref={viewport} data-bb-chat-ui-fluid-height="" data-bb-chat-ui-fluid-view={panelOpen ? 'options' : 'input'} data-voice-mode={voiceMode || undefined}>
+  return <div ref={viewport} data-bb-chat-ui-fluid-height="" data-multiline={multiline} data-bb-chat-ui-fluid-view={panelOpen ? 'options' : 'input'} data-voice-mode={voiceMode || undefined}>
     <div data-bb-chat-ui-fluid-surface="" aria-hidden="true"/>
     {decoration}
     <div ref={content} data-bb-chat-ui-fluid-content="">

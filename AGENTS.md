@@ -55,7 +55,7 @@
 - 이 플러그인의 제품 규칙은 이 절에 쓴다.
 - 공식 `experimental_composer` 슬롯으로 입력 상자 전체를 교체한다. BB 앱과 기존 Chat UI는 수정하지 않는다.
 - `composer/`와 직접 의존하는 `lib/`는 Chat UI의 Fluid 통합 커밋에서 복사하며 출처·파일 해시는 `docs/upstream-source.json`으로 확인한다. 이전 독립 입력기와 모션은 Git 이력에 보존한다.
-- 입력 스쿼클은 지원 시 desktop 50.6px·phone 54.9px이며, 미지원은 24px·26px을 유지한다. 옵션 카드·원형 버튼과 Fluid의 높이·음성 전환은 원본대로 유지한다.
+- 한 줄 입력은 desktop 24px·phone 26px의 반원을 유지한다. 여러 줄 입력의 실제 clip에만 지원 시 스쿼클 desktop 50.6px·phone 54.9px을 적용하며 미지원은 기존 둥근 모서리를 유지한다. 옵션 카드·원형 버튼과 Fluid의 높이·음성 전환은 원본대로 유지한다.
 - 제품 스타일과 기기 bridge는 이 플러그인의 컴포저가 mount된 동안만 연결한다. 선택하지 않은 상태에서 Chat UI의 정보 줄·footer를 숨기는 전역 content script를 등록하지 않는다.
 - Chat UI의 메시지·인용·목차·정보 카드 controller는 가져오지 않는다. 실제 역할 분리와 현재 선택된 컴포저의 변경은 별도 작업이다.
 - 실제 분리 전의 입력기 변경 정본은 bb-chat-ui이며, 이 저장소의 제품 사본을 독자적으로 변경하지 않는다. 동기화할 때 출처·파일 해시를 함께 갱신한다.

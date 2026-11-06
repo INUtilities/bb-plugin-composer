@@ -18,7 +18,6 @@ html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-de
   --bb-chat-ui-fluid-options-offset:calc(var(--bb-chat-ui-fluid-toggle-size) + 4px);
   position:relative; width:100%; min-width:0; margin:0; padding:0 calc(var(--bb-chat-ui-fluid-control-size) + 8px) 0 0; box-sizing:border-box;
   border:0; border-radius:var(--bb-chat-ui-fluid-input-radius); color:var(--foreground);
-  transition:border-radius ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out};
   background:transparent;
 }
 [data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face], [data-bb-chat-ui-fluid-details-face], [data-bb-chat-ui-fluid-details] {
@@ -40,7 +39,8 @@ html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-de
 [data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] > [data-bb-chat-ui-fluid-surface] { transform:translateX(var(--bb-chat-ui-fluid-options-offset)); }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --bb-chat-ui-fluid-input-radius:26px; --bb-chat-ui-fluid-control-size:36px; --bb-chat-ui-fluid-device-max:35dvh; }
 .dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face], .dark [data-bb-chat-ui-fluid-details-face], .dark [data-bb-chat-ui-fluid-details] { background:${DARK_GLASS_FACE}; box-shadow:0 8px 24px -12px color-mix(in oklab,var(--background) 60%,transparent),inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
-[data-bb-chat-ui-fluid-height] { position:relative; display:flex; flex-direction:column; justify-content:flex-end; overflow:clip; border-radius:inherit; }
+[data-bb-chat-ui-fluid-height] { position:relative; display:flex; flex-direction:column; justify-content:flex-end; overflow:clip; border-radius:var(--bb-chat-ui-fluid-input-radius); }
+[data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] { border-radius:26px; }
 [data-bb-chat-ui-fluid-toggle] { position:absolute; left:8px; bottom:8px; z-index:1; display:flex; border-radius:999px; }
 [data-bb-chat-ui-fluid-toggle-face] { inset:4px; opacity:0; transition:opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
 [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-toggle] > button { position:relative; background:transparent; }
@@ -176,12 +176,11 @@ html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-visual] > [data-bb-
 [data-bb-chat-ui-voice-bars-space] { flex:none; height:24px; }
 [data-bb-chat-ui-voice-bars-space][data-has-preview="true"] { height:32px; }
 @media (prefers-reduced-motion: reduce) { [data-bb-chat-ui-voice-neck] { animation:none !important; opacity:0; } [data-bb-chat-ui-voice-actions] > button::before { animation:none !important; } [data-bb-chat-ui-voice-waveform] { transition:none !important; } }
-/* 입력 상자에만 스쿼클을 적용하고 옵션 카드와 원형 버튼은 유지한다. */
+/* 한 줄은 반원을 유지하고 여러 줄 입력의 실제 clip과 배경만 스쿼클로 바꾼다. */
 @supports (corner-shape: squircle) {
-  [data-bb-chat-ui-fluid-composer] { --bb-chat-ui-fluid-input-radius:50.6px; }
-  html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --bb-chat-ui-fluid-input-radius:54.9px; }
-  [data-bb-chat-ui-fluid-composer]:not([data-bb-chat-ui-fluid-view="options"]) { corner-shape:squircle; }
-  [data-bb-chat-ui-fluid-height],
+  [data-bb-chat-ui-fluid-height] { corner-shape:round; }
+  [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"] { border-radius:50.6px; corner-shape:squircle; }
+  html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"] { border-radius:54.9px; }
   [data-bb-chat-ui-fluid-height] > [data-bb-chat-ui-fluid-surface],
   [data-bb-chat-ui-fluid-height] > [data-bb-chat-ui-voice-glow] { corner-shape:inherit; }
 }

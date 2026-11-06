@@ -55,7 +55,7 @@ test('fluid composer follows wrapping, newlines, deletion and rapid retargeting'
     for (const height of [76, 100, 124, 76, 52]) {
       f.resize(height);
       assert.equal(f.viewport.style.height, `${height}px`);
-      assert.match(f.viewport.style.transition, /height 320ms/);
+      assert.match(f.viewport.style.transition, /height 120ms/);
     }
     f.resize(52);
     assert.equal(f.viewport.style.height, '52px');
@@ -72,24 +72,24 @@ test('reduced motion changes immediately and resumes for later height changes', 
     assert.equal(f.viewport.style.transition, 'none');
     f.reduce(false);
     f.resize(52);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 120ms/);
   } finally { f.stop(); f.dom.window.close(); }
 });
 
-test('text growth eases into its new height while shrinking and option morphs retain their existing curve', async () => {
+test('typing synchronizes fast height and corners while option morphs retain their existing duration', async () => {
   const f = fixture();
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'input');
     for (const height of [76, 100, 148]) {
       f.resize(height);
-      assert.equal(f.viewport.style.transition, `height 320ms ${EASE.droplet}`);
+      assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 120ms ${EASE.out}`).join(', '));
     }
     f.resize(52);
-    assert.equal(f.viewport.style.transition, `height 320ms ${EASE.out}`);
+    assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 120ms ${EASE.out}`).join(', '));
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'options');
     f.resize(212);
-    assert.equal(f.viewport.style.transition, `height 320ms ${EASE.out}`);
+    assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 320ms ${EASE.out}`).join(', '));
   } finally { f.stop(); f.dom.window.close(); }
 });
 

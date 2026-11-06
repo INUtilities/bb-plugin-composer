@@ -29,7 +29,8 @@ it('keeps the height curve but releases the moving caret immediately when typing
   act(()=>vi.advanceTimersByTime(20));
   lines=3;v.rerender(draw('세 줄'));act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
-  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.droplet});
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
+  expect(animations.at(-1)!.options).toEqual({duration:120,easing:EASE.out});
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
   const bubbled=vi.fn();v.container.addEventListener('beforeinput',bubbled);
   const input=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});
@@ -37,10 +38,11 @@ it('keeps the height curve but releases the moving caret immediately when typing
   expect(animations.at(-1)!.cancel).toHaveBeenCalled();
   expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
   expect(input.defaultPrevented).toBe(false);expect(bubbled).toHaveBeenCalledOnce();
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 320ms');
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 120ms');
   lines=1;v.rerender(draw('한 줄'));act(()=>vi.advanceTimersByTime(20));
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('false');
   expect(animations[0].cancel).toHaveBeenCalled();
-  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
+  expect(animations.at(-1)!.options).toEqual({duration:120,easing:EASE.out});
   Object.defineProperty(animate.mock.results.at(-1)!.value,'playState',{value:'finished'});
   editor!.dispatchEvent(new InputEvent('beforeinput',{inputType:'insertText',bubbles:true}));
   expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
