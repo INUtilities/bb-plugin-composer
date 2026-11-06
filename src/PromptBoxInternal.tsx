@@ -3272,10 +3272,11 @@ export function PromptBoxInternal({
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [cancelVoiceInput, showVoiceActionGroup, voice]);
 
+  // 기존 Chat UI가 기본 입력기에만 연결하는 DOM 전환과 분리한다.
   return (
     <form
       ref={formRef}
-      data-promptbox=""
+      data-composer-promptbox=""
       data-promptbox-compact={showCompactLayout ? "" : undefined}
       data-promptbox-collapsed={compact === undefined ? undefined : ""}
       data-promptbox-voice-active={showVoiceActionGroup ? "" : undefined}

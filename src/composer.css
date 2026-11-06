@@ -66,61 +66,61 @@
 }
 
 @container follow-up-composer style(--follow-up-composer-container-compact: true) {
-  [data-promptbox] [data-promptbox-layout] {
+  [data-composer-promptbox] [data-promptbox-layout] {
     height: 100%;
   }
 
-  [data-promptbox] [data-promptbox-main] {
+  [data-composer-promptbox] [data-promptbox-main] {
     position: static;
   }
 
-  [data-promptbox] [data-promptbox-submit-group] {
+  [data-composer-promptbox] [data-promptbox-submit-group] {
     position: static;
     z-index: 1;
   }
 
-  [data-promptbox] [data-promptbox-submit-action] {
+  [data-composer-promptbox] [data-promptbox-submit-action] {
     width: auto;
     aspect-ratio: 1;
     margin-left: 0;
   }
 
-  [data-promptbox] [data-promptbox-submit-label] {
+  [data-composer-promptbox] [data-promptbox-submit-label] {
     display: none;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not(
+  [data-composer-promptbox][data-promptbox-collapsed]:not(
       [data-promptbox-voice-active]
     ) {
     overflow: hidden;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-action-row] {
     flex-wrap: nowrap;
     gap: 0;
     padding: 0 0.5rem 0 0;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-main] {
     display: flex;
     align-items: center;
     height: 3rem;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-input-region] {
     flex: 1 1 0%;
     min-width: 0;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-expanded-only] {
     display: none !important;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-scroll] {
     height: 3rem !important;
     min-height: 3rem !important;
@@ -131,14 +131,14 @@
     padding-right: 0.5rem;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content] {
     display: flex;
     align-items: center;
     height: 100%;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .ProseMirror[contenteditable] {
     width: 100%;
@@ -149,11 +149,11 @@
     white-space: nowrap !important;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .ProseMirror[contenteditable]
     > *,
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .ProseMirror[contenteditable]
     :where(blockquote, p) {
@@ -169,12 +169,12 @@
     white-space: inherit;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .ProseMirror[contenteditable]
     > *
     + *::before,
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .ProseMirror[contenteditable]
     :where(blockquote)
@@ -183,7 +183,7 @@
     content: " ";
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .ProseMirror[contenteditable]
     br {
@@ -191,21 +191,21 @@
     content: " ";
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .ProseMirror[contenteditable]
     br::after {
     content: " ";
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .prompt-mention-pill
     > span:last-child {
     min-width: 0;
   }
 
-  [data-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
+  [data-composer-promptbox][data-promptbox-collapsed]:not([data-promptbox-voice-active])
     [data-promptbox-editor-content]
     .ProseMirror
     p.is-editor-empty:first-child::before {
