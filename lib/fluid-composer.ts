@@ -67,6 +67,7 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --b
 [data-bb-chat-ui-fluid-panel-list] [role="menuitem"] > span { min-width:0; }
 [data-bb-chat-ui-fluid-panel-list] > p { margin:8px; color:var(--muted-foreground); font-size:12px; line-height:18px; }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-panel-list] [role="menuitem"] { min-height:36px; padding:8px; font-size:13px; }
+html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }
 [data-bb-chat-ui-fluid-row] { display:grid; flex:1 1 auto; grid-template-columns:auto minmax(0,1fr) auto; grid-template-rows:minmax(0,1fr); grid-template-areas:"options editor actions"; align-items:end; gap:4px; padding:8px; min-height:48px; box-sizing:border-box; }
 [data-bb-chat-ui-fluid-row][data-multiline="true"] { grid-template-areas:"editor editor editor" "options . actions"; grid-template-rows:minmax(0,1fr) auto; row-gap:8px; }
 [data-bb-chat-ui-fluid-row][data-voice-mode="true"] { grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); grid-template-areas:". actions ."; grid-template-rows:auto; row-gap:0; padding:0 8px; }

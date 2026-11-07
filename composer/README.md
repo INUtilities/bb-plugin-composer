@@ -273,3 +273,10 @@ iPhone의 실제 Enter `keydown`은 기본 입력 경로에 맡긴다. 한글 �
 ProseMirror가 아직 처리하지 않은 Enter 뒤에 다음 키의 `keydown`이 오면 그 키보다 먼저
 같은 공개 view 경로로 Enter를 처리한다. 그 사이 문서가 바뀌었거나 ProseMirror가 이미
 Enter를 처리했다면 건너뛴다. 이 Enter의 native 줄바꿈 요청이 늦게 오면 한 번만 취소한다.
+
+## phone 배치 전환 중 커서
+
+한 줄 배치와 여러 줄 배치가 바뀌면 입력 열은 `transform`으로 새 위치까지 이동한다.
+iOS는 커서를 페이지 밖에서 그려 이 이동을 frame마다 따라가지 않으므로, phone에서는
+이 이동이 끝나거나 취소될 때까지 입력의 `caret-color`만 투명하게 둔다. 높이·모서리·이동의
+시간과 곡선, desktop 커서는 바꾸지 않는다.

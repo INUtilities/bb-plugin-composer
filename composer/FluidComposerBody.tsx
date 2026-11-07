@@ -163,7 +163,14 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!previous || !column?.animate || column.ownerDocument.defaultView!.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const next = (column.querySelector('[data-bb-chat-ui-voice-transcript], .ProseMirror') ?? column).getBoundingClientRect(), dx = previous.x - next.x, dy = previous.y - next.y;
     if (!dx && !dy) return;
-    layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: multiline ? FLUID_COMPOSER_LINE_MS : FLUID_COMPOSER_MORPH_MS, easing: EASE.out });
+    const animation = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: multiline ? FLUID_COMPOSER_LINE_MS : FLUID_COMPOSER_MORPH_MS, easing: EASE.out });
+    layoutAnimation.current = animation;
+    // iOS draws its caret outside the page and does not follow this transform,
+    // so phone CSS hides the caret until the column reaches its new place.
+    column.setAttribute('data-bb-chat-ui-fluid-moving', '');
+    animation.onfinish = animation.oncancel = () => {
+      if (layoutAnimation.current === animation || layoutAnimation.current === null) column.removeAttribute('data-bb-chat-ui-fluid-moving');
+    };
   }, [multiline]);
   useLayoutEffect(() => {
     const win = viewport.current?.ownerDocument.defaultView;

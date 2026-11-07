@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { FluidComposerBody } from './FluidComposerBody';
 import { EASE } from '../lib/motion';
+import { fluidComposerCss } from '../lib/fluid-composer';
 
 let reduced=false;
 const listeners=new Set<()=>void>();
@@ -278,4 +279,31 @@ it('contains input touch gestures while preserving inner scrolling, pinch and cl
  expect(touch('touchmove',160).defaultPrevented).toBe(false);editor.scrollTop=400;expect(touch('touchmove',140).defaultPrevented).toBe(true);expect(parent).not.toHaveBeenCalled();
  touch('touchstart',180,2);expect(touch('touchmove',160,2).defaultPrevented).toBe(false);expect(parent).toHaveBeenCalledTimes(1);
  v.unmount();v.container.append(viewport);touch('touchstart',160);expect(touch('touchmove',140).defaultPrevented).toBe(false);expect(parent).toHaveBeenCalledTimes(2);
+});
+it('hides the phone caret only while the editor column slides into its new layout',()=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const x=editor?(full?20:52):0,y=editor?(full?16:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ const animations:Animation[]=[];
+ const oldAnimate=HTMLElement.prototype.animate;
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:vi.fn(()=>{const a={cancel:vi.fn(),playState:'running',onfinish:null,oncancel:null} as unknown as Animation;animations.push(a);return a;})});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('첫 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const column=v.container.querySelector('[data-bb-chat-ui-fluid-editor]')!;
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(false);
+  lines=2;v.rerender(draw('첫 줄\n다음 줄'));
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(true);
+  act(()=>{animations.at(-1)!.onfinish?.call(animations.at(-1)!,{} as AnimationPlaybackEvent);});
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(false);
+ }finally{v.unmount();bounds.mockRestore();Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:oldAnimate});}
+});
+it('makes the moving caret transparent on phone only',()=>{
+ expect(fluidComposerCss).toContain('html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }');
+ expect(fluidComposerCss).not.toMatch(/(^|\n)\[data-bb-chat-ui-fluid-editor\]\[data-bb-chat-ui-fluid-moving\]/);
 });
