@@ -111,7 +111,7 @@ it('reveals rings sequentially with opacity and releases the native animations',
   for (let i = 0; i < VOICE_ORBIT_RINGS; i++) {
     const [frames, options] = animate.mock.calls[i] as unknown as [Keyframe[], KeyframeAnimationOptions];
     expect(frames).toEqual([{ opacity: 0 }, { opacity: 1 }]);
-    expect(options).toMatchObject({ duration: 260, delay: i * 27, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' });
+    expect(options).toMatchObject({ duration: 300, delay: i * 30, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' });
   }
   orb.finishEntrance(); orb.dispose();
   for (const animation of animations) expect(animation.cancel).toHaveBeenCalledOnce();
@@ -127,7 +127,7 @@ it('removes rings in sequence and completes only once the last ring has disappea
   for (let i = 0; i < VOICE_ORBIT_RINGS; i++) {
     const [frames, options] = animate.mock.calls[i] as unknown as [Keyframe[], KeyframeAnimationOptions];
     expect(frames).toEqual([{ opacity: 1 }, { opacity: 0 }]);
-    expect(options).toMatchObject({ duration: 180, delay: i * 21, fill: 'both' });
+    expect(options).toMatchObject({ duration: 220, delay: i * 24, fill: 'both' });
     animations[i].playState = 'finished'; animations[i].onfinish?.();
     expect(done).toHaveBeenCalledTimes(i === VOICE_ORBIT_RINGS - 1 ? 1 : 0);
   }

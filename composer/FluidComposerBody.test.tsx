@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { FluidComposerBody } from './FluidComposerBody';
 import { EASE } from '../lib/motion';
-import { FLUID_EDITOR_FOLLOW_ANIMATION } from '../lib/fluid-composer-height';
+import { fluidComposerCss } from '../lib/fluid-composer';
 
 let reduced=false;
 const listeners=new Set<()=>void>();
@@ -12,6 +12,59 @@ beforeEach(()=>{
  vi.stubGlobal('matchMedia',()=>({get matches(){return reduced;},addEventListener:(_type:string,fn:()=>void)=>listeners.add(fn),removeEventListener:(_type:string,fn:()=>void)=>listeners.delete(fn)}));
 });
 afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();});
+it('starts the full-width layout and its transition in the input commit before another animation frame',()=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const x=editor?(full?20:52):0,y=editor?(full?16:lines>1?48:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
+ const animate=vi.fn(()=>({cancel:vi.fn(),playState:'running'}));
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('한 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const editor=v.container.querySelector('.ProseMirror');
+  const before=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});
+  editor!.dispatchEvent(before);
+  lines=2;v.rerender(draw('줄 경계를 넘는 입력'));
+  // No rAF/timer advance: the narrow wrapped layout must never reach paint.
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
+  expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+  expect(before.defaultPrevented).toBe(false);
+  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(32px, 44px)'},{transform:'translate(0, 0)'}],{duration:160,easing:EASE.out});
+ }finally{
+  v.unmount();bounds.mockRestore();
+  if(descriptor)Object.defineProperty(HTMLElement.prototype,'animate',descriptor);
+  else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
+ }
+});
+it('moves the real focused editor with the input height curve without replacing its selection',()=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const x=editor?(full?20:52):0,y=editor?(full?16:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ const oldAnimate=HTMLElement.prototype.animate,animate=vi.fn(()=>({cancel:vi.fn(),playState:'running'}));
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" contentEditable suppressContentEditableWarning style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('첫 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!;editor.focus();
+  const selection=document.getSelection()!;selection.selectAllChildren(editor);selection.collapseToEnd();
+  lines=2;v.rerender(draw('첫 줄\n다음 줄'));
+  act(()=>vi.advanceTimersByTime(20));
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
+  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(32px, 44px)'},{transform:'translate(0, 0)'}],{duration:160,easing:EASE.out});
+  expect(document.activeElement).toBe(editor);
+  expect(editor.contains(selection.anchorNode)).toBe(true);expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+ }finally{v.unmount();bounds.mockRestore();if(oldAnimate)Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:oldAnimate});else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
+});
 it('keeps the height curve but releases the moving caret immediately when typing continues',()=>{
  let lines=1;
  const animations:{options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
@@ -28,10 +81,11 @@ it('keeps the height curve but releases the moving caret immediately when typing
  const v=render(draw('한 줄')),editor=v.container.querySelector('.ProseMirror');
  try{
   act(()=>vi.advanceTimersByTime(20));
-  lines=3;v.rerender(draw('세 줄'));act(()=>vi.advanceTimersByTime(20));
+  lines=3;v.rerender(draw('세 줄'));
+  act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
-  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
+  expect(animations.at(-1)!.options).toEqual({duration:160,easing:EASE.out});
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
   const bubbled=vi.fn();v.container.addEventListener('beforeinput',bubbled);
   const input=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});
@@ -39,11 +93,11 @@ it('keeps the height curve but releases the moving caret immediately when typing
   expect(animations.at(-1)!.cancel).toHaveBeenCalled();
   expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
   expect(input.defaultPrevented).toBe(false);expect(bubbled).toHaveBeenCalledOnce();
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 320ms');
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 380ms');
   lines=1;v.rerender(draw('한 줄'));act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('false');
   expect(animations[0].cancel).toHaveBeenCalled();
-  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
+  expect(animations.at(-1)!.options).toEqual({duration:380,easing:EASE.out});
   Object.defineProperty(animate.mock.results.at(-1)!.value,'playState',{value:'finished'});
   editor!.dispatchEvent(new InputEvent('beforeinput',{inputType:'insertText',bubbles:true}));
   expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
@@ -59,7 +113,7 @@ it('keeps the height curve but releases the moving caret immediately when typing
 // 합성 초안과 옵션을 사용해 입력 영역의 수명을 확인한다.
 const view=(open=false)=><FluidComposerBody panelOpen={open} panel={<div role="region" aria-label="옵션"><button>선택</button></div>} editor={<textarea defaultValue="보존할 초안"/>} options={<button>＋</button>} actions={<button>전송</button>} attachments={null}/>;
 // 빈 초안의 접힘과 호스트가 보존·복구한 초안을 같은 입력 노드에서 확인한다.
-it('resets a host-cleared draft before the next frame without losing a retained or restored draft',()=>{
+it('returns a cleared draft to the compact layout while retaining its height and corner transition',()=>{
  let lines=3;
  const cancel=vi.fn(),animate=vi.fn(()=>({cancel,playState:'running'}));
  const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
@@ -68,7 +122,7 @@ it('resets a host-cleared draft before the next frame without losing a retained 
  // 줄 수와 펼침 상태만으로 입력 영역의 배치를 재현한다.
  const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
   const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
-  return {left:editor?(full?20:52):0,top:0,width:400,height:editor?lines*24:136} as DOMRect;
+  const x=editor?(full?20:52):0;return {x,y:0,left:x,top:0,width:400,height:editor?lines*24:136} as DOMRect;
  });
  // 호스트가 보존하거나 비우거나 복구한 초안만 입력 본문에 전달한다.
  const draw=(text:string,open=false)=><FluidComposerBody draftText={text} panelOpen={open} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
@@ -80,11 +134,15 @@ it('resets a host-cleared draft before the next frame without losing a retained 
   const editor=v.container.querySelector('.ProseMirror'),count=animate.mock.calls.length;
   v.rerender(draw('보존할\n초안'));
   expect(viewport.dataset.multiline).toBe('true');
+  viewport.style.transition=`height 160ms ${EASE.out}, border-radius 160ms ${EASE.out}`;
   lines=1;v.rerender(draw(''));
   expect(viewport.dataset.multiline).toBe('false');
   expect(viewport.getAttribute('data-bb-chat-ui-fluid-reset')).toBe('true');
-  expect(viewport.style.transition).toBe('none');
-  expect(animate).toHaveBeenCalledTimes(count);expect(cancel).toHaveBeenCalled();
+  expect(viewport.style.transition).toContain('height 380ms');
+  expect(viewport.style.transition).toContain('border-radius 380ms');
+  expect(viewport.style.transition).toContain('corner-shape 380ms');
+  expect(animate.mock.calls.length).toBeGreaterThan(count);
+  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(-32px, 0px)'},{transform:'translate(0, 0)'}],{duration:380,easing:EASE.out});
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
   v.rerender(draw('',true));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
   v.rerender(draw(''));expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
@@ -93,6 +151,12 @@ it('resets a host-cleared draft before the next frame without losing a retained 
   expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
  }finally{v.unmount();bounds.mockRestore();if(descriptor)Object.defineProperty(HTMLElement.prototype,'animate',descriptor);else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
 });
+it('keeps clearing immediate when reduced motion is enabled',()=>{
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<textarea/>} options={null} actions={null} attachments={null}/>;
+ const v=render(draw('지울 초안'));act(()=>{vi.advanceTimersByTime(20);reduced=true;for(const change of listeners)change();});
+ v.rerender(draw(''));expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toBe('none');
+});
 // 음성 미리보기의 종료를 전송 후 텍스트 초기화로 오인하지 않는지 확인한다.
 it('preserves voice exit motion when its preview returns to an empty text draft',()=>{
  vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
@@ -100,24 +164,26 @@ it('preserves voice exit motion when its preview returns to an empty text draft'
  v.rerender(<FluidComposerBody draftText="" editor={<textarea/>} options={null} actions={null} attachments={null}/>);
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
 });
-it('releases vertical-only following on further input without cancelling unrelated editor animation',()=>{
+it.each(['insertText','insertParagraph','insertCompositionText','deleteContentBackward'])('keeps text and height moving together during %s without cancelling native input',inputType=>{
  const v=render(view()),input=v.container.querySelector('textarea')!;
  const column=input.closest<HTMLElement>('[data-bb-chat-ui-fluid-editor]')!;
  const content=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-content]')!;
  const cancel=vi.fn(),unrelated=vi.fn();
+ const viewport=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!;
+ viewport.style.height='80px';viewport.style.transition=`height 160ms ${EASE.out}`;
  const bounds=vi.spyOn(content,'getBoundingClientRect').mockReturnValue({height:140} as DOMRect);
  Object.defineProperty(column,'getAnimations',{value:()=>[
-  {id:FLUID_EDITOR_FOLLOW_ANIMATION,playState:'running',cancel},
+  {id:'editor-decoration',playState:'running',cancel},
   {id:'unrelated',playState:'running',cancel:unrelated},
  ]});
  try{
-  const event=new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType:'insertText'});
+  const event=new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType});
   input.dispatchEvent(event);
-  expect(cancel).toHaveBeenCalledOnce();expect(unrelated).not.toHaveBeenCalled();
+  expect(cancel).not.toHaveBeenCalled();expect(unrelated).not.toHaveBeenCalled();
   expect(event.defaultPrevented).toBe(false);
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
+  expect(viewport.style.height).toBe('80px');expect(viewport.style.transition).toBe(`height 160ms ${EASE.out}`);
   input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
-  expect(cancel).toHaveBeenCalledTimes(2);
+  expect(cancel).not.toHaveBeenCalled();
  }finally{bounds.mockRestore();}
 });
 it('sizes the voice backdrop to its pane and updates it without widening the composer',()=>{
@@ -152,7 +218,7 @@ it('moves the real action column into voice mode and cancels its motion for redu
   const action=v.container.querySelector('[data-bb-chat-ui-fluid-actions]');v.rerender(draw(true));
   expect(v.container.querySelector('[data-voice-mode="true"]')).toBeTruthy();expect(v.container.querySelector('[data-bb-chat-ui-fluid-actions]')).toBe(action);
   expect(animations[0].frames[0]).toEqual({transform:'translate(140px, 0px)'});
-  expect(animations[0].options).toEqual({duration:320,easing:EASE.out});
+  expect(animations[0].options).toEqual({duration:380,easing:EASE.out});
   reduced=true;act(()=>{for(const listener of listeners)listener();});expect(animations[0].cancel).toHaveBeenCalled();
   v.unmount();expect(listeners.size).toBe(0);
  }finally{bounds.mockRestore();HTMLElement.prototype.animate=oldAnimate;v.unmount();}
@@ -166,7 +232,7 @@ it('mounts the options lazily and retains both real views only during the closin
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-input]')!.hasAttribute('inert')).toBe(true);
  v.rerender(view());expect(panel.isConnected).toBe(true);expect(panel.hasAttribute('inert')).toBe(true);expect(panel.getAttribute('aria-hidden')).toBe('true');
  expect(v.queryByRole('region',{name:'옵션'})).toBeNull();
- act(()=>vi.advanceTimersByTime(319));expect(panel.isConnected).toBe(true);
+ act(()=>vi.advanceTimersByTime(379));expect(panel.isConnected).toBe(true);
  act(()=>vi.advanceTimersByTime(1));expect(panel.isConnected).toBe(false);expect(v.container.querySelector('textarea')).toBe(editor);expect(editor.value).toBe('보존할 초안');
 });
 it('reverses a closing morph without letting its old timer remove the reopened menu',()=>{
@@ -213,4 +279,31 @@ it('contains input touch gestures while preserving inner scrolling, pinch and cl
  expect(touch('touchmove',160).defaultPrevented).toBe(false);editor.scrollTop=400;expect(touch('touchmove',140).defaultPrevented).toBe(true);expect(parent).not.toHaveBeenCalled();
  touch('touchstart',180,2);expect(touch('touchmove',160,2).defaultPrevented).toBe(false);expect(parent).toHaveBeenCalledTimes(1);
  v.unmount();v.container.append(viewport);touch('touchstart',160);expect(touch('touchmove',140).defaultPrevented).toBe(false);expect(parent).toHaveBeenCalledTimes(2);
+});
+it('hides the phone caret only while the editor column slides into its new layout',()=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const x=editor?(full?20:52):0,y=editor?(full?16:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ const animations:Animation[]=[];
+ const oldAnimate=HTMLElement.prototype.animate;
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:vi.fn(()=>{const a={cancel:vi.fn(),playState:'running',onfinish:null,oncancel:null} as unknown as Animation;animations.push(a);return a;})});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('첫 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const column=v.container.querySelector('[data-bb-chat-ui-fluid-editor]')!;
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(false);
+  lines=2;v.rerender(draw('첫 줄\n다음 줄'));
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(true);
+  act(()=>{animations.at(-1)!.onfinish?.call(animations.at(-1)!,{} as AnimationPlaybackEvent);});
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(false);
+ }finally{v.unmount();bounds.mockRestore();Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:oldAnimate});}
+});
+it('makes the moving caret transparent on phone only',()=>{
+ expect(fluidComposerCss).toContain('html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }');
+ expect(fluidComposerCss).not.toMatch(/(^|\n)\[data-bb-chat-ui-fluid-editor\]\[data-bb-chat-ui-fluid-moving\]/);
 });

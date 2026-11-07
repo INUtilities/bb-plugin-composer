@@ -180,16 +180,16 @@ Arrow 키와 Home·End로 활성 항목을
 아닌 바깥 box의 폭으로 판단한다. `draftText`·입력 준비 변화와 현재 row·버튼의 크기
 변화만 한 frame에 묶어 측정하며 transcript를 관찰하지 않는다.
 
-입력 배치가 바뀌면 같은 실제 editor의 위치 차이만 320ms·kit 감속 easing으로 옮긴다.
-여러 줄로 펼칠 때는 바깥 높이와 같은 감속 곡선으로 이동해 커서가 표면보다 먼저
-올라가지 않게 한다. 한 줄로 축소할 때는 기존 감속 곡선을 유지한다.
+입력 배치는 기준 Chat UI `79ab0e4`처럼 frame에 묶어 계산한다. 실제 입력의
+`getBoundingClientRect()`로 이전·다음 위치 차이를 구하고 가로·세로 이동을 같은
+320ms로 잇는다. 펼침은 `EASE.droplet`, 축소는 `EASE.out`을 쓰며 포커스로 이동을
+제외하지 않는다. 높이 controller가 editor를 별도로 다시 옮기는 보정은 두지 않는다.
 문자·버튼의 scale이나 복제는 없으며, 빠른 역전은 현재 보이는 위치에서 이어간다.
 reduced motion·해제 시 위치 전환과 예약 frame을 취소한다.
 
-위치 전환 중 후속 Enter나 `beforeinput`이 들어오면 실제 editor의 이동 모션을 즉시
-끝낸다. 진행 중인 높이 transition도 그때만 마쳐 커서가 작은 창 위로 잘리지 않게 한다.
-입력 사건은 취소하거나 지연하지 않는다. 후속 입력이 없는 기본 320ms 감속 모션과 이미
-펼쳐진 입력의 이후 높이 전환은 유지하며 두 listener는 해당 컴포저에만 연결한다.
+위치 전환 중 후속 Enter나 `beforeinput`이 들어오면 기준 코드처럼 실제 editor의
+위치 모션과 남은 높이 전환을 끝내 입력을 우선한다. 입력 사건은 취소하거나 지연하지
+않으며 두 listener는 해당 컴포저에만 연결한다.
 
 여러 줄 본문은 좌우 20px·위 16px를 비운다. padding이 바뀌어도 실제 글자 위치를
 기준으로 이동량을 구해 전환 시작 때 글자가 튀지 않게 한다.
@@ -251,7 +251,32 @@ selection 햅틱을 한 번 낸다. 기존 음성·메뉴 선택·전송 햅틱�
 입력 글자는 desktop 14px·phone 16px이고 줄 높이는 24px다. 한 줄 기본 배치와
 모션은 이 글자 크기를 줄이지 않는다.
 
-여러 줄 입력의 확장·축소는 320ms·kit 감속 곡선으로 바로 출발한다.
-실제 clip의 높이·반지름·corner-shape를 같은 시간·곡선으로 전환한다. 옵션은 기존 320ms를 유지한다.
-기존 높이 ResizeObserver만 재사용하고 빠른 추가 입력은 현재 보이는 높이에서
-이어 간다. 하단 버튼과 높이 상한·reduced motion 처리는 유지한다.
+텍스트의 기존 이동 계산과 곡선은 유지하고 입력의 확장 높이·반지름·corner-shape만
+120ms `EASE.out`으로 더 빨리 따라간다. 이미 펼친 입력의 줄 수 변화도 120ms로 잇는다.
+포커스가 없는 배치 전환과 전체 삭제는 320ms로 접히며, 한 줄 배치로 바꾸기 전에
+모서리의 전환 시간을 맞춘다. 옵션은 기존 320ms를 유지한다.
+기존 높이 ResizeObserver만 재사용하고 빠른 추가 입력은 현재 보이는 높이에서 이어
+간다. 하단 버튼과 높이 상한은 유지하며 reduced motion에서는 즉시 최종 배치를 쓴다.
+
+## iPhone 화면 키보드의 줄바꿈
+
+iPhone의 실제 Enter `keydown`은 기본 입력 경로에 맡긴다. 한글 조합이 끝난 뒤
+취소 가능한 `beforeinput`의 `insertParagraph`·`insertLineBreak`가 오면, 공개 editor view
+입력 경로에서 해당 요청을 즉시 처리한다. 처리된 요청만 native 편집을 취소하므로
+다음 글자는 새 줄에 들어가며 기존 iOS fallback이 같은 Enter를 다시 처리하지 않는다.
+조합 중·취소 불가·잠금·포커스 이탈과 다른 기기는 기존 경로를 유지한다.
+입력 도착을 추측하는 타이머나 keyup·frame 보완은 추가하지 않으며 높이·모션·CSS는 유지한다.
+
+실제 iPhone 기록에서는 빠른 글자·Enter 교대 중 Enter의 약 절반이 `beforeinput` 없이
+`keydown`·`keyup`만 온다. ProseMirror는 이 Enter를 200ms fallback으로 처리하지만, 그
+사이 다음 키가 처리되면 fallback이 실행을 거부해 Enter가 사라진다. 그래서 iPhone에서
+ProseMirror가 아직 처리하지 않은 Enter 뒤에 다음 키의 `keydown`이 오면 그 키보다 먼저
+같은 공개 view 경로로 Enter를 처리한다. 그 사이 문서가 바뀌었거나 ProseMirror가 이미
+Enter를 처리했다면 건너뛴다. 이 Enter의 native 줄바꿈 요청이 늦게 오면 한 번만 취소한다.
+
+## phone 배치 전환 중 커서
+
+한 줄 배치와 여러 줄 배치가 바뀌면 입력 열은 `transform`으로 새 위치까지 이동한다.
+iOS는 커서를 페이지 밖에서 그려 이 이동을 frame마다 따라가지 않으므로, phone에서는
+이 이동이 끝나거나 취소될 때까지 입력의 `caret-color`만 투명하게 둔다. 높이·모서리·이동의
+시간과 곡선, desktop 커서는 바꾸지 않는다.

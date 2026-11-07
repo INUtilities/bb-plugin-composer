@@ -6,7 +6,6 @@ import { FluidComposerBody } from "../FluidComposerBody";
 import { FluidComposerToggle } from "../FluidComposerToggle";
 import { FluidOptionsPanel } from "../FluidOptionsPanel";
 import { FluidComposerDetails } from "../FluidComposerDetails";
-import { useDeviceChrome } from "../../lib/use-device";
 import {
   experimental_ComposerRoot as ComposerRoot,
   experimental_FailedVoiceRecordings as FailedVoiceRecordings,
@@ -131,6 +130,7 @@ import {
   removeEmptyBlockquotes,
 } from "./editor/prompt-editor-blockquote";
 import { applyPromptParagraphNewline } from "./editor/prompt-editor-paragraph";
+import { useDeviceChrome } from "../../lib/use-device";
 import { MentionMenu } from "./mentions/MentionMenu";
 import { useTypeaheadMenuMaxHeight } from "./useTypeaheadMenuMaxHeight";
 import {
@@ -1082,17 +1082,16 @@ export function PromptBoxInternal({
   } = attachmentConfig;
   const isPointerCoarse = usePointerCoarse();
   const { device } = useDeviceChrome();
+  const isPhoneWebKitRef = useRef(false);
+  isPhoneWebKitRef.current =
+    device === "phone" && isPointerCoarse &&
+    typeof navigator !== "undefined" &&
+    /Apple Computer/u.test(navigator.vendor) &&
+    /\bAppleWebKit\//u.test(navigator.userAgent);
   const isCompactViewport = useIsCompactViewport();
   const blurOnPointerSubmit =
     surface === "thread" && isCompactViewport && isPointerCoarse;
   const isIPadOSWebKitDevice = useMemo(isIPadOSWebKit, []);
-  const isPhoneWebKitDevice = useMemo(
-    () =>
-      device === "phone" &&
-      /Apple Computer/u.test(navigator.vendor) &&
-      /\bAppleWebKit\//u.test(navigator.userAgent),
-    [device],
-  );
   const editorEnterKeyHint = isPointerCoarse ? "enter" : "send";
   const formRef = useRef<HTMLFormElement>(null);
   const typeaheadMenuRef = useRef<HTMLDivElement>(null);
@@ -1165,6 +1164,10 @@ export function PromptBoxInternal({
     (event: KeyboardEvent, isOriginalIPadHardwareEnter?: boolean) => boolean
   >(() => false);
   const compositionEndedAtRef = useRef(Number.NEGATIVE_INFINITY);
+  // iPhone Return that ProseMirror's iOS fallback has not dispatched yet, and
+  // whether the next key already applied it ahead of a late native paragraph.
+  const pendingPhoneEnterDocRef = useRef<ProseMirrorNode | null>(null);
+  const appliedPhoneEnterRef = useRef(false);
   const postCompositionKeyDownEvents = usePostCompositionKeyDownEvents();
   const dispatchAppCommandKey = renderer.dispatchAppCommandKey;
   const syncTriggerStateRef = useRef<(editor: Editor) => void>(() => {});
@@ -1795,18 +1798,34 @@ export function PromptBoxInternal({
               (event.metaKey || event.ctrlKey) &&
               event.shiftKey &&
               event.key.toLowerCase() === "v";
+            if (isPhoneWebKitRef.current) {
+              const pendingDoc = pendingPhoneEnterDocRef.current;
+              pendingPhoneEnterDocRef.current = null;
+              const canEdit =
+                _view.editable && !_view.composing && !event.isComposing;
+              if (event.keyCode === 13) {
+                // iOS sometimes sends a Return as keydown/keyup only. ProseMirror
+                // then dispatches it from a 200ms fallback, which refuses to run
+                // once another key has been dispatched in between.
+                appliedPhoneEnterRef.current = false;
+                if (canEdit && !event.ctrlKey && !event.altKey && !event.metaKey)
+                  pendingPhoneEnterDocRef.current = _view.state.doc;
+              } else if (
+                canEdit && event.key !== "Enter" && pendingDoc === _view.state.doc
+              ) {
+                // The next key arrived first: apply that Return before it.
+                const newline = new KeyboardEvent("keydown", {
+                  key: "Enter", bubbles: true, cancelable: true,
+                });
+                _view.dispatchEvent(newline);
+                appliedPhoneEnterRef.current = newline.defaultPrevented;
+              }
+            }
             const isIPadHardwareEnter =
               isIPadOSWebKitDevice && isIPadHardwareEnterCandidate(event);
-            const isPhoneEnter =
-              isPhoneWebKitDevice &&
-              isPointerCoarse &&
-              event.key === "Enter" &&
-              !event.metaKey &&
-              !event.altKey &&
-              !event.ctrlKey;
             if (
               !_view.editable ||
-              (!isIPadHardwareEnter && !isPhoneEnter) ||
+              !isIPadHardwareEnter ||
               _view.composing ||
               event.isComposing ||
               event.keyCode === 229
@@ -1823,9 +1842,38 @@ export function PromptBoxInternal({
               return false;
             }
 
-            // iOS can omit insertParagraph after Korean input. Handle this Enter
-            // before ProseMirror's 200ms fallback so the next character follows it.
+            // Only hardware iPad Enter needs this early submit route. Let the
+            // iPhone keyboard commit Korean text and insert its native paragraph:
+            // cancelling keydown before beforeinput can disrupt its IME state.
             return handleEditorKeyDownRef.current(event, isIPadHardwareEnter);
+          },
+          beforeinput: (view, event) => {
+            const isNewlineInput =
+              event.inputType === "insertParagraph" || event.inputType === "insertLineBreak";
+            if (appliedPhoneEnterRef.current) {
+              appliedPhoneEnterRef.current = false;
+              // A late native paragraph for the Return already applied above.
+              if (isNewlineInput && event.cancelable) {
+                event.preventDefault();
+                return true;
+              }
+            }
+            if (
+              !isPhoneWebKitRef.current || !view.editable || !view.hasFocus() ||
+              view.composing || event.isComposing || !event.cancelable || !isNewlineInput
+            ) return false;
+
+            // beforeinput confirms the newline intent after the keyboard's IME
+            // commit. Keep its real keydown native; handle this edit before the
+            // next character and mark Enter handled through the public view path.
+            const newline = new KeyboardEvent("keydown", {
+              key: "Enter", shiftKey: event.inputType === "insertLineBreak",
+              bubbles: true, cancelable: true,
+            });
+            view.dispatchEvent(newline);
+            if (!newline.defaultPrevented) return false;
+            event.preventDefault();
+            return true;
           },
           keyup: () => {
             pasteWithoutFormattingRef.current = false;
@@ -1842,6 +1890,8 @@ export function PromptBoxInternal({
           return false;
         },
         handleKeyDown: (_view, event) => {
+          // ProseMirror has dispatched an Enter itself (native or fallback).
+          if (event.key === "Enter") pendingPhoneEnterDocRef.current = null;
           return handleEditorKeyDownRef.current(event);
         },
         handlePaste: (view, event, slice) => {
