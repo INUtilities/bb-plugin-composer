@@ -184,6 +184,14 @@ html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-visual] > [data-bb-
   [data-bb-chat-ui-fluid-height] > [data-bb-chat-ui-fluid-surface],
   [data-bb-chat-ui-fluid-height] > [data-bb-chat-ui-voice-glow] { corner-shape:inherit; }
 }
+/* 함께 로드된 Chat UI의 이전 전역 규칙보다 Composer 소유 전환을 우선한다. */
+html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] :is([data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face], [data-bb-chat-ui-fluid-input], [data-bb-chat-ui-fluid-panel-layer], [data-bb-chat-ui-voice-stop-symbol]) { transition-duration:${FLUID_COMPOSER_MORPH_MS}ms; }
+html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-toggle-glyph]::before,
+html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-toggle-glyph]::after { transition-duration:${FLUID_COMPOSER_MORPH_MS}ms; }
+html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-active="true"] > button { transition-duration:520ms,520ms,520ms,300ms; }
+html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-waveform] { transition-duration:220ms; }
+html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-split="true"] > button::before,
+html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-split="true"] > [data-bb-chat-ui-voice-neck] { animation-duration:520ms; }
 `;
 
 // Fluid 컴포저의 스타일과 활성 표식을 설치하고 해제 시 원래 상태로 돌린다.
