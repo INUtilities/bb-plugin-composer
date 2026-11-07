@@ -257,3 +257,12 @@ selection 햅틱을 한 번 낸다. 기존 음성·메뉴 선택·전송 햅틱�
 모서리의 전환 시간을 맞춘다. 옵션은 기존 320ms를 유지한다.
 기존 높이 ResizeObserver만 재사용하고 빠른 추가 입력은 현재 보이는 높이에서 이어
 간다. 하단 버튼과 높이 상한은 유지하며 reduced motion에서는 즉시 최종 배치를 쓴다.
+
+## iPhone 화면 키보드의 줄바꿈
+
+iPhone의 실제 Enter `keydown`은 기본 입력 경로에 맡긴다. 한글 조합이 끝난 뒤
+취소 가능한 `beforeinput`의 `insertParagraph`·`insertLineBreak`가 오면, 공개 editor view
+입력 경로에서 해당 요청을 즉시 처리한다. 처리된 요청만 native 편집을 취소하므로
+다음 글자는 새 줄에 들어가며 기존 iOS fallback이 같은 Enter를 다시 처리하지 않는다.
+조합 중·취소 불가·잠금·포커스 이탈과 다른 기기는 기존 경로를 유지한다.
+입력 도착을 추측하는 타이머나 keyup·frame 보완은 추가하지 않으며 높이·모션·CSS는 유지한다.

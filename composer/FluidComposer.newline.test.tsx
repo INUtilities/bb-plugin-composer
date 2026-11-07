@@ -76,11 +76,17 @@ function nativeEnter(editor: Editor, init: KeyboardEventInit = {}) {
   });
   dom.dispatchEvent(event);
   expect(event.defaultPrevented).toBe(false);
+  nativeParagraph(editor);
+  dom.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, bubbles: true }));
+}
+
+function nativeParagraph(editor: Editor) {
+  const dom = editor.view.dom;
   const before = new InputEvent('beforeinput', {
     inputType: 'insertParagraph', bubbles: true, cancelable: true,
   });
   dom.dispatchEvent(before);
-  expect(before.defaultPrevented).toBe(false);
+  if (before.defaultPrevented) return;
   // jsdom has no contenteditable default action. Model the browser splitting
   // the paragraph, then let the real ProseMirror DOM observer read the change.
   const selection = window.getSelection()!;
@@ -94,7 +100,6 @@ function nativeEnter(editor: Editor, init: KeyboardEventInit = {}) {
   paragraph.after(next);
   selection.collapse(next, 0);
   dom.dispatchEvent(new InputEvent('input', { inputType: 'insertParagraph', bubbles: true }));
-  dom.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, bubbles: true }));
 }
 
 function commitKoreanText(editor: Editor, text: string) {
@@ -121,6 +126,26 @@ it('lets the iPhone keyboard finish its native Enter instead of cancelling it be
   act(() => { editor.view.dom.dispatchEvent(event); });
   expect(event.defaultPrevented).toBe(false);
   expect(editor.state.doc).toBe(before);
+  expect(run).not.toHaveBeenCalled();
+});
+
+it('keeps one newline when native iPhone paragraph input arrives after a frame following key release', async () => {
+  const { editor, run } = await mount();
+  vi.useFakeTimers();
+  await act(async () => {
+    editor.commands.insertContent('한글');
+    editor.view.focus();
+    editor.view.dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+    editor.view.dom.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, bubbles: true }));
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(32);
+    nativeParagraph(editor);
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  expect(editor.state.doc.childCount).toBe(2);
+  expect(editor.state.doc.firstChild!.textContent).toBe('한글');
+  expect(editor.state.doc.lastChild!.textContent).toBe('');
   expect(run).not.toHaveBeenCalled();
 });
 
@@ -238,4 +263,79 @@ it('preserves iPad hardware Enter submission', async () => {
   expect(handled).toBe(true);
   expect(event.defaultPrevented).toBe(true);
   await waitFor(() => expect(run).toHaveBeenCalledOnce());
+});
+
+
+it('applies an explicit iPhone paragraph before the next text event without waiting for native DOM input', async () => {
+  const { editor, run } = await mount();
+  vi.useFakeTimers();
+  act(() => { editor.commands.insertContent('ㅇ');editor.view.focus(); });
+  const key=new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true});
+  const before=new InputEvent('beforeinput',{inputType:'insertParagraph',bubbles:true,cancelable:true});
+  act(() => {editor.view.dom.dispatchEvent(key);editor.view.dom.dispatchEvent(before);});
+  expect(key.defaultPrevented).toBe(false);
+  expect(before.defaultPrevented).toBe(true);
+  expect(editor.state.doc.childCount).toBe(2);
+  act(() => {editor.commands.insertContent('ㅇ');});
+  await act(async () => {await vi.advanceTimersByTimeAsync(250);});
+  expect(Array.from({length:editor.state.doc.childCount},(_,i)=>editor.state.doc.child(i).textContent)).toEqual(['ㅇ','ㅇ']);
+  expect(run).not.toHaveBeenCalled();
+});
+
+it('keeps eight immediate Korean composition commits and beforeinput paragraphs ordered with no duplicated fallback', async () => {
+  const { editor, run } = await mount();
+  vi.useFakeTimers();
+  for(let index=0;index<8;index++){
+    act(() => {
+      commitKoreanText(editor,'ㅇ');
+      if(index<7){
+        editor.view.dom.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));
+        const before=new InputEvent('beforeinput',{inputType:'insertParagraph',bubbles:true,cancelable:true});
+        editor.view.dom.dispatchEvent(before);
+        expect(before.defaultPrevented).toBe(true);
+        expect(editor.state.doc.childCount).toBe(index+2);
+        editor.view.dom.dispatchEvent(new KeyboardEvent('keyup',{key:'Enter',keyCode:13,bubbles:true}));
+      }
+    });
+    await act(async () => {await Promise.resolve();await vi.advanceTimersByTimeAsync(25);});
+  }
+  await act(async () => {await vi.advanceTimersByTimeAsync(300);});
+  expect(Array.from({length:editor.state.doc.childCount},(_,i)=>editor.state.doc.child(i).textContent)).toEqual(Array(8).fill('ㅇ'));
+  expect(run).not.toHaveBeenCalled();
+});
+
+it.each([{isComposing:true,cancelable:true},{isComposing:false,cancelable:false}])('keeps native paragraph input when it is composing or cannot be cancelled: %j', async init => {
+ const {editor,run}=await mount();act(()=>{editor.commands.insertContent('한');editor.view.focus();});
+ const before=new InputEvent('beforeinput',{inputType:'insertParagraph',bubbles:true,...init});
+ act(()=>{editor.view.dom.dispatchEvent(before);});
+ expect(before.defaultPrevented).toBe(false);expect(editor.state.doc.childCount).toBe(1);expect(run).not.toHaveBeenCalled();
+});
+
+it.each(['android', 'desktop', 'ipad'] as const)('leaves the %s beforeinput paragraph route native', async kind => {
+ vi.restoreAllMocks();device(kind);
+ const {editor,run}=await mount();act(()=>{editor.commands.insertContent('native');editor.view.focus();});
+ const before=new InputEvent('beforeinput',{inputType:'insertParagraph',bubbles:true,cancelable:true});
+ act(()=>{editor.view.dom.dispatchEvent(before);});
+ expect(before.defaultPrevented).toBe(false);expect(editor.state.doc.childCount).toBe(1);expect(run).not.toHaveBeenCalled();
+});
+
+it('does not edit from a locked or blurred beforeinput event', async () => {
+ const {editor,run}=await mount();act(()=>{editor.commands.insertContent('한');editor.view.focus();editor.setEditable(false);});
+ const locked=new InputEvent('beforeinput',{inputType:'insertParagraph',bubbles:true,cancelable:true});
+ act(()=>{editor.view.dom.dispatchEvent(locked);});expect(locked.defaultPrevented).toBe(false);
+ act(()=>{editor.setEditable(true);editor.view.dom.blur();});
+ const blurred=new InputEvent('beforeinput',{inputType:'insertParagraph',bubbles:true,cancelable:true});
+ act(()=>{editor.view.dom.dispatchEvent(blurred);});expect(blurred.defaultPrevented).toBe(false);
+ expect(editor.state.doc.childCount).toBe(1);expect(run).not.toHaveBeenCalled();
+});
+
+it('handles a confirmed line-break intent once while leaving the keydown and later timer intact', async () => {
+ const {editor,run}=await mount();vi.useFakeTimers();
+ act(()=>{editor.commands.insertContent('앞');editor.view.focus();});
+ const key=new KeyboardEvent('keydown',{key:'Enter',keyCode:13,shiftKey:true,bubbles:true,cancelable:true});
+ const before=new InputEvent('beforeinput',{inputType:'insertLineBreak',bubbles:true,cancelable:true});
+ act(()=>{editor.view.dom.dispatchEvent(key);editor.view.dom.dispatchEvent(before);});
+ expect(key.defaultPrevented).toBe(false);expect(before.defaultPrevented).toBe(true);
+ await act(async()=>{await vi.advanceTimersByTimeAsync(250);});
+ expect(editor.state.doc.childCount).toBe(2);expect(editor.state.doc.firstChild!.textContent).toBe('앞');expect(run).not.toHaveBeenCalled();
 });

@@ -130,6 +130,7 @@ import {
   removeEmptyBlockquotes,
 } from "./editor/prompt-editor-blockquote";
 import { applyPromptParagraphNewline } from "./editor/prompt-editor-paragraph";
+import { useDeviceChrome } from "../../lib/use-device";
 import { MentionMenu } from "./mentions/MentionMenu";
 import { useTypeaheadMenuMaxHeight } from "./useTypeaheadMenuMaxHeight";
 import {
@@ -1080,6 +1081,13 @@ export function PromptBoxInternal({
     projectId: attachmentProjectId,
   } = attachmentConfig;
   const isPointerCoarse = usePointerCoarse();
+  const { device } = useDeviceChrome();
+  const isPhoneWebKitRef = useRef(false);
+  isPhoneWebKitRef.current =
+    device === "phone" && isPointerCoarse &&
+    typeof navigator !== "undefined" &&
+    /Apple Computer/u.test(navigator.vendor) &&
+    /\bAppleWebKit\//u.test(navigator.userAgent);
   const isCompactViewport = useIsCompactViewport();
   const blurOnPointerSubmit =
     surface === "thread" && isCompactViewport && isPointerCoarse;
@@ -1811,6 +1819,25 @@ export function PromptBoxInternal({
             // iPhone keyboard commit Korean text and insert its native paragraph:
             // cancelling keydown before beforeinput can disrupt its IME state.
             return handleEditorKeyDownRef.current(event, isIPadHardwareEnter);
+          },
+          beforeinput: (view, event) => {
+            if (
+              !isPhoneWebKitRef.current || !view.editable || !view.hasFocus() ||
+              view.composing || event.isComposing || !event.cancelable ||
+              (event.inputType !== "insertParagraph" && event.inputType !== "insertLineBreak")
+            ) return false;
+
+            // beforeinput confirms the newline intent after the keyboard's IME
+            // commit. Keep its real keydown native; handle this edit before the
+            // next character and mark Enter handled through the public view path.
+            const newline = new KeyboardEvent("keydown", {
+              key: "Enter", shiftKey: event.inputType === "insertLineBreak",
+              bubbles: true, cancelable: true,
+            });
+            view.dispatchEvent(newline);
+            if (!newline.defaultPrevented) return false;
+            event.preventDefault();
+            return true;
           },
           keyup: () => {
             pasteWithoutFormattingRef.current = false;
