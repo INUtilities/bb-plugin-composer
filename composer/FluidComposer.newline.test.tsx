@@ -339,3 +339,92 @@ it('handles a confirmed line-break intent once while leaving the keydown and lat
  await act(async()=>{await vi.advanceTimersByTimeAsync(250);});
  expect(editor.state.doc.childCount).toBe(2);expect(editor.state.doc.firstChild!.textContent).toBe('앞');expect(run).not.toHaveBeenCalled();
 });
+
+function nativeLetter(editor: Editor, text: string) {
+  const dom = editor.view.dom;
+  dom.dispatchEvent(new KeyboardEvent('keydown', { key: text, keyCode: 68, bubbles: true, cancelable: true }));
+  const before = new InputEvent('beforeinput', { inputType: 'insertText', data: text, bubbles: true, cancelable: true });
+  dom.dispatchEvent(before);
+  if (!before.defaultPrevented) {
+    // jsdom has no contenteditable default action. Model iOS inserting the
+    // letter at the current DOM caret, then let ProseMirror read the change.
+    const at = editor.view.domAtPos(editor.state.selection.from);
+    const previous = at.node.nodeType === Node.TEXT_NODE ? null : at.node.childNodes[at.offset - 1];
+    const node = previous?.nodeType === Node.TEXT_NODE ? previous : at.node;
+    const offset = previous?.nodeType === Node.TEXT_NODE ? (previous as Text).length : at.offset;
+    const paragraph = (node.nodeType === Node.TEXT_NODE ? node.parentElement : node) as HTMLElement;
+    const textNode = node.nodeType === Node.TEXT_NODE ? node as Text : null;
+    if (textNode) textNode.insertData(offset, text);
+    else paragraph.replaceChildren(document.createTextNode(text));
+    const caret = textNode ?? paragraph.firstChild!;
+    window.getSelection()!.collapse(caret, textNode ? offset + text.length : text.length);
+    dom.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: text, bubbles: true }));
+  }
+  dom.dispatchEvent(new KeyboardEvent('keyup', { key: text, keyCode: 68, bubbles: true }));
+}
+
+function lines(editor: Editor) {
+  return Array.from({ length: editor.state.doc.childCount }, (_, i) => editor.state.doc.child(i).textContent);
+}
+
+// Physical iPhone trace (2026-11-07): about every other Return sends only
+// keydown/keyup without beforeinput, and the next letter arrives before
+// ProseMirror's 200ms iOS Enter fallback, which then refuses to dispatch.
+it('keeps a Return that has no beforeinput when the next letter arrives before the iOS fallback', async () => {
+  const { editor, run } = await mount();
+  vi.useFakeTimers();
+  act(() => { editor.view.focus(); });
+  for (let index = 0; index < 6; index++) {
+    await act(async () => { nativeLetter(editor, 'd'); await Promise.resolve(); await vi.advanceTimersByTimeAsync(60); });
+    await act(async () => {
+      const dom = editor.view.dom;
+      const key = new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true, cancelable: true });
+      dom.dispatchEvent(key);
+      expect(key.defaultPrevented).toBe(false);
+      if (index % 2 === 1) {
+        const before = new InputEvent('beforeinput', { inputType: 'insertParagraph', bubbles: true, cancelable: true });
+        dom.dispatchEvent(before);
+      }
+      dom.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, bubbles: true }));
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(120);
+    });
+  }
+  await act(async () => { nativeLetter(editor, 'd'); await Promise.resolve(); await vi.advanceTimersByTimeAsync(400); });
+  expect(lines(editor)).toEqual(Array(7).fill('d'));
+  expect(run).not.toHaveBeenCalled();
+});
+
+it('does not add a second newline when the Return input arrives after the next letter keydown', async () => {
+  const { editor, run } = await mount();
+  vi.useFakeTimers();
+  act(() => { editor.view.focus(); });
+  await act(async () => { nativeLetter(editor, 'd'); await Promise.resolve(); });
+  await act(async () => {
+    const dom = editor.view.dom;
+    dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+    await vi.advanceTimersByTimeAsync(40);
+    dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', keyCode: 68, bubbles: true, cancelable: true }));
+    const late = new InputEvent('beforeinput', { inputType: 'insertParagraph', bubbles: true, cancelable: true });
+    dom.dispatchEvent(late);
+    expect(late.defaultPrevented).toBe(true);
+    await vi.advanceTimersByTimeAsync(400);
+  });
+  expect(lines(editor)).toEqual(['d', '']);
+  expect(run).not.toHaveBeenCalled();
+});
+
+it('does not repeat a Return that the iOS fallback already applied before a slow next letter', async () => {
+  const { editor, run } = await mount();
+  vi.useFakeTimers();
+  act(() => { editor.view.focus(); });
+  await act(async () => { nativeLetter(editor, 'd'); await Promise.resolve(); });
+  await act(async () => {
+    editor.view.dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+    await vi.advanceTimersByTimeAsync(210);
+  });
+  expect(lines(editor)).toEqual(['d', '']);
+  await act(async () => { nativeLetter(editor, 'd'); await Promise.resolve(); await vi.advanceTimersByTimeAsync(400); });
+  expect(lines(editor)).toEqual(['d', 'd']);
+  expect(run).not.toHaveBeenCalled();
+});

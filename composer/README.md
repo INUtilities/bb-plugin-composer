@@ -266,3 +266,10 @@ iPhone의 실제 Enter `keydown`은 기본 입력 경로에 맡긴다. 한글 �
 다음 글자는 새 줄에 들어가며 기존 iOS fallback이 같은 Enter를 다시 처리하지 않는다.
 조합 중·취소 불가·잠금·포커스 이탈과 다른 기기는 기존 경로를 유지한다.
 입력 도착을 추측하는 타이머나 keyup·frame 보완은 추가하지 않으며 높이·모션·CSS는 유지한다.
+
+실제 iPhone 기록에서는 빠른 글자·Enter 교대 중 Enter의 약 절반이 `beforeinput` 없이
+`keydown`·`keyup`만 온다. ProseMirror는 이 Enter를 200ms fallback으로 처리하지만, 그
+사이 다음 키가 처리되면 fallback이 실행을 거부해 Enter가 사라진다. 그래서 iPhone에서
+ProseMirror가 아직 처리하지 않은 Enter 뒤에 다음 키의 `keydown`이 오면 그 키보다 먼저
+같은 공개 view 경로로 Enter를 처리한다. 그 사이 문서가 바뀌었거나 ProseMirror가 이미
+Enter를 처리했다면 건너뛴다. 이 Enter의 native 줄바꿈 요청이 늦게 오면 한 번만 취소한다.
