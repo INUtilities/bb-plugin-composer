@@ -38,7 +38,7 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
       ?? root.current)?.focus({ preventScroll: true });
     const motion = root.current?.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
     if (!motion?.matches) {
-      const animation = list?.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: EASE.out });
+      const animation = list?.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: EASE.out });
       if (animation) entering.current.push(animation);
     }
     const reduce = () => { if (motion?.matches) stopEntering(); };

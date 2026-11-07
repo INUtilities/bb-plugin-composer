@@ -76,7 +76,7 @@ it('fades the complete menu once regardless of item count and cancels when close
  try{
   const items=Array.from({length:12},(_,i)=>({...plugin(),key:`p/${i}`}));const {v}=mount({},items);
   expect(motions).toHaveLength(1);expect(motions[0].target.getAttribute('role')).toBe('menu');
-  expect(motions[0].options.delay??0).toBe(0);expect(motions[0].options.duration).toBe(260);
+  expect(motions[0].options.delay??0).toBe(0);expect(motions[0].options.duration).toBe(300);
   expect(motions[0].frames).toEqual([{opacity:0},{opacity:1}]);
   v.unmount();for(const m of motions)expect(m.cancel).toHaveBeenCalled();expect(media.removeEventListener).toHaveBeenCalled();
  }finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
@@ -94,7 +94,7 @@ it('keeps menu text stationary while its opacity fades in',()=>{
   mount({onAttach:vi.fn()});expect(motions).toHaveLength(1);
   const {frames,options}=motions[0];
   expect(frames.every(frame=>frame.transform===undefined)).toBe(true);
-  expect(frames.at(-1)!.opacity).toBe(1);expect(options.duration).toBe(260);
+  expect(frames.at(-1)!.opacity).toBe(1);expect(options.duration).toBe(300);
  }finally{Element.prototype.animate=oldAnimate;}
 });
 it('preserves a disabled choice opacity during its entrance',()=>{

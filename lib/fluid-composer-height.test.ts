@@ -71,7 +71,7 @@ test('newline resizing leaves the native editor in place while the surface heigh
     for (const height of [100, 124, 148, 100]) {
       f.resize(height);
       assert.equal(f.viewport.style.height, `${height}px`);
-      assert.match(f.viewport.style.transition, /height (120|320)ms/);
+      assert.match(f.viewport.style.transition, /height (160|380)ms/);
       assert.equal(f.animations.length, 0, 'resizing must not move the editor and its native caret after a newline');
     }
   } finally { f.stop(); f.dom.window.close(); }
@@ -84,11 +84,11 @@ test('input growth catches the reference text quickly while clearing keeps its f
     const editor = f.dom.window.document.querySelector<HTMLElement>('.ProseMirror')!;
     editor.parentElement!.setAttribute('data-bb-chat-ui-fluid-editor', '');editor.tabIndex=0;editor.focus();
     f.viewport.setAttribute('data-multiline', 'true');f.resize(116);
-    assert.match(f.viewport.style.transition, /height 120ms/);
+    assert.match(f.viewport.style.transition, /height 160ms/);
     assert.equal(f.viewport.style.height, '116px');
-    f.resize(140);assert.match(f.viewport.style.transition, /height 120ms/);
+    f.resize(140);assert.match(f.viewport.style.transition, /height 160ms/);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-reset','true');f.viewport.setAttribute('data-multiline','false');f.resize(52);
-    assert.match(f.viewport.style.transition, /height 320ms/);assert.equal(f.animations.length,0);
+    assert.match(f.viewport.style.transition, /height 380ms/);assert.equal(f.animations.length,0);
   } finally { f.stop(); f.dom.window.close(); }
 });
 
@@ -98,7 +98,7 @@ test('height retargeting and padding changes preserve native editor positioning 
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.resize(100);
     assert.equal(f.animations.length, 0);
-    assert.match(f.viewport.style.transition, /height 120ms/);
+    assert.match(f.viewport.style.transition, /height 160ms/);
     f.visible(80); f.offset(20); f.resize(124);
     assert.equal(f.animations.length, 0);
     assert.equal(f.viewport.style.height, '124px');
@@ -121,7 +121,7 @@ test('fluid composer follows wrapping, newlines, deletion and rapid retargeting'
   const f = fixture();
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
-    for (const [height,duration] of [[76,120], [100,120], [124,120], [76,320], [52,320]]) {
+    for (const [height,duration] of [[76,160], [100,160], [124,160], [76,380], [52,380]]) {
       f.resize(height);
       assert.equal(f.viewport.style.height, `${height}px`);
       assert.ok(f.viewport.style.transition.includes(`height ${duration}ms`));
@@ -137,27 +137,27 @@ test('expanded input briefly follows subsequent line heights while layout and op
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.viewport.setAttribute('data-multiline', 'true'); f.resize(100);
-    assert.match(f.viewport.style.transition, /height 120ms/);
+    assert.match(f.viewport.style.transition, /height 160ms/);
     const count = f.animations.length;
     for (const height of [124, 148, 100]) {
       f.resize(height);
       assert.equal(f.viewport.style.height, `${height}px`);
-      assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 120ms ${EASE.out}`).join(', '));
+      assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 160ms ${EASE.out}`).join(', '));
       assert.equal(f.animations.length, count);
     }
     assert.equal(f.animations.length, 0);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'options'); f.resize(212);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 380ms/);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'input'); f.resize(100);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 380ms/);
     f.viewport.setAttribute('data-voice-mode', 'true'); f.resize(140);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 380ms/);
     f.resize(172);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 380ms/);
     f.viewport.removeAttribute('data-voice-mode'); f.resize(100);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 380ms/);
     f.viewport.setAttribute('data-multiline', 'false'); f.resize(52);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 380ms/);
   } finally { f.stop(); f.dom.window.close(); }
 });
 
@@ -171,13 +171,13 @@ test('cleared input smoothly shrinks the box without moving the editor or droppi
     f.viewport.setAttribute('data-bb-chat-ui-fluid-reset','true');
     f.resize(76);
     assert.equal(f.viewport.style.height,'76px');
-    assert.match(f.viewport.style.transition,/height 320ms/);
-    assert.match(f.viewport.style.transition,/border-radius 320ms/);
+    assert.match(f.viewport.style.transition,/height 380ms/);
+    assert.match(f.viewport.style.transition,/border-radius 380ms/);
     assert.equal(f.animations.length,count);
     f.viewport.setAttribute('data-multiline','false');f.resize(52);
-    assert.match(f.viewport.style.transition,/height 320ms/);assert.equal(f.animations.length,count);
+    assert.match(f.viewport.style.transition,/height 380ms/);assert.equal(f.animations.length,count);
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view','options');f.resize(212);
-    assert.match(f.viewport.style.transition,/height 320ms/);
+    assert.match(f.viewport.style.transition,/height 380ms/);
   }finally{f.stop();f.dom.window.close();}
 });
 
@@ -191,7 +191,7 @@ test('reduced motion changes immediately and resumes for later height changes', 
     assert.equal(f.viewport.style.transition, 'none');
     f.reduce(false);
     f.resize(52);
-    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.match(f.viewport.style.transition, /height 380ms/);
   } finally { f.stop(); f.dom.window.close(); }
 });
 
@@ -202,13 +202,13 @@ test('typing synchronizes height and corners while option morphs retain their ex
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'input');
     for (const height of [76, 100, 148]) {
       f.resize(height);
-      assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 120ms ${EASE.out}`).join(', '));
+      assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 160ms ${EASE.out}`).join(', '));
     }
     f.resize(52);
-    assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 320ms ${EASE.out}`).join(', '));
+    assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 380ms ${EASE.out}`).join(', '));
     f.viewport.setAttribute('data-bb-chat-ui-fluid-view', 'options');
     f.resize(212);
-    assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 320ms ${EASE.out}`).join(', '));
+    assert.equal(f.viewport.style.transition, ['height', 'border-radius', 'corner-shape'].map(property => `${property} 380ms ${EASE.out}`).join(', '));
   } finally { f.stop(); f.dom.window.close(); }
 });
 

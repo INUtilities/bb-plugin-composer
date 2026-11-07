@@ -17,7 +17,7 @@ export function createVoiceGlow(root: HTMLElement): VoiceOrbRenderer {
     const from = leaving ? win.getComputedStyle(root).opacity || '1' : '0';
     cancel(); if (disposed) return () => {};
     target = leaving ? '0' : '1'; done = callback; root.style.opacity = target;
-    if (!motion?.matches) animation = root.animate?.([{ opacity: from }, { opacity: target }], { duration: leaving ? 180 : 260, easing: EASE.out, fill: 'both' }) ?? null;
+    if (!motion?.matches) animation = root.animate?.([{ opacity: from }, { opacity: target }], { duration: leaving ? 220 : 300, easing: EASE.out, fill: 'both' }) ?? null;
     if (animation) { animation.onfinish = complete; motion?.addEventListener('change', reduce); }
     else complete();
     return cancel;

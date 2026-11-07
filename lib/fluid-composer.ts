@@ -116,16 +116,16 @@ html [data-bb-chat-ui-fluid-composer] :is([data-bb-chat-ui-voice-primary], [data
 html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-active="true"] > button {
   position:absolute; left:50%; top:50%; width:var(--bb-chat-ui-voice-pill-width); height:var(--bb-chat-ui-voice-pill-height); min-width:0; min-height:0; padding-inline:8px;
   border:0; background:transparent; color:var(--foreground);
-  transform:translate(-50%,-50%); transition:width 460ms ${EASE.droplet}, height 460ms ${EASE.droplet}, transform 460ms ${EASE.droplet}, opacity 260ms ${EASE.out};
+  transform:translate(-50%,-50%); transition:width 520ms ${EASE.droplet}, height 520ms ${EASE.droplet}, transform 520ms ${EASE.droplet}, opacity 300ms ${EASE.out};
 }
 html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-active="true"]:not([data-split="true"]) > [data-bb-chat-ui-voice-primary] { width:var(--bb-chat-ui-voice-orb-size); height:var(--bb-chat-ui-voice-orb-size); padding:0; }
-[data-bb-chat-ui-voice-waveform] { position:absolute; left:50%; top:50%; z-index:1; display:block; width:min(72px,var(--bb-chat-ui-voice-orb-size)); height:min(72px,var(--bb-chat-ui-voice-orb-size)); transform:translate(-50%,-50%); overflow:visible; flex:none; opacity:1; pointer-events:none; transition:opacity 180ms ${EASE.out}; }
+[data-bb-chat-ui-voice-waveform] { position:absolute; left:50%; top:50%; z-index:1; display:block; width:min(72px,var(--bb-chat-ui-voice-orb-size)); height:min(72px,var(--bb-chat-ui-voice-orb-size)); transform:translate(-50%,-50%); overflow:visible; flex:none; opacity:1; pointer-events:none; transition:opacity 220ms ${EASE.out}; }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-voice-waveform] { width:min(80px,var(--bb-chat-ui-voice-orb-size)); height:min(80px,var(--bb-chat-ui-voice-orb-size)); }
 [data-bb-chat-ui-voice-orbit] > svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
 [data-bb-chat-ui-voice-actions][data-split="true"] [data-bb-chat-ui-voice-waveform] { opacity:0; }
 [data-bb-chat-ui-voice-actions][data-leaving="true"] > [data-bb-chat-ui-voice-primary]:disabled { opacity:1; }
 [data-bb-chat-ui-voice-actions][data-active="true"] > button::before { content:""; position:absolute; inset:0; border-radius:inherit; background:var(--foreground); opacity:0; pointer-events:none; }
-[data-bb-chat-ui-voice-actions][data-split="true"] > button::before { opacity:1; animation:bb-chat-ui-voice-form 460ms ${EASE.droplet}; }
+[data-bb-chat-ui-voice-actions][data-split="true"] > button::before { opacity:1; animation:bb-chat-ui-voice-form 520ms ${EASE.droplet}; }
 [data-bb-chat-ui-voice-send] [data-icon-root], [data-bb-chat-ui-voice-stop-symbol] { z-index:1; }
 [data-bb-chat-ui-voice-send] [data-icon-root] { position:relative; }
 [data-bb-chat-ui-voice-stop-symbol] { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
@@ -136,7 +136,7 @@ html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-split
 html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-split="true"] > [data-bb-chat-ui-voice-send] { opacity:1; transform:translate(calc(-50% + var(--bb-chat-ui-voice-shift)),-50%); pointer-events:auto; }
 html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-split="true"] > button:disabled { opacity:.5; }
 [data-bb-chat-ui-voice-neck] { position:absolute; left:50%; top:50%; width:var(--bb-chat-ui-fluid-control-size); height:var(--bb-chat-ui-voice-pill-height); color:var(--foreground); opacity:0; pointer-events:none; transform:translate(-50%,-50%) scale(.5,1); }
-[data-bb-chat-ui-voice-actions][data-split="true"] > [data-bb-chat-ui-voice-neck] { animation:bb-chat-ui-voice-separate 460ms ${EASE.droplet}; }
+[data-bb-chat-ui-voice-actions][data-split="true"] > [data-bb-chat-ui-voice-neck] { animation:bb-chat-ui-voice-separate 520ms ${EASE.droplet}; }
 @keyframes bb-chat-ui-voice-separate {
   0%,15% { opacity:0; transform:translate(-50%,-50%) scale(.5,1); }
   25% { opacity:1; transform:translate(-50%,-50%) scale(.7,1); }

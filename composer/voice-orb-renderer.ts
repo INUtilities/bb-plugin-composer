@@ -102,7 +102,7 @@ export function createVoiceOrb(svg: SVGSVGElement): VoiceOrbRenderer {
       // 02A는 선을 그리지 않고 링의 면 전체를 순서대로 fade한다.
       const animation = path.animate?.([
         { opacity: leaving ? from[index] : 0 }, { opacity: leaving ? 0 : 1 },
-      ], { duration: leaving ? 180 : 260, delay: index * (leaving ? 420 : 540) / (VOICE_ORBIT_RINGS - 1), easing: EASE.out, fill: 'both' });
+      ], { duration: leaving ? 220 : 300, delay: index * (leaving ? 480 : 600) / (VOICE_ORBIT_RINGS - 1), easing: EASE.out, fill: 'both' });
       if (animation) {
         current.animations.push(animation);
         animation.onfinish = () => {
