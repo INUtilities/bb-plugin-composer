@@ -11,7 +11,7 @@ Chat UI의 원격 experiment/fluid-composer에서 시작한 Fluid 입력·옵션
 - 원격 기준: INUtilities/bb-chat-ui, experiment/fluid-composer, 7ad97e54c514aac6527a408305989c3996b8ff07.
 - 초기 통합 기준: bb-chat-ui의 88b073be2adc0ea83c9cf9ffa11f178a1ad06a04.
 - 보존한 기준 태그: `composer-baseline-2026-11-06`. 이 태그의 제품 코드 기준은 bb-chat-ui의 `3dbed839d38d6f2ac78bed6f1e9d77b3f19fae4f`다.
-- 현재 main 제품 코드 기준: bb-chat-ui의 `6827ecf3e5d7d81e9de0e6499cbcbb122680b74c`. 출처와 파일 해시는 `docs/upstream-source.json`에 기록한다.
+- 현재 main 제품 코드 기준: bb-chat-ui의 `5a069eda0956aa10e5eba3aa97dd3daa980b2c9e`. 출처와 파일 해시는 `docs/upstream-source.json`에 기록한다.
 - composer/와 직접 필요한 lib/는 수정 없이 복사했다. 파일별 SHA와 엔진 원본은 docs/upstream-source.json, composer/UPSTREAM.json으로 확인한다.
 - 초기 독립 구현은 Git 이력에 보존하고, 현재 입력 코드는 Fluid로 통일한다.
 - 실제 분리 전까지 변경 정본은 bb-chat-ui다. 이 저장소는 검증된 버전의 사본으로 유지하며 자동 동기화는 하지 않는다.
@@ -55,4 +55,4 @@ plugin id는 composer, 교체 슬롯은 composer/composer이며 UI 이름은 Com
 
 모델 버튼의 중복 Effort 요약은 숨기고 기존 메뉴·title·접근성을 유지한다. 별도 Effort에는 hover 배경을 두지 않으며 확정된 글자만 300ms fade·zoom과 폭 전환으로 표시한다. 연속 변경·scope 변경·해제·reduced motion에서는 해당 모션을 정리한다.
 
-Low·Medium·High는 세 막대의 점등 수로 표시하고 Extra high는 고정된 오른쪽 칸에 긴 테마 강조색 막대를 추가한다. 미선정 None·Max·Ultra 후보 각 10개와 공식 SVG·LICENSE는 assets에 보관하며 실행 번들에는 넣지 않는다.
+Low·Medium·High는 세 막대의 점등 수로 표시하고 Extra high는 고정된 오른쪽 칸에 긴 테마 강조색 막대를 추가한다. 막대의 실제 두께는 2.5px이며 Effort 글자만 테마 보조색 72%로 표시한다. 미선정 None·Max·Ultra 후보 각 10개와 공식 SVG·LICENSE는 assets에 보관하며 실행 번들에는 넣지 않는다.

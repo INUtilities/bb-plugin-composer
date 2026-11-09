@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "6827ecf3e5d7d81e9de0e6499cbcbb122680b74c",
+  "integratedCommit": "5a069eda0956aa10e5eba3aa97dd3daa980b2c9e",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -89,7 +89,7 @@
     {
       "source": "composer/README.md",
       "destination": "composer/README.md",
-      "sha256": "29ca6c21573f370c67ba31824d6ade5efac6c9140e7f3f713ab9b2cd77b84ff5",
+      "sha256": "57f8d3130da850e2e35bebf7354fbaffc62882f5e75ec7def5123721837423db",
       "checkoutNote": "Git checkout line endings differ from the source; normalized UTF-8 text is identical"
     },
     {
@@ -510,7 +510,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "6d88c4313c73801183db63843f22f2573738d3326bfb094518455ea707b01782"
+      "sha256": "e0bb354ae2e1617cbb70d4064efc915a45df9b7875eeefc8df0b1d0af72c39f1"
     },
     {
       "source": "lib/fluid-composer-height.ts",
@@ -575,7 +575,7 @@
     {
       "source": "composer/EffortIcon.tsx",
       "destination": "composer/EffortIcon.tsx",
-      "sha256": "2011837116ae20bfa9eefbd59ef96b2b56a3d5358df749a3da5650361087647e"
+      "sha256": "2b085ad2e5269828831a76158f30a7ce5d273a9d1277613e1d426f75b0e48a6c"
     },
     {
       "source": "composer/assets/effort-candidates/LICENSE",

@@ -73,7 +73,7 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-panel-list] [ro
 [data-bb-chat-ui-fluid-effort]:hover { background:transparent; color:var(--muted-foreground); }
 [data-bb-chat-ui-fluid-effort] svg { flex:none; width:16px; height:16px; }
 [data-bb-chat-ui-fluid-effort-label] { display:inline-flex; flex:none; align-items:center; justify-content:center; max-width:70px; overflow:clip; }
-[data-bb-chat-ui-fluid-effort-value] { display:block; flex:none; width:max-content; max-width:70px; overflow:hidden; text-overflow:ellipsis; transform-origin:center; }
+[data-bb-chat-ui-fluid-effort-value] { display:block; flex:none; width:max-content; max-width:70px; overflow:hidden; text-overflow:ellipsis; transform-origin:center; color:color-mix(in oklab,var(--muted-foreground) 72%,transparent); }
 [data-bb-chat-ui-fluid-actions] { grid-area:actions; }
 [data-bb-chat-ui-fluid-actions] > [data-promptbox-submit-group] { display:flex; align-items:center; flex:none; }
 [data-bb-chat-ui-fluid-composer] [data-promptbox-send-menu] { margin-left:0; border-radius:999px; overflow:hidden; }
