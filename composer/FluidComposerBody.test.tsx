@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { FluidComposerBody } from './FluidComposerBody';
 import { EASE } from '../lib/motion';
-import { FLUID_EDITOR_FOLLOW_ANIMATION } from '../lib/fluid-composer-height';
+import { FLUID_EDITOR_FOLLOW_ANIMATION, FLUID_COMPOSER_INPUT_EASING } from '../lib/fluid-composer-height';
 
 let reduced=false;
 const listeners=new Set<()=>void>();
@@ -12,13 +12,14 @@ beforeEach(()=>{
  vi.stubGlobal('matchMedia',()=>({get matches(){return reduced;},addEventListener:(_type:string,fn:()=>void)=>listeners.add(fn),removeEventListener:(_type:string,fn:()=>void)=>listeners.delete(fn)}));
 });
 afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();});
-it('keeps the height curve but releases the moving caret immediately when typing continues',()=>{
+// 가로 이동이 클 때도 글을 clip 밖으로 튕기지 않고 후속 입력을 바로 받는다.
+it.each([[52,FLUID_COMPOSER_INPUT_EASING],[252,EASE.out]] as const)('keeps the height curve and releases the moving caret from x=%i',(startX,growEase)=>{
  let lines=1;
  const animations:{options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
  const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
   const full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
   const editor=this.classList.contains('ProseMirror');
-  const x=editor?(full?20:52):0,y=editor?(full?16:60):0,width=editor?280:400,height=editor?lines*24:this.hasAttribute('data-bb-chat-ui-fluid-content')&&lines>1?lines*24+68:52;
+  const x=editor?(full?20:startX):0,y=editor?(full?16:60):0,width=editor?280:400,height=editor?lines*24:this.hasAttribute('data-bb-chat-ui-fluid-content')&&lines>1?lines*24+68:52;
   return {x,y,top:y,left:x,width,height,right:x+width,bottom:y+height,toJSON:()=>({})};
  });
  const animate=vi.fn((_frames:Keyframe[],options:KeyframeAnimationOptions)=>{const cancel=vi.fn();animations.push({options,cancel});return {cancel,playState:'running'} as unknown as Animation;});
@@ -31,7 +32,7 @@ it('keeps the height curve but releases the moving caret immediately when typing
   lines=3;v.rerender(draw('세 줄'));act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
-  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
+  expect(animations.at(-1)!.options).toEqual({duration:400,easing:growEase});
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);
   const bubbled=vi.fn();v.container.addEventListener('beforeinput',bubbled);
   const input=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});
@@ -39,11 +40,11 @@ it('keeps the height curve but releases the moving caret immediately when typing
   expect(animations.at(-1)!.cancel).toHaveBeenCalled();
   expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');
   expect(input.defaultPrevented).toBe(false);expect(bubbled).toHaveBeenCalledOnce();
-  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 320ms');
+  expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.transition).toContain('height 400ms');
   lines=1;v.rerender(draw('한 줄'));act(()=>vi.advanceTimersByTime(20));
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('false');
   expect(animations[0].cancel).toHaveBeenCalled();
-  expect(animations.at(-1)!.options).toEqual({duration:320,easing:EASE.out});
+  expect(animations.at(-1)!.options).toEqual({duration:150,easing:'ease-out'});
   Object.defineProperty(animate.mock.results.at(-1)!.value,'playState',{value:'finished'});
   editor!.dispatchEvent(new InputEvent('beforeinput',{inputType:'insertText',bubbles:true}));
   expect(v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe('140px');

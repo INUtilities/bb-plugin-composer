@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "b845b6868fcb2663ef263bed6a6b2780cf3042f2",
+  "integratedCommit": "2a444d188daeb9cc5301b5a564a6f092fe83f5f0",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -34,12 +34,12 @@
     {
       "source": "composer/FluidComposerBody.test.tsx",
       "destination": "composer/FluidComposerBody.test.tsx",
-      "sha256": "bba08ecf09a47774c455f840ec4be3e5c6cf7539ceefc8b673a65e317de722a3"
+      "sha256": "d422135ec580b0ee07546ec1ca47e8077ac2ebe2627fffbcc6da57d096c89c59"
     },
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "2aefd058f5df0be66615a052a7d426163d6ad71f97c0139ed8c2b50d89a315aa"
+      "sha256": "53a6f330105d46aa3fae4495ebb7eb30de17ea1987219ff14052e8956fca94f1"
     },
     {
       "source": "composer/FluidComposerDetails.tsx",
@@ -89,7 +89,7 @@
     {
       "source": "composer/README.md",
       "destination": "composer/README.md",
-      "sha256": "4a484a65ca4bd69044852c89f39224e837452519425d30d6e1fedf8b5329f152",
+      "sha256": "ad4f2d679b13c994c9fd5b737de683ca8a0a2d95e08a187716fb208d0b43cc59",
       "checkoutNote": "Git checkout line endings differ from the source; normalized UTF-8 text is identical"
     },
     {
@@ -515,12 +515,12 @@
     {
       "source": "lib/fluid-composer-height.ts",
       "destination": "lib/fluid-composer-height.ts",
-      "sha256": "de2c49f07df5b1ef8ff1a6897723f03dd9a574c4fc26cdbd4c2d8de2951c9afd"
+      "sha256": "1e9b62a90f6d53b9ff1e53e3e1568eace1ffbfbfc7a05568158439f96b54299e"
     },
     {
       "source": "lib/fluid-composer-height.test.ts",
       "destination": "lib/fluid-composer-height.test.ts",
-      "sha256": "ad0fa38d53564756fb07de80227fd6c25b040354d641ea2f193368fc319418a9"
+      "sha256": "99efe24304665be6acb9f91877472abe09539a8e6b43c1c07a6c89e7f785e15b"
     },
     {
       "source": "lib/fluid-composer-layout.ts",

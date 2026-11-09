@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_MORPH_MS, FLUID_EDITOR_FOLLOW_ANIMATION, readFluidEditorPosition } from '../lib/fluid-composer-height';
+import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_INPUT_EASING, FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND, FLUID_COMPOSER_LINE_MS, FLUID_COMPOSER_MORPH_MS, FLUID_EDITOR_FOLLOW_ANIMATION, readFluidEditorPosition } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
@@ -145,6 +145,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (layoutFrame.current !== null) { element.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current); layoutFrame.current = null; }
     multilineRef.current = false; setMultiline(false);
   }, [draftText, voiceMode]);
+  // 같은 입력 노드의 가로 위치를 큰 펼침과 빠른 접힘에 맞춰 보정한다.
   useLayoutEffect(() => {
     const previous = previousPosition.current, column = editorColumn.current;
     previousPosition.current = null;
@@ -153,7 +154,8 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!next) return;
     const dx = previous.x - next.x;
     if (!dx) return;
-    layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, 0px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_INPUT_MS, easing: EASE.out });
+    const horizontalEase = next.x - Math.max(0, dx) * FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND < 0 ? EASE.out : FLUID_COMPOSER_INPUT_EASING;
+    layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, 0px)` }, { transform: 'translate(0, 0)' }], { duration: multiline ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_LINE_MS, easing: multiline ? horizontalEase : 'ease-out' });
   }, [multiline]);
   return <>
     {panelOpen ? <div data-bb-chat-ui-fluid-panel-layer="">{panel}</div> : null}

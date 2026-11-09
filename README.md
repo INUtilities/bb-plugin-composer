@@ -11,7 +11,7 @@ Chat UI의 원격 experiment/fluid-composer에서 시작한 Fluid 입력·옵션
 - 원격 기준: INUtilities/bb-chat-ui, experiment/fluid-composer, 7ad97e54c514aac6527a408305989c3996b8ff07.
 - 초기 통합 기준: bb-chat-ui의 88b073be2adc0ea83c9cf9ffa11f178a1ad06a04.
 - 보존한 기준 태그: `composer-baseline-2026-11-06`. 이 태그의 제품 코드 기준은 bb-chat-ui의 `3dbed839d38d6f2ac78bed6f1e9d77b3f19fae4f`다.
-- 현재 main 제품 코드 기준: bb-chat-ui의 `b845b6868fcb2663ef263bed6a6b2780cf3042f2`. 출처와 파일 해시는 `docs/upstream-source.json`에 기록한다.
+- 현재 main 제품 코드 기준: bb-chat-ui의 `2a444d188daeb9cc5301b5a564a6f092fe83f5f0`. 출처와 파일 해시는 `docs/upstream-source.json`에 기록한다.
 - composer/와 직접 필요한 lib/는 수정 없이 복사했다. 파일별 SHA와 엔진 원본은 docs/upstream-source.json, composer/UPSTREAM.json으로 확인한다.
 - 초기 독립 구현은 Git 이력에 보존하고, 현재 입력 코드는 Fluid로 통일한다.
 - 실제 분리 전까지 변경 정본은 bb-chat-ui다. 이 저장소는 검증된 버전의 사본으로 유지하며 자동 동기화는 하지 않는다.
@@ -25,7 +25,7 @@ Chat UI의 원격 experiment/fluid-composer에서 시작한 Fluid 입력·옵션
 한 줄 입력은 desktop 24px·phone 26px의 반원을 유지한다. 스쿼클 지원 시 여러 줄 입력의 실제 clip만 desktop 50.6px·phone 54.9px을 사용하며, 미지원은 기존 둥근 모서리를 유지한다.
 옵션 카드와 원형 버튼, Fluid의 높이·음성 동작은 원본을 유지한다. 이 배율은 시각적 비교값이며 정확한 곡선 환산식은 아니다.
 초안·첨부·전송 상태는 공개 SDK를 통해 BB가 관리한다.
-첫 펼침·음성 전환과 +·× 기호는 320ms, 옵션 필 전체는 기존 상단 정보 pill과 같은 물방울 460ms·45ms 간격, 펼친 입력의 줄 높이는 120ms로 이어 준다. 호스트가 초안을 비우면 즉시 접힌 입력으로 돌아온다.
+큰 입력 펼침은 400ms 탄성, 접힘·이미 펼친 입력의 줄 변화는 150ms 감속으로 잇는다. 높이 상한과 글의 왼쪽 경계를 넘을 수 있는 반동은 제한한다. 음성 전환과 +·× 기호는 기존 320ms, 옵션 필 전체는 물방울 460ms·45ms 간격을 유지한다. 호스트가 초안을 비우면 즉시 접힌 입력으로 돌아온다.
 
 ## 설치와 검증
 
