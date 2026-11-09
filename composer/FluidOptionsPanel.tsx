@@ -5,7 +5,7 @@ import { Icon } from './components/ui/icon';
 import { InlineDropdownMenuItems } from './components/ui/dropdown-menu';
 import { orderedPromptActions, PROMPT_ACTION_PRESENTATION } from './src/PromptBoxActionsMenu';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
-import '../lib/motion.css';
+import { staggerIn } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 export interface FluidOptionsPanelProps {
@@ -27,9 +27,11 @@ function pulse(): void {
 // 입력창 위의 옵션 필을 그리고 플러그인 항목은 공개 host renderer에 맡긴다.
 export function FluidOptionsPanel({ active = true, actions = [], plugins, onAttach, onAction, onClose, onPluginSelected }: FluidOptionsPanelProps) {
   const root = useRef<HTMLDivElement>(null);
-  // 직접 조작 때 필 배경면의 순차 등장을 즉시 끝낸다.
-  const stopEntering = useCallback(() => { root.current?.removeAttribute('data-bb-chat-ui-fluid-entering'); }, []);
+  const entering = useRef<Animation[]>([]);
+  // 직접 조작과 해제 때 필 전체의 순차 등장을 즉시 끝낸다.
+  const stopEntering = useCallback(() => { for (const animation of entering.current) animation.cancel(); entering.current = []; }, []);
   const visible = orderedPromptActions(actions).filter(action => action.text.length > 0);
+  // 기존 상단 pill과 같은 등장 모션을 실제 옵션 항목에 연결한다.
   useLayoutEffect(() => {
     if (!active) return;
     const panel = root.current;
@@ -40,14 +42,11 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
       ?? root.current)?.focus({ preventScroll: true });
     const motion = root.current?.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
     const items = Array.from(list?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
-    // 공통 droplet의 45ms 간격만 배경 가상 요소에 전달한다.
-    items.forEach((item, index) => item.style.setProperty('--bb-chat-ui-fluid-option-delay', `${index * 45}ms`));
-    if (!motion?.matches) panel?.setAttribute('data-bb-chat-ui-fluid-entering', '');
+    if (!motion?.matches) entering.current = staggerIn(items).filter((animation): animation is Animation => animation !== null);
     const reduce = () => { if (motion?.matches) stopEntering(); };
     motion?.addEventListener('change', reduce);
     return () => {
-      panel?.removeAttribute('data-bb-chat-ui-fluid-entering');
-      for (const item of items) item.style.removeProperty('--bb-chat-ui-fluid-option-delay');
+      stopEntering();
       motion?.removeEventListener('change', reduce);
     };
   }, [active, stopEntering]);

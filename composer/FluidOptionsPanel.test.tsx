@@ -76,38 +76,38 @@ it('does not take focus when retained only for the outgoing morph',()=>{
  const outside=document.createElement('input');document.body.append(outside);outside.focus();
  try{mount({active:false},[plugin()]);expect(document.activeElement).toBe(outside);}finally{outside.remove();}
 });
-// 모든 실제 항목의 배경면에 순서를 주고 해제 때 자체 표식을 제거한다.
-it('staggers droplet faces in item order without animating menu text or hit targets',()=>{
- const animate=vi.fn(),oldAnimate=Element.prototype.animate;Element.prototype.animate=animate;
- try{
-  const {v}=mount({onAttach:vi.fn(),actions:[{kind:'plan',text:'/plan '}]},[plugin(true)]);
-  const panel=screen.getByRole('region',{name:'컴포저 옵션'}),items=screen.getAllByRole('menuitem');
-  expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(true);
-  expect(items.map(item=>item.style.getPropertyValue('--bb-chat-ui-fluid-option-delay'))).toEqual(['0ms','45ms','90ms']);
-  expect(animate).not.toHaveBeenCalled();expect(items.every(item=>!item.style.transform)).toBe(true);
-  v.unmount();expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);
-  expect(items.every(item=>!item.style.getPropertyValue('--bb-chat-ui-fluid-option-delay'))).toBe(true);
+// 기존 상단 pill과 같은 구간별 모션을 필 전체에 순서대로 적용한다.
+it('matches the existing upper-pill droplet on each whole option with 45ms spacing',()=>{
+ const oldAnimate=Element.prototype.animate,entries:{target:Element;frames:Keyframe[];options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
+ Element.prototype.animate=function(frames,options){const entry={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};entries.push(entry);return entry as unknown as Animation;};
+ try{const {v}=mount({onAttach:vi.fn(),actions:[{kind:'plan',text:'/plan '}]},[plugin(true)]);const items=screen.getAllByRole('menuitem');
+  expect(entries.map(entry=>entry.target)).toEqual(items);
+  expect(entries.map(entry=>entry.options.delay)).toEqual([0,45,90]);
+  expect(entries[0].frames.map(frame=>frame.transform)).toEqual(['translateY(8px) scale(.82,.72)','translateY(-4px) scale(.94,1.16)','translateY(0) scale(1.1,.94)','translateY(-1px) scale(.985,1.015)','none']);
+  expect(entries[0].frames.map(frame=>frame.offset)).toEqual([0,.35,.65,.82,1]);
+  expect(entries[0].frames.slice(0,-1).every(frame=>frame.easing==='cubic-bezier(.36,0,.18,1)')).toBe(true);
+  expect(entries.every(entry=>entry.options.duration===460&&entry.options.fill==='backwards'&&entry.frames.every(frame=>frame.opacity===undefined))).toBe(true);
+  v.unmount();expect(entries.every(entry=>entry.cancel.mock.calls.length===1)).toBe(true);
  }finally{Element.prototype.animate=oldAnimate;}
 });
-// 동작 줄이기를 켜면 진행 중인 배경면 효과도 즉시 끝낸다.
-it('cancels droplet faces immediately when reduced motion is enabled',()=>{
+// 동작 줄이기를 켜면 필 전체의 진행 중인 등장도 즉시 끝낸다.
+it('cancels whole-pill droplets immediately when reduced motion is enabled',()=>{
  let change:(()=>void)|undefined;const media={matches:false,addEventListener:(_event:string,fn:()=>void)=>{change=fn;},removeEventListener:vi.fn()};
- const old=window.matchMedia;window.matchMedia=()=>media as unknown as MediaQueryList;
- try{const {v}=mount({onAttach:vi.fn()});const panel=screen.getByRole('region',{name:'컴포저 옵션'});expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(true);media.matches=true;change!();expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);v.unmount();expect(media.removeEventListener).toHaveBeenCalled();}finally{window.matchMedia=old;}
+ const old=window.matchMedia,oldAnimate=Element.prototype.animate,cancel=vi.fn();window.matchMedia=()=>media as unknown as MediaQueryList;Element.prototype.animate=()=>({cancel}) as unknown as Animation;
+ try{const {v}=mount({onAttach:vi.fn()});media.matches=true;change!();expect(cancel).toHaveBeenCalledOnce();v.unmount();expect(cancel).toHaveBeenCalledOnce();expect(media.removeEventListener).toHaveBeenCalled();}finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
 });
 // 처음부터 동작 줄이기이면 필을 지연 없이 표시한다.
-it('does not start a droplet sequence when reduced motion is already enabled',()=>{
- const old=window.matchMedia;window.matchMedia=()=>({matches:true,addEventListener:vi.fn(),removeEventListener:vi.fn()}) as unknown as MediaQueryList;
- try{mount({onAttach:vi.fn()});expect(screen.getByRole('region',{name:'컴포저 옵션'}).hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);}finally{window.matchMedia=old;}
+it('does not start whole-pill droplets when reduced motion is already enabled',()=>{
+ const old=window.matchMedia,oldAnimate=Element.prototype.animate,animate=vi.fn();window.matchMedia=()=>({matches:true,addEventListener:vi.fn(),removeEventListener:vi.fn()}) as unknown as MediaQueryList;Element.prototype.animate=animate;
+ try{mount({onAttach:vi.fn()});expect(animate).not.toHaveBeenCalled();}finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
 });
-// 직접 조작은 순서를 기다리지 않고 효과를 끝낸다.
-it('finishes droplet faces on pointer and keyboard interactions',()=>{
- const {v}=mount({onAttach:vi.fn()});let panel=screen.getByRole('region',{name:'컴포저 옵션'});
- fireEvent.pointerDown(screen.getByRole('menuitem'));expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);v.unmount();
- mount({onAttach:vi.fn()});panel=screen.getByRole('region',{name:'컴포저 옵션'});fireEvent.keyDown(panel,{key:'ArrowRight'});expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);
+// 직접 조작은 순서를 기다리지 않고 필 전체의 모션을 끝낸다.
+it.each(['pointer','keyboard','wheel'])('finishes whole-pill droplets on %s input',kind=>{
+ const oldAnimate=Element.prototype.animate,cancel=vi.fn();Element.prototype.animate=()=>({cancel}) as unknown as Animation;
+ try{mount({onAttach:vi.fn()});const panel=screen.getByRole('region',{name:'컴포저 옵션'});if(kind==='pointer')fireEvent.pointerDown(screen.getByRole('menuitem'));else if(kind==='keyboard')fireEvent.keyDown(panel,{key:'ArrowRight'});else fireEvent.wheel(panel,{deltaY:40});expect(cancel).toHaveBeenCalledOnce();}finally{Element.prototype.animate=oldAnimate;}
 });
-// 비활성 항목은 배경 효과와 무관하게 원래 흐림을 유지한다.
-it('preserves a disabled choice opacity during its droplet entrance',()=>{
+// 기존 상단 pill처럼 opacity를 건드리지 않고 비활성 흐림을 유지한다.
+it('preserves disabled opacity during the whole-pill droplet',()=>{
  const style=document.createElement('style');style.textContent='button:disabled { opacity:.4; }';document.head.append(style);
  try{mount({},[plugin(true)]);expect(getComputedStyle(screen.getByRole('menuitem')).opacity).toBe('0.4');}finally{style.remove();}
 });

@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "af35cc2f1a0922a91036354b4606d5e070856311",
+  "integratedCommit": "75fc18ff66c736d1605a6b1741ce52341e57fbee",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -54,12 +54,12 @@
     {
       "source": "composer/FluidOptionsPanel.test.tsx",
       "destination": "composer/FluidOptionsPanel.test.tsx",
-      "sha256": "0b27893bb59c6e03bee0e09c27bd0f1ab74a48ec42520f6abd7842054fb923db"
+      "sha256": "181e5536c9daaaadcd42d0f6f14b6f8ec041f94b415500279a59089cccfd59bb"
     },
     {
       "source": "composer/FluidOptionsPanel.tsx",
       "destination": "composer/FluidOptionsPanel.tsx",
-      "sha256": "7e87e92e335f9e269d5667f9aff1565eacad89709b5efc13cad8a3c85006c177"
+      "sha256": "f0f17776844c86642b4966e91c626c3163523f8dd054f9805264b9ceb0339da5"
     },
     {
       "source": "composer/FluidVoiceControl.test.tsx",
@@ -510,7 +510,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "d795ca86a15eedb65b85968987262b32a946a27fdbba441551a148b15299bbf0"
+      "sha256": "94eb300c75ab4eb2a5a329e8f69a71dd1268a5581dcbfff697133779e08c6449"
     },
     {
       "source": "lib/fluid-composer-height.ts",
@@ -556,11 +556,6 @@
       "source": "lib/send-haptic.ts",
       "destination": "lib/send-haptic.ts",
       "sha256": "8874bf049a4f869e1e3ad261fc6196f4498614b720d91e98fbb7c3a493e34ac4"
-    },
-    {
-      "source": "lib/motion.css",
-      "destination": "lib/motion.css",
-      "sha256": "18ab009ea298be8ccca4b21efdc9896f031fbb69ba3ec6adcaed56deb7684bea"
     }
   ]
 }
