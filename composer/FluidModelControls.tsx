@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useComposer, useSdk } from '@get-bb/plugin-sdk/app';
 import { Button } from './components/ui/button';
 import { useDeviceChrome } from '../lib/use-device';
@@ -6,6 +6,8 @@ import { postHaptic, readHapticBridge } from '../lib/send-haptic';
 
 type Effort = { reasoningEffort: string; label?: string; description: string };
 const labels: Record<string, string> = { none: 'None', minimal: 'Minimal', low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra high', max: 'Max', ultra: 'Ultra' };
+const EFFORT_LABEL_MS = 300;
+const EFFORT_WIDTH_EASING = 'cubic-bezier(.175,.885,.32,1.275)';
 
 // 일반 단계는 올라가는 막대로, max와 ultra는 서로 다른 기호로 표시한다.
 function EffortIcon({ level, index, count }: { level: string; index: number; count: number }) {
@@ -60,10 +62,56 @@ export function FluidModelControls({ controls, disabled = false, onError }: { co
   const efforts = catalog?.key === key ? catalog.efforts : [];
   const index = efforts.findIndex(item => item.reasoningEffort === level);
   const label = efforts[index]?.label || (level ? labels[level] ?? level : '');
+  const labelBox = useRef<HTMLSpanElement>(null), labelValue = useRef<HTMLSpanElement>(null);
+  const previousLabel = useRef<{ key: string; label: string; width: number } | null>(null);
+  const beforeLabelWidth = useRef<number | null>(null);
+  const labelAnimations = useRef<Animation[]>([]);
+  const labelWidthAnimation = useRef<Animation | null>(null);
+  // 확정된 글자는 레퍼런스처럼 fade·zoom하고 바뀐 길이만큼 폭을 이어 준다.
+  useLayoutEffect(() => {
+    const box = labelBox.current, value = labelValue.current;
+    if (!box || !value) return;
+    const previous = previousLabel.current;
+    const changed = previous?.key === key && previous.label !== label;
+    const width = value.offsetWidth;
+    const fromWidth = labelWidthAnimation.current?.playState === 'running'
+      ? box.getBoundingClientRect().width
+      : beforeLabelWidth.current ?? previous?.width ?? width;
+    for (const animation of labelAnimations.current) animation.cancel();
+    labelAnimations.current = []; labelWidthAnimation.current = null;
+    previousLabel.current = { key, label, width }; beforeLabelWidth.current = null;
+    if (!changed || box.ownerDocument.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const motion: Array<Animation | undefined> = [];
+    if (fromWidth > 0 && width > 0 && fromWidth !== width) {
+      labelWidthAnimation.current = box.animate?.(
+        [{ width: `${fromWidth}px` }, { width: `${width}px` }],
+        { duration: EFFORT_LABEL_MS, easing: EFFORT_WIDTH_EASING },
+      ) ?? null;
+      if (labelWidthAnimation.current) motion.push(labelWidthAnimation.current);
+    }
+    motion.push(value.animate?.(
+      [{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'scale(1)' }],
+      { duration: EFFORT_LABEL_MS, easing: 'ease' },
+    ));
+    labelAnimations.current = motion.filter((animation): animation is Animation => !!animation);
+  }, [key, label]);
+  const showEffort = !!(providerId && model && level);
+  // 모션 줄이기와 해제 시 이 글자에 연결한 모션과 리스너만 정리한다.
+  useEffect(() => {
+    const media = labelBox.current?.ownerDocument.defaultView?.matchMedia('(prefers-reduced-motion: reduce)');
+    // 진행 중인 폭과 글자 모션을 마치고 자연 크기의 확정값을 보여 준다.
+    const cancel = () => { for (const animation of labelAnimations.current) animation.cancel(); labelAnimations.current = []; labelWidthAnimation.current = null; };
+    // 모션 줄이기를 켜면 표시 중인 전환을 즉시 끝낸다.
+    const reduce = () => { if (media?.matches) cancel(); };
+    media?.addEventListener('change', reduce);
+    return () => { media?.removeEventListener('change', reduce); cancel(); };
+  }, [showEffort]);
   const blocked = disabled || composer.isSubmitting || pending === key || (catalog?.key === key && (index < 0 || efforts.length < 2));
   // 연속 클릭과 이전 화면의 오류 표시를 막고 호스트의 확정값을 기다린다.
   const cycle = async () => {
     if (blocked || activeRequest.current === key) return;
+    beforeLabelWidth.current = labelWidthAnimation.current?.playState === 'running'
+      ? null : labelBox.current?.getBoundingClientRect().width || labelValue.current?.offsetWidth || null;
     activeRequest.current = key; setPending(key);
     const controller = new AbortController(); request.current = controller;
     try {
@@ -80,16 +128,17 @@ export function FluidModelControls({ controls, disabled = false, onError }: { co
       setPending(previous => previous === key ? null : previous);
     }
   };
-  return <div data-bb-chat-ui-fluid-model-controls="">
+  return <div data-bb-chat-ui-fluid-model-controls="" data-bb-chat-ui-fluid-separate-effort={showEffort ? '' : undefined}>
     <div data-bb-chat-ui-fluid-native-controls="">{controls}</div>
-    {providerId && model && level ? <Button type="button" variant="ghost" size="sm" data-bb-chat-ui-fluid-effort=""
+    {showEffort ? <Button type="button" variant="ghost" size="sm" data-bb-chat-ui-fluid-effort=""
       aria-label={`Effort: ${label}`} aria-busy={pending === key || undefined} disabled={blocked}
       aria-description={blocked ? '모델 메뉴에서 선택' : '클릭하면 다음 단계'}
       onClick={event => {
         if (!blocked && device === 'phone' && event.nativeEvent.isTrusted) postHaptic(readHapticBridge(window), 'impact-light');
         void cycle();
       }}>
-      <EffortIcon level={level} index={index} count={efforts.length}/><span>{label}</span>
+      <EffortIcon level={level!} index={index} count={efforts.length}/>
+      <span ref={labelBox} data-bb-chat-ui-fluid-effort-label="" aria-hidden="true"><span ref={labelValue} data-bb-chat-ui-fluid-effort-value="">{label}</span></span>
     </Button> : null}
   </div>;
 }

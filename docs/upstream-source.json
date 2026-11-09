@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "a7b26a87ca84547729f884f2bc919c1de31a309f",
+  "integratedCommit": "8ebc08c70337d091decffe2001953faafbfb4f50",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -89,7 +89,7 @@
     {
       "source": "composer/README.md",
       "destination": "composer/README.md",
-      "sha256": "9c8af30c83dd7fe5d49ac9c582c40f30c4d353c1b9c4ecea28fed7f7341b6d50",
+      "sha256": "b877ce14327cb69a918fa2405d6c129e9fbb5d7230630612dd176a9721e6dcd4",
       "checkoutNote": "Git checkout line endings differ from the source; normalized UTF-8 text is identical"
     },
     {
@@ -510,7 +510,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "ba707c4a724c8cda4c19dcd82a759f831b803f3f1560b480dc3ff983871766ea"
+      "sha256": "6d88c4313c73801183db63843f22f2573738d3326bfb094518455ea707b01782"
     },
     {
       "source": "lib/fluid-composer-height.ts",
@@ -560,12 +560,12 @@
     {
       "source": "composer/FluidModelControls.tsx",
       "destination": "composer/FluidModelControls.tsx",
-      "sha256": "8a06a7bca6c5feed7e853a90787a66ae1551ea369aad6808d0819433b4e02bcb"
+      "sha256": "ff141df28bd824cd52c51ec18193f76484ff54267f5727f79848f7961754a616"
     },
     {
       "source": "composer/FluidModelControls.test.tsx",
       "destination": "composer/FluidModelControls.test.tsx",
-      "sha256": "7a03876d12c831f2d3ae6e2fc15e02cc1d8b8d7e8c23d97cd98df1debb5f37d5"
+      "sha256": "6f7331f4b283cd29e3c1325a6f1bd97a69af0449fde1616362d0a6a983b015f8"
     }
   ]
 }

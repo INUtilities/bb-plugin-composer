@@ -259,3 +259,7 @@ selection 햅틱을 한 번 낸다. 기존 음성·메뉴 선택·전송 햅틱�
 ## 입력 안의 모델과 Effort
 
 모델 메뉴는 기존 host 선택을 유지하며, 옆의 Effort 버튼은 지원 단계만 순환한다. 일반 단계는 높이가 다른 막대, Max는 별, Ultra는 광선 아이콘으로 구분한다. 단계 목록은 첫 클릭에만 현재 실행 환경에서 읽고, 대화 전환·입력마다 조회하지 않는다. 목록 로딩 중 중복 클릭과 이전 대화의 늦은 결과를 차단하며, 조회·선택 오류 때도 원래 모델 메뉴를 유지한다. 모델과 기기별 메뉴·서비스 등급은 기존 메뉴에서 선택한다.
+
+별도 Effort가 있을 때 native 모델 trigger의 중복 effort 요약만 숨긴다. Effort는 hover 배경을 두지 않으며 확정된 새 글자가 300ms fade·zoom으로 나타나고 폭도 이어진다. 연속 변경·scope 변경·unmount·reduced motion에서 모션을 정리하며 기존 모델 메뉴·title·접근성을 유지한다.
+
+phone의 native 모델 summary가 `span.contents`로 묶인 구조에서도 첫 provider 또는 service-tier 아이콘만 남겨 기존 압축 배치를 유지한다. 이 숨김은 phone의 Fluid native 컨트롤에 한정한다.

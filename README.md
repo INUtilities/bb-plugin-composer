@@ -11,7 +11,7 @@ Chat UI의 원격 experiment/fluid-composer에서 시작한 Fluid 입력·옵션
 - 원격 기준: INUtilities/bb-chat-ui, experiment/fluid-composer, 7ad97e54c514aac6527a408305989c3996b8ff07.
 - 초기 통합 기준: bb-chat-ui의 88b073be2adc0ea83c9cf9ffa11f178a1ad06a04.
 - 보존한 기준 태그: `composer-baseline-2026-11-06`. 이 태그의 제품 코드 기준은 bb-chat-ui의 `3dbed839d38d6f2ac78bed6f1e9d77b3f19fae4f`다.
-- 현재 main 제품 코드 기준: bb-chat-ui의 `a7b26a87ca84547729f884f2bc919c1de31a309f`. 출처와 파일 해시는 `docs/upstream-source.json`에 기록한다.
+- 현재 main 제품 코드 기준: bb-chat-ui의 `8ebc08c70337d091decffe2001953faafbfb4f50`. 출처와 파일 해시는 `docs/upstream-source.json`에 기록한다.
 - composer/와 직접 필요한 lib/는 수정 없이 복사했다. 파일별 SHA와 엔진 원본은 docs/upstream-source.json, composer/UPSTREAM.json으로 확인한다.
 - 초기 독립 구현은 Git 이력에 보존하고, 현재 입력 코드는 Fluid로 통일한다.
 - 실제 분리 전까지 변경 정본은 bb-chat-ui다. 이 저장소는 검증된 버전의 사본으로 유지하며 자동 동기화는 하지 않는다.
@@ -52,3 +52,5 @@ plugin id는 composer, 교체 슬롯은 composer/composer이며 UI 이름은 Com
 실제 phone·IME·마이크·업로드·외부 전송과 최종 화면 판정은 별도 검수가 필요하다.
 
 모델 선택은 입력창 안의 + 오른쪽에서 기존 host 메뉴를 연다. 옆의 Effort는 첫 활성화에만 현재 환경의 목록을 읽고 지원 단계를 순환한다. 일반 단계는 막대, Max는 별, Ultra는 광선 아이콘으로 구분한다. 대화 전환·입력에는 조회를 추가하지 않으며 초안과 첨부를 유지한다.
+
+모델 버튼의 중복 Effort 요약은 숨기고 기존 메뉴·title·접근성을 유지한다. 별도 Effort에는 hover 배경을 두지 않으며 확정된 글자만 300ms fade·zoom과 폭 전환으로 표시한다. 연속 변경·scope 변경·해제·reduced motion에서는 해당 모션을 정리한다.
