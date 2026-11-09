@@ -96,6 +96,7 @@ it('animates the confirmed label and cancels its previous motion on repeated cha
  try{expect(animations).toHaveLength(0);const button=screen.getByRole('button',{name:'Effort: Medium'});fireEvent.click(button);await screen.findByRole('button',{name:'Effort: High'});
  expect(animations.some(item=>item.target.hasAttribute('data-bb-chat-ui-fluid-effort-value')&&item.frames[0].opacity===0&&item.frames[0].transform==='scale(.92)')).toBe(true);
  expect(animations.some(item=>item.target.hasAttribute('data-bb-chat-ui-fluid-effort-label')&&item.frames[0].width!==item.frames[1].width)).toBe(true);
+ await waitFor(()=>expect(button.hasAttribute('disabled')).toBe(false));
  const old=[...animations];fireEvent.click(button);await screen.findByRole('button',{name:'Effort: Max'});for(const item of old)expect(item.cancel).toHaveBeenCalled();view.unmount();for(const item of animations)expect(item.cancel).toHaveBeenCalled();
  }finally{view.unmount();measure.mockRestore();Element.prototype.animate=original;}
 });

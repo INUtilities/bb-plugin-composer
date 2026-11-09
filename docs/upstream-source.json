@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "5a069eda0956aa10e5eba3aa97dd3daa980b2c9e",
+  "integratedCommit": "b845b6868fcb2663ef263bed6a6b2780cf3042f2",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -89,7 +89,7 @@
     {
       "source": "composer/README.md",
       "destination": "composer/README.md",
-      "sha256": "57f8d3130da850e2e35bebf7354fbaffc62882f5e75ec7def5123721837423db",
+      "sha256": "4a484a65ca4bd69044852c89f39224e837452519425d30d6e1fedf8b5329f152",
       "checkoutNote": "Git checkout line endings differ from the source; normalized UTF-8 text is identical"
     },
     {
@@ -510,7 +510,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "e0bb354ae2e1617cbb70d4064efc915a45df9b7875eeefc8df0b1d0af72c39f1"
+      "sha256": "b8b6ef2b41e7cadc5117c7c7dcc455e66228cdaf0585260fc057559e0795e454"
     },
     {
       "source": "lib/fluid-composer-height.ts",
@@ -565,17 +565,17 @@
     {
       "source": "composer/FluidModelControls.test.tsx",
       "destination": "composer/FluidModelControls.test.tsx",
-      "sha256": "6f7331f4b283cd29e3c1325a6f1bd97a69af0449fde1616362d0a6a983b015f8"
+      "sha256": "213877fd91b8f708f375992fd02c44c440201c0357f6e01bd3474cbe0d23bc08"
     },
     {
       "source": "composer/EffortIcon.test.tsx",
       "destination": "composer/EffortIcon.test.tsx",
-      "sha256": "e5fb0ac4647f670669c58fa41f6a0337f1bb2b8d784248ac1475a9155f1fe9c9"
+      "sha256": "8c72287d105e6f7881090b167e56916f1d9dfa42c5c0275718984280519b3d29"
     },
     {
       "source": "composer/EffortIcon.tsx",
       "destination": "composer/EffortIcon.tsx",
-      "sha256": "2b085ad2e5269828831a76158f30a7ce5d273a9d1277613e1d426f75b0e48a6c"
+      "sha256": "8ad1c48f99205cbaa7c7aa4c9a7e6978e85f7c3f8689b10287c476f4e9c0d952"
     },
     {
       "source": "composer/assets/effort-candidates/LICENSE",
