@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { FluidComposerBody } from './FluidComposerBody';
 import { EASE } from '../lib/motion';
+import { fluidComposerCss } from '../lib/fluid-composer';
 import { FLUID_EDITOR_FOLLOW_ANIMATION, FLUID_COMPOSER_INPUT_EASING } from '../lib/fluid-composer-height';
 
 let reduced=false;
@@ -61,7 +62,7 @@ it.each([[52,FLUID_COMPOSER_INPUT_EASING],[252,EASE.out]] as const)('keeps the h
 const view=(open=false)=><FluidComposerBody panelOpen={open} panel={<div role="region" aria-label="옵션"><button>선택</button></div>} editor={<textarea defaultValue="보존할 초안"/>} options={<button>＋</button>} actions={<button>전송</button>} attachments={null}/>;
 // 빈 초안의 접힘과 호스트가 보존·복구한 초안을 같은 입력 노드에서 확인한다.
 it('resets a host-cleared draft before the next frame without losing a retained or restored draft',()=>{
- let lines=3;
+ let lines=1;
  const cancel=vi.fn(),animate=vi.fn(()=>({cancel,playState:'running'}));
  const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
  Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
@@ -73,9 +74,10 @@ it('resets a host-cleared draft before the next frame without losing a retained 
  });
  // 호스트가 보존하거나 비우거나 복구한 초안만 입력 본문에 전달한다.
  const draw=(text:string,open=false)=><FluidComposerBody draftText={text} panelOpen={open} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
- const v=render(draw('보존할\n초안'));
+ const v=render(draw('처음'));
  try{
   act(()=>vi.advanceTimersByTime(20));
+  lines=3;v.rerender(draw('보존할\n초안'));act(()=>vi.advanceTimersByTime(20));
   const viewport=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!;
   expect(viewport.dataset.multiline).toBe('true');
   const editor=v.container.querySelector('.ProseMirror'),count=animate.mock.calls.length;
@@ -223,4 +225,92 @@ it('contains input touch gestures while preserving inner scrolling, pinch and cl
  expect(touch('touchmove',160).defaultPrevented).toBe(false);editor.scrollTop=400;expect(touch('touchmove',140).defaultPrevented).toBe(true);expect(parent).not.toHaveBeenCalled();
  touch('touchstart',180,2);expect(touch('touchmove',160,2).defaultPrevented).toBe(false);expect(parent).toHaveBeenCalledTimes(1);
  v.unmount();v.container.append(viewport);touch('touchstart',160);expect(touch('touchmove',140).defaultPrevented).toBe(false);expect(parent).toHaveBeenCalledTimes(2);
+});
+
+// 원격 입력·caret 회귀 검증을 현재 400ms 높이 규격으로 유지한다.
+it('starts the full-width layout and its transition in the input commit before another animation frame',()=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const x=editor?(full?20:52):0,y=editor?(full?16:lines>1?48:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
+ const animate=vi.fn(()=>({cancel:vi.fn(),playState:'running'}));
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('한 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const editor=v.container.querySelector('.ProseMirror');
+  const before=new InputEvent('beforeinput',{inputType:'insertText',data:'ㅇ',bubbles:true,cancelable:true});
+  editor!.dispatchEvent(before);
+  lines=2;v.rerender(draw('줄 경계를 넘는 입력'));
+  // No rAF/timer advance: the narrow wrapped layout must never reach paint.
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.getAttribute('data-multiline')).toBe('true');
+  expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+  expect(before.defaultPrevented).toBe(false);
+  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(32px, 0px)'},{transform:'translate(0, 0)'}],{duration:400,easing:FLUID_COMPOSER_INPUT_EASING});
+ }finally{
+  v.unmount();bounds.mockRestore();
+  if(descriptor)Object.defineProperty(HTMLElement.prototype,'animate',descriptor);
+  else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
+ }
+});
+
+// 원격 입력·caret 회귀 검증을 현재 400ms 높이 규격으로 유지한다.
+it('moves the real focused editor with the input height curve without replacing its selection',()=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const x=editor?(full?20:52):0,y=editor?(full?16:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ const oldAnimate=HTMLElement.prototype.animate,animate=vi.fn(()=>({cancel:vi.fn(),playState:'running'}));
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" contentEditable suppressContentEditableWarning style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('첫 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!;editor.focus();
+  const selection=document.getSelection()!;selection.selectAllChildren(editor);selection.collapseToEnd();
+  lines=2;v.rerender(draw('첫 줄\n다음 줄'));
+  act(()=>vi.advanceTimersByTime(20));
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.getAttribute('data-multiline')).toBe('true');
+  expect(animate).toHaveBeenLastCalledWith([{transform:'translate(32px, 0px)'},{transform:'translate(0, 0)'}],{duration:400,easing:FLUID_COMPOSER_INPUT_EASING});
+  expect(document.activeElement).toBe(editor);
+  expect(editor.contains(selection.anchorNode)).toBe(true);expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+ }finally{v.unmount();bounds.mockRestore();if(oldAnimate)Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:oldAnimate});else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
+});
+
+// 원격 입력·caret 회귀 검증을 현재 400ms 높이 규격으로 유지한다.
+it('hides the phone caret only while the editor column slides into its new layout',()=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const x=editor?(full?20:52):0,y=editor?(full?16:60):0;
+  return {x,y,left:x,top:y,width:400,height:editor?lines*24:136} as DOMRect;
+ });
+ const animations:Animation[]=[];
+ const oldAnimate=HTMLElement.prototype.animate;
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:vi.fn(()=>{const a={cancel:vi.fn(),playState:'running',onfinish:null,oncancel:null} as unknown as Animation;animations.push(a);return a;})});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('첫 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const column=v.container.querySelector('[data-bb-chat-ui-fluid-editor]')!;
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(false);
+  lines=2;v.rerender(draw('첫 줄\n다음 줄'));
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(true);
+  act(()=>{animations.at(-1)!.onfinish?.call(animations.at(-1)!,{} as AnimationPlaybackEvent);});
+  expect(column.hasAttribute('data-bb-chat-ui-fluid-moving')).toBe(false);
+ }finally{v.unmount();bounds.mockRestore();Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:oldAnimate});}
+});
+
+// 원격 입력·caret 회귀 검증을 현재 400ms 높이 규격으로 유지한다.
+it('makes the moving caret transparent on phone only',()=>{
+ expect(fluidComposerCss).toContain('html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }');
+ expect(fluidComposerCss).not.toMatch(/(^|\n)\[data-bb-chat-ui-fluid-editor\]\[data-bb-chat-ui-fluid-moving\]/);
 });

@@ -1,0 +1,51 @@
+{
+  "kind": "unapplied-composer-morph-prototypes",
+  "baseCommit": "b845b6868fcb2663ef263bed6a6b2780cf3042f2",
+  "source": "git archive of baseCommit (working tree changes excluded)",
+  "productFiles": [
+    {
+      "file": "composer/FluidComposerBody.tsx",
+      "sha256": "2aefd058f5df0be66615a052a7d426163d6ad71f97c0139ed8c2b50d89a315aa"
+    },
+    {
+      "file": "composer/FluidComposerToggle.tsx",
+      "sha256": "aeeac1466b0942231c847ed5fbb396cdf4d668914a7bed0a6f71dab2960416d1"
+    },
+    {
+      "file": "composer/EffortIcon.tsx",
+      "sha256": "8ad1c48f99205cbaa7c7aa4c9a7e6978e85f7c3f8689b10287c476f4e9c0d952"
+    },
+    {
+      "file": "composer/components/ui/button.tsx",
+      "sha256": "af7d9c03a7bbffe3cae6e1a8010025dfaeac6e0c00132be4741c4c7fdaa65e9c"
+    },
+    {
+      "file": "lib/fluid-composer.ts",
+      "sha256": "b8b6ef2b41e7cadc5117c7c7dcc455e66228cdaf0585260fc057559e0795e454"
+    },
+    {
+      "file": "lib/fluid-composer-height.ts",
+      "sha256": "de2c49f07df5b1ef8ff1a6897723f03dd9a574c4fc26cdbd4c2d8de2951c9afd"
+    },
+    {
+      "file": "lib/fluid-composer-layout.ts",
+      "sha256": "e9b8279854cddaf1d1110d331fcdb3fd886b9ef6637c3a67e36b17fb5fd4090e"
+    },
+    {
+      "file": "lib/composer-effort-wave.ts",
+      "sha256": "832acf6b4a07ea995a140cad001022ac2c89d905e2c03142c9ae051acb99f84f"
+    },
+    {
+      "file": "lib/composer-menu-glass.ts",
+      "sha256": "063c716e345159955756d75331721b602defed3f6577957588d11a6d80066d0b"
+    },
+    {
+      "file": "lib/motion.ts",
+      "sha256": "3bd4c9549956f316085f2365e697228ebd68a4652341e1cd01d24843d7378ba1"
+    }
+  ],
+  "appCss": "dist/app.css from the checkout (untracked build output)",
+  "outputSha": "802ef29b916d5c6ce86a194fdd2e1a3d53af20299cf7fc5ee16c726f270a6933",
+  "productModified": false,
+  "remoteCalls": false
+}

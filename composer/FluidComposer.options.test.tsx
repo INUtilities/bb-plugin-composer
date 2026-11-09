@@ -6,7 +6,8 @@ import type { ExperimentalComposerRendererApi } from '@get-bb/plugin-sdk/app';
 import { PromptBoxInternal } from './src/PromptBoxInternal';
 import { injectFluidComposer } from '../lib/fluid-composer';
 
-beforeEach(()=>vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}})));
+// 기존 방식의 계약은 토글을 끈 상태에서 계속 검증한다.
+beforeEach(()=>{sessionStorage.setItem('bb-chat-ui:fluid-slot-picker','off');vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}}));});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 function mount(){
  const run=vi.fn();

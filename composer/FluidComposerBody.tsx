@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_INPUT_EASING, FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND, FLUID_COMPOSER_LINE_MS, FLUID_COMPOSER_MORPH_MS, FLUID_EDITOR_FOLLOW_ANIMATION, readFluidEditorPosition } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
@@ -28,14 +28,15 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const multilineRef = useRef(false), layoutFrame = useRef<number | null>(null);
   const previousDraft = useRef({ text: draftText, voiceMode });
   const previousPosition = useRef<{ x: number; y: number } | null>(null);
+  const inputPosition = useRef<{ x: number; y: number } | null>(null);
   const layoutAnimation = useRef<Animation | null>(null);
   const actionAnimation = useRef<Animation | null>(null);
   const actionPosition = useRef<{ x: number; y: number } | null>(null);
   const previousVoiceMode = useRef(voiceMode);
   const voicePane = useRef<HTMLElement | null>(null);
-  const layoutProbe = useRef(() => {});
-  // 접힌 입력의 가용 폭으로 배치를 정하고 가로 전환의 시작점을 보관한다.
-  layoutProbe.current = () => {
+  const layoutProbe = useRef((_beforeInput?: { x: number; y: number }) => {});
+  // 입력 전 위치를 사용해 원격의 첫 프레임 보정과 현재 높이 곡선을 함께 유지한다.
+  layoutProbe.current = beforeInput => {
     if (voiceMode) {
       const element = viewport.current, pane = voicePane.current;
       if (!element || !pane) return;
@@ -51,11 +52,10 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!draftText && !voiceMode) actionPosition.current = actionColumn.current.getBoundingClientRect();
     const next = voiceMode || needsFullWidthComposer(row.current, input, optionColumn.current, actionColumn.current);
     if (next === multilineRef.current) return;
-    previousPosition.current = readFluidEditorPosition(editorColumn.current, content.current);
+    previousPosition.current = beforeInput ?? readFluidEditorPosition(editorColumn.current, content.current);
     layoutAnimation.current?.cancel();
     multilineRef.current = next; setMultiline(next);
   };
-  // 같은 프레임의 배치 요청을 한 번만 처리한다.
   const scheduleLayout = useCallback(() => {
     const win = viewport.current?.ownerDocument.defaultView;
     if (!win || layoutFrame.current !== null) return;
@@ -67,15 +67,19 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const element = viewport.current;
     const stopHeight = bindFluidComposerHeight(element, content.current, () => editorColumn.current);
     const stopScroll = bindComposerScrollBoundary(element.closest<HTMLElement>('[data-bb-chat-ui-fluid-composer]') ?? element);
-    // 후속 입력은 가로·세로 이동을 즉시 끝내고 입력 사건을 그대로 전달한다.
     const interruptPosition = (event: Event) => {
       if (!(event.target instanceof win.Element) || !event.target.closest('[data-bb-chat-ui-fluid-editor]')) return;
+      if (!multilineRef.current) {
+        // 좁은 열에서 이미 줄바꿈된 좌표를 모션 시작점으로 삼지 않는다.
+        inputPosition.current = editorColumn.current && content.current ? readFluidEditorPosition(editorColumn.current, content.current) : null;
+      }
       const followers = editorColumn.current?.getAnimations?.().filter(animation => animation.id === FLUID_EDITOR_FOLLOW_ANIMATION && animation.playState === 'running') ?? [];
       if (layoutAnimation.current?.playState !== 'running' && !followers.length) return;
       if (element.getAttribute('data-bb-chat-ui-fluid-view') !== 'input') return;
       layoutAnimation.current?.cancel();
       layoutAnimation.current = null;
       for (const animation of followers) animation.cancel();
+      editorColumn.current?.removeAttribute('data-bb-chat-ui-fluid-moving');
       // 연속 입력 때는 커서를 즉시 풀고, 아직 작은 창에 새 줄이 잘리지 않게 한다.
       const height = content.current?.getBoundingClientRect().height;
       if (height !== undefined && Number.isFinite(height) && height > 0) {
@@ -86,7 +90,6 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
         element.style.transition = transition;
       }
     };
-    // 줄바꿈 키도 새 입력 전에 진행 중인 위치 보정을 끝낸다.
     const interruptEnter = (event: KeyboardEvent) => { if (event.key === 'Enter') interruptPosition(event); };
     element.addEventListener('beforeinput', interruptPosition, true);
     element.addEventListener('keydown', interruptEnter, true);
@@ -117,7 +120,16 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
       element.style.removeProperty('--bb-chat-ui-voice-backdrop-width'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-left'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-bottom');
     };
   }, [!!voice, voiceMode, scheduleLayout]);
-  useEffect(scheduleLayout, [draftText, editorReady, voiceMode, scheduleLayout]);
+  useLayoutEffect(() => {
+    // 입력이 좁은 열에서 먼저 줄바꿈된 한 프레임을 그리지 않게 한다.
+    if (layoutFrame.current !== null) {
+      viewport.current?.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current);
+      layoutFrame.current = null;
+    }
+    const beforeInput = previousDraft.current.text !== draftText ? inputPosition.current : null;
+    inputPosition.current = null;
+    layoutProbe.current(beforeInput ?? undefined);
+  }, [draftText, editorReady, panelOpen, voiceMode]);
   useLayoutEffect(() => {
     const column = actionColumn.current, previous = actionPosition.current;
     const changed = previousVoiceMode.current !== voiceMode;
@@ -129,7 +141,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const dx = previous.x - next.x, dy = previous.y - next.y;
     if (dx || dy) actionAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_MORPH_MS, easing: EASE.out });
   }, [voiceMode]);
-  // 호스트가 초안을 비웠을 때만 대기 중인 배치·위치 모션 없이 접힌 입력으로 복귀한다.
+  // 현재 제품 규칙대로 호스트가 초안을 비우면 높이와 입력 모션을 즉시 마친다.
   useLayoutEffect(() => {
     const cleared = !previousDraft.current.voiceMode && previousDraft.current.text !== undefined && previousDraft.current.text !== '' && draftText === '';
     previousDraft.current = { text: draftText, voiceMode };
@@ -139,9 +151,10 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!cleared) return;
     element.setAttribute('data-bb-chat-ui-fluid-reset', 'true');
     element.style.transition = 'none';
-    layoutAnimation.current?.cancel(); layoutAnimation.current = null;
     previousPosition.current = null;
+    layoutAnimation.current?.cancel(); layoutAnimation.current = null;
     for (const animation of editorColumn.current?.getAnimations?.() ?? []) if (animation.id === FLUID_EDITOR_FOLLOW_ANIMATION) animation.cancel();
+    editorColumn.current?.removeAttribute('data-bb-chat-ui-fluid-moving');
     if (layoutFrame.current !== null) { element.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current); layoutFrame.current = null; }
     multilineRef.current = false; setMultiline(false);
   }, [draftText, voiceMode]);
@@ -155,7 +168,14 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const dx = previous.x - next.x;
     if (!dx) return;
     const horizontalEase = next.x - Math.max(0, dx) * FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND < 0 ? EASE.out : FLUID_COMPOSER_INPUT_EASING;
-    layoutAnimation.current = column.animate([{ transform: `translate(${dx}px, 0px)` }, { transform: 'translate(0, 0)' }], { duration: multiline ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_LINE_MS, easing: multiline ? horizontalEase : 'ease-out' });
+    const animation = column.animate([{ transform: `translate(${dx}px, 0px)` }, { transform: 'translate(0, 0)' }], { duration: multiline ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_LINE_MS, easing: multiline ? horizontalEase : 'ease-out' });
+    layoutAnimation.current = animation;
+    // iOS draws its caret outside the page and does not follow this transform,
+    // so phone CSS hides the caret until the column reaches its new place.
+    column.setAttribute('data-bb-chat-ui-fluid-moving', '');
+    animation.onfinish = animation.oncancel = () => {
+      if (layoutAnimation.current === animation || layoutAnimation.current === null) column.removeAttribute('data-bb-chat-ui-fluid-moving');
+    };
   }, [multiline]);
   return <>
     {panelOpen ? <div data-bb-chat-ui-fluid-panel-layer="">{panel}</div> : null}

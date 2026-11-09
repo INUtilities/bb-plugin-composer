@@ -1,4 +1,5 @@
 import { FluidModelControls } from '../FluidModelControls';
+import { FluidComposerPicker } from '../FluidComposerPicker';
 import { FluidVoiceControl } from "../FluidVoiceControl";
 import { FluidVoiceWaveform } from "../FluidVoiceWaveform";
 import { IDLE_HOLD_VOICE, holdVoiceIsActive } from "../../lib/hold-voice";
@@ -7,7 +8,6 @@ import { FluidComposerBody } from "../FluidComposerBody";
 import { FluidComposerToggle } from "../FluidComposerToggle";
 import { FluidOptionsPanel } from "../FluidOptionsPanel";
 import { FluidComposerDetails } from "../FluidComposerDetails";
-import { useDeviceChrome } from "../../lib/use-device";
 import {
   experimental_ComposerRoot as ComposerRoot,
   experimental_FailedVoiceRecordings as FailedVoiceRecordings,
@@ -132,6 +132,7 @@ import {
   removeEmptyBlockquotes,
 } from "./editor/prompt-editor-blockquote";
 import { applyPromptParagraphNewline } from "./editor/prompt-editor-paragraph";
+import { useDeviceChrome } from "../../lib/use-device";
 import { MentionMenu } from "./mentions/MentionMenu";
 import { useTypeaheadMenuMaxHeight } from "./useTypeaheadMenuMaxHeight";
 import {
@@ -1016,7 +1017,7 @@ function isIPadHardwareEnterCandidate(event: KeyboardEvent): boolean {
   );
 }
 
-// 호스트 초안과 입력 기능을 유지하며 Fluid 입력과 상단 옵션 필을 연결한다.
+// 같은 입력 엔진에 기존 메뉴와 선택 가능한 Fluid 모델 슬롯을 연결한다.
 export function PromptBoxInternal({
   id,
   fluid = false,
@@ -1084,17 +1085,16 @@ export function PromptBoxInternal({
   } = attachmentConfig;
   const isPointerCoarse = usePointerCoarse();
   const { device } = useDeviceChrome();
+  const isPhoneWebKitRef = useRef(false);
+  isPhoneWebKitRef.current =
+    device === "phone" && isPointerCoarse &&
+    typeof navigator !== "undefined" &&
+    /Apple Computer/u.test(navigator.vendor) &&
+    /\bAppleWebKit\//u.test(navigator.userAgent);
   const isCompactViewport = useIsCompactViewport();
   const blurOnPointerSubmit =
     surface === "thread" && isCompactViewport && isPointerCoarse;
   const isIPadOSWebKitDevice = useMemo(isIPadOSWebKit, []);
-  const isPhoneWebKitDevice = useMemo(
-    () =>
-      device === "phone" &&
-      /Apple Computer/u.test(navigator.vendor) &&
-      /\bAppleWebKit\//u.test(navigator.userAgent),
-    [device],
-  );
   const editorEnterKeyHint = isPointerCoarse ? "enter" : "send";
   const formRef = useRef<HTMLFormElement>(null);
   const typeaheadMenuRef = useRef<HTMLDivElement>(null);
@@ -1167,6 +1167,10 @@ export function PromptBoxInternal({
     (event: KeyboardEvent, isOriginalIPadHardwareEnter?: boolean) => boolean
   >(() => false);
   const compositionEndedAtRef = useRef(Number.NEGATIVE_INFINITY);
+  // iPhone Return that ProseMirror's iOS fallback has not dispatched yet, and
+  // whether the next key already applied it ahead of a late native paragraph.
+  const pendingPhoneEnterDocRef = useRef<ProseMirrorNode | null>(null);
+  const appliedPhoneEnterRef = useRef(false);
   const postCompositionKeyDownEvents = usePostCompositionKeyDownEvents();
   const dispatchAppCommandKey = renderer.dispatchAppCommandKey;
   const syncTriggerStateRef = useRef<(editor: Editor) => void>(() => {});
@@ -1798,18 +1802,34 @@ export function PromptBoxInternal({
               (event.metaKey || event.ctrlKey) &&
               event.shiftKey &&
               event.key.toLowerCase() === "v";
+            if (isPhoneWebKitRef.current) {
+              const pendingDoc = pendingPhoneEnterDocRef.current;
+              pendingPhoneEnterDocRef.current = null;
+              const canEdit =
+                _view.editable && !_view.composing && !event.isComposing;
+              if (event.keyCode === 13) {
+                // iOS sometimes sends a Return as keydown/keyup only. ProseMirror
+                // then dispatches it from a 200ms fallback, which refuses to run
+                // once another key has been dispatched in between.
+                appliedPhoneEnterRef.current = false;
+                if (canEdit && !event.ctrlKey && !event.altKey && !event.metaKey)
+                  pendingPhoneEnterDocRef.current = _view.state.doc;
+              } else if (
+                canEdit && event.key !== "Enter" && pendingDoc === _view.state.doc
+              ) {
+                // The next key arrived first: apply that Return before it.
+                const newline = new KeyboardEvent("keydown", {
+                  key: "Enter", bubbles: true, cancelable: true,
+                });
+                _view.dispatchEvent(newline);
+                appliedPhoneEnterRef.current = newline.defaultPrevented;
+              }
+            }
             const isIPadHardwareEnter =
               isIPadOSWebKitDevice && isIPadHardwareEnterCandidate(event);
-            const isPhoneEnter =
-              isPhoneWebKitDevice &&
-              isPointerCoarse &&
-              event.key === "Enter" &&
-              !event.metaKey &&
-              !event.altKey &&
-              !event.ctrlKey;
             if (
               !_view.editable ||
-              (!isIPadHardwareEnter && !isPhoneEnter) ||
+              !isIPadHardwareEnter ||
               _view.composing ||
               event.isComposing ||
               event.keyCode === 229
@@ -1826,9 +1846,38 @@ export function PromptBoxInternal({
               return false;
             }
 
-            // iOS can omit insertParagraph after Korean input. Handle this Enter
-            // before ProseMirror's 200ms fallback so the next character follows it.
+            // Only hardware iPad Enter needs this early submit route. Let the
+            // iPhone keyboard commit Korean text and insert its native paragraph:
+            // cancelling keydown before beforeinput can disrupt its IME state.
             return handleEditorKeyDownRef.current(event, isIPadHardwareEnter);
+          },
+          beforeinput: (view, event) => {
+            const isNewlineInput =
+              event.inputType === "insertParagraph" || event.inputType === "insertLineBreak";
+            if (appliedPhoneEnterRef.current) {
+              appliedPhoneEnterRef.current = false;
+              // A late native paragraph for the Return already applied above.
+              if (isNewlineInput && event.cancelable) {
+                event.preventDefault();
+                return true;
+              }
+            }
+            if (
+              !isPhoneWebKitRef.current || !view.editable || !view.hasFocus() ||
+              view.composing || event.isComposing || !event.cancelable || !isNewlineInput
+            ) return false;
+
+            // beforeinput confirms the newline intent after the keyboard's IME
+            // commit. Keep its real keydown native; handle this edit before the
+            // next character and mark Enter handled through the public view path.
+            const newline = new KeyboardEvent("keydown", {
+              key: "Enter", shiftKey: event.inputType === "insertLineBreak",
+              bubbles: true, cancelable: true,
+            });
+            view.dispatchEvent(newline);
+            if (!newline.defaultPrevented) return false;
+            event.preventDefault();
+            return true;
           },
           keyup: () => {
             pasteWithoutFormattingRef.current = false;
@@ -1845,6 +1894,8 @@ export function PromptBoxInternal({
           return false;
         },
         handleKeyDown: (_view, event) => {
+          // ProseMirror has dispatched an Enter itself (native or fallback).
+          if (event.key === "Enter") pendingPhoneEnterDocRef.current = null;
           return handleEditorKeyDownRef.current(event);
         },
         handlePaste: (view, event, slice) => {
@@ -3369,15 +3420,20 @@ export function PromptBoxInternal({
       onDrop={event => { if (!onAttachFiles) return; event.preventDefault(); if (event.dataTransfer.files.length) { setFluidOptionsOpen(false); attachFilesWithHistory(Array.from(event.dataTransfer.files)); } }}
       style={maxHeight === undefined ? undefined : { ["--bb-chat-ui-fluid-host-max" as string]: `${Math.max(96, maxHeight)}px` }}>
       <input ref={attachmentInputRef} type="file" multiple className="hidden" onChange={handleAttachmentInputChange} />
-      <FluidComposerDetails scopeKey={composerScopeKey} suspended={fluidVoiceActive}
-        onOpen={() => { dismissComposerMenu(); setFluidOptionsOpen(false); }}>
-      {(detailsToggle, details) => <>{details}
+      <FluidComposerPicker formRef={formRef} disabled={composerInputLocked || isSubmitting || fluidVoiceActive || showVoiceActionGroup}
+        onOpen={() => { dismissComposerMenu(); setFluidOptionsOpen(false); if (promptActionFocusFrameRef.current !== null) { cancelAnimationFrame(promptActionFocusFrameRef.current); promptActionFocusFrameRef.current = null; } blurPromptEditor(editorRef.current); }}
+        onError={renderer.showError}>
+      {picker => <FluidComposerDetails scopeKey={composerScopeKey} suspended={fluidVoiceActive}
+        onOpen={() => { picker.close(); dismissComposerMenu(); setFluidOptionsOpen(false); }}>
+      {(detailsToggle, details) => <>
+      <div data-bb-chat-ui-slot-toolbar="" hidden={fluidVoiceActive}>{picker.modeToggle}{picker.enabled ? detailsToggle : null}</div>
+      {details}
       <FluidComposerBody
-        options={<FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/>}
+        options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
         decoration={fluidVoiceActive ? <FluidVoiceWaveform appearance="glow" indicator={fluidVoiceGesture === 'hold' ? 'orb' : fluidVoiceBars ? 'bars' : undefined} stream={fluidVoiceStream} exiting={fluidVoiceState.phase !== "starting" && fluidVoiceState.phase !== "recording"}/> : null}
         draftText={fluidVoiceActive ? fluidVoicePreview.text : value} editorReady={editor !== null}
         toggle={<FluidComposerToggle open={fluidOptionsOpen}
-          disabled={composerInputLocked || isSubmitting || showVoiceActionGroup || fluidVoiceActive}
+          disabled={composerInputLocked || isSubmitting || showVoiceActionGroup || fluidVoiceActive || picker.open}
           onClick={() => { if (fluidOptionsOpen) closeFluidOptions(); else openFluidOptions(); }}/>}
         panelOpen={fluidOptionsOpen}
         panel={<FluidOptionsPanel active={fluidOptionsOpen} actions={promptActions} plugins={contributions}
@@ -3387,7 +3443,7 @@ export function PromptBoxInternal({
           onAttach={onAttachFiles ? () => { setFluidOptionsOpen(false); attachmentInputRef.current?.click(); } : undefined}
           />}
         auxiliary={<>{handoff}{voice && voice.failedRecordings.length > 0 ? <FailedVoiceRecordings className="px-2 pt-2" recordings={voice.failedRecordings} retryDisabled={false} onRetry={voice.retry} onDownload={voice.download} onDiscard={voice.discard} /> : null}</>}
-        editor={<div data-bb-chat-ui-voice-editor="">
+        editor={<div data-bb-chat-ui-voice-editor="" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
           {fluidVoiceBars ? <div data-bb-chat-ui-voice-bars-space="" data-has-preview={!!fluidVoicePreview.text} aria-hidden="true"/> : null}
           {fluidVoiceActive || (fluidVoiceState.error && !hasSubmittableInput) ? <div ref={fluidVoiceScroll} data-promptbox-editor-scroll="" role="status" aria-live="polite">
             <div data-bb-chat-ui-voice-transcript="" hidden={fluidVoiceBars && !fluidVoicePreview.text} data-placeholder={!fluidVoicePreview.text || undefined}><p>{fluidVoicePreview.text ||
@@ -3404,9 +3460,10 @@ export function PromptBoxInternal({
           </div>
         </div>}
         actions={<>
-          <span data-bb-chat-ui-fluid-extra-actions="" hidden={fluidVoiceActive}><contributions.Actions />{compactBeforeSend}</span>
-          {detailsToggle}
-          <div data-promptbox-submit-group="" className="flex shrink-0 flex-row items-center">
+          <span data-bb-chat-ui-fluid-extra-actions="" hidden={fluidVoiceActive} inert={picker.open || undefined} aria-hidden={picker.open || undefined}><contributions.Actions />{compactBeforeSend}</span>
+          {picker.enabled ? picker.trigger : detailsToggle}
+          <div data-bb-chat-ui-slot-submit="">
+          <div data-promptbox-submit-group="" className="flex shrink-0 flex-row items-center" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
             <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream} onGestureChange={setFluidVoiceGesture}
               disabled={!voice?.isSupported || isSubmitting || composerInputLocked || showVoiceActionGroup}
               sendDisabled={submitDisabled || isSubmitting || isAttaching || composerInputLocked}
@@ -3426,6 +3483,8 @@ export function PromptBoxInternal({
               </ComposerSendMenu>}
             />
           </div>
+          {picker.confirm}
+          </div>
         </>}
         attachments={<><AttachmentPreview attachments={attachments} pendingUploads={pendingUploads} attachmentProjectId={attachmentProjectId}
           expandedImageIndex={expandedImageIndex} onExpandedImageIndexChange={setExpandedImageIndex} onRemoveAttachment={onUpdateAttachments ? removeAttachment : undefined} />
@@ -3433,8 +3492,10 @@ export function PromptBoxInternal({
         voice={voice && showVoiceActionGroup ? <VoiceRecordingBar isCompact state={renderedVoiceActionState} delivery={voice.delivery} stream={voice.stream}
           microphoneWarning={voice.microphoneWarning} submitIcon={submitIcon ?? "CornerDownLeft"} onConfirm={voice.stop} onSend={voice.send} onCancel={cancelVoiceInput} /> : undefined}
       />
+      {picker.overlay}
       </>}
-      </FluidComposerDetails>
+      </FluidComposerDetails>}
+      </FluidComposerPicker>
       <ComposerRoot rootRef={formRef} editor={composerEditor} menuRef={typeaheadMenuRef} menuOpen={composerMenuOpen} />
             <ComposerPopupHost
               open={composerMenuOpen}

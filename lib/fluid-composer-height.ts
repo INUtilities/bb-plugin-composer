@@ -91,8 +91,8 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
   motion.addEventListener('change', updateMotion);
   return () => {
     disposed = true;
-    observer.disconnect();
     editorMotion?.cancel(); editorMotion = null;
+    observer.disconnect();
     win.cancelAnimationFrame(frame);
     motion.removeEventListener('change', updateMotion);
     viewport.style.height = previousHeight;
