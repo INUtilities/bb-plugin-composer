@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { FluidComposerBody } from './FluidComposerBody';
+import { useEffect, useState } from 'react';
 import { EASE } from '../lib/motion';
 import { fluidComposerCss } from '../lib/fluid-composer';
 import { FLUID_EDITOR_FOLLOW_ANIMATION, FLUID_COMPOSER_INPUT_EASING } from '../lib/fluid-composer-height';
@@ -13,6 +14,18 @@ beforeEach(()=>{
  vi.stubGlobal('matchMedia',()=>({get matches(){return reduced;},addEventListener:(_type:string,fn:()=>void)=>listeners.add(fn),removeEventListener:(_type:string,fn:()=>void)=>listeners.delete(fn)}));
 });
 afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();});
+
+// 호스트 초안이 편집기 DOM에 늦게 반영돼도 행 resize 없이 접힘을 다시 판정한다.
+it('rechecks a host draft after the editor commits without a row resize',()=>{
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){return {left:0,top:0,width:400,height:this.classList.contains('ProseMirror')?(this.textContent?.includes('\n')?48:24):136} as DOMRect;});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ // 호스트 초안을 편집기의 passive commit에서 적용하는 실제 수명을 재현한다.
+ function CommittedEditor({text}:{text:string}){const [shown,setShown]=useState(text);useEffect(()=>setShown(text),[text]);return <div className="ProseMirror" style={{lineHeight:'24px'}}>{shown}</div>;}
+ // 같은 입력 노드에 호스트의 새 초안만 전달한다.
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<CommittedEditor text={text}/>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const view=render(draw('첫 줄\n다음 줄'));
+ try{act(()=>vi.advanceTimersByTime(20));expect(view.container.querySelector('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')).toBe('true');const editor=view.container.querySelector('.ProseMirror');view.rerender(draw('짧게'));act(()=>vi.advanceTimersByTime(20));expect(view.container.querySelector('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')).toBe('false');expect(view.container.querySelector('.ProseMirror')).toBe(editor);}finally{view.unmount();bounds.mockRestore();}
+});
 // 가로 이동이 클 때도 글을 clip 밖으로 튕기지 않고 후속 입력을 바로 받는다.
 it.each([[52,FLUID_COMPOSER_INPUT_EASING],[252,EASE.out]] as const)('keeps the height curve and releases the moving caret from x=%i',(startX,growEase)=>{
  let lines=1;

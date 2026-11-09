@@ -41,14 +41,14 @@
     {
       "source": "composer/FluidComposerBody.test.tsx",
       "destination": "composer/FluidComposerBody.test.tsx",
-      "sha256": "e01b18d0f5e5aac6ba9b6c50a838c7b1daf92ecef4c4784a7fdd00dde9e3d7e6",
+      "sha256": "685cc91cc1453216a8dd34ba3b86d021b984a9b8d03a69fa15bf0db7a8e0bdea",
       "sourceSha256": "2c8907398a9d6b070458f2eeb0e96e5a3c4e4dc5ab98039445bd408abd634c92",
       "integrationOverlay": true
     },
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "fe12df60003070996521fb7854ba52a8800779f8acbc47c1b9c4ec064cfc4f5f",
+      "sha256": "9cafcaa63d1ebc1dbf39c6780a673208095ed5cbe4dbe05523850a1011d20ae3",
       "sourceSha256": "7c1fd405973de8b05155f7cfdd03612d1892f448e62858369bfedd1f626d59ed",
       "integrationOverlay": true
     },

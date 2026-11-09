@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_INPUT_EASING, FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND, FLUID_COMPOSER_LINE_MS, FLUID_COMPOSER_MORPH_MS, FLUID_EDITOR_FOLLOW_ANIMATION, readFluidEditorPosition } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
@@ -130,6 +130,8 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     inputPosition.current = null;
     layoutProbe.current(beforeInput ?? undefined);
   }, [draftText, editorReady, panelOpen, voiceMode]);
+  // 호스트 초안의 편집기 DOM 반영은 commit 뒤일 수 있으므로 기존 예약 프레임으로 한 번 더 맞춘다.
+  useEffect(scheduleLayout, [draftText, editorReady, voiceMode, scheduleLayout]);
   useLayoutEffect(() => {
     const column = actionColumn.current, previous = actionPosition.current;
     const changed = previousVoiceMode.current !== voiceMode;
