@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/MORPHLET/bb-chat-ui",
-  "ref": "archive/fluid-source-261109",
+  "ref": "3015ec0206ebb8bb77cad9415b49e355f7ae8486",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
   "integratedCommit": "3015ec0206ebb8bb77cad9415b49e355f7ae8486",
   "engineOrigin": "composer/UPSTREAM.json",
@@ -10,7 +10,8 @@
     "Merged with standalone Composer origin/main 41108c7: preserve native iPhone Enter/beforeinput, first-commit layout and moving-caret protection.",
     "Latest approved 400ms expand / 150ms collapse, immediate host-clear and independent option pills supersede the older standalone 380ms/160ms/card-morph design.",
     "sourceSha256 records the canonical source; sha256 records the merged destination. Differences are explicit standalone integration overlays.",
-    "No Chat UI message, quote, TOC or information-card controller is imported."
+    "No Chat UI message, quote, TOC or information-card controller is imported.",
+    "The canonical commit is a local source reference, not an advertised remote branch. All merged product files required to build are included in this PR."
   ],
   "files": [
     {
@@ -987,5 +988,7 @@
     }
   ],
   "upstreamComposerCommit": "41108c7",
-  "hashNormalization": "UTF-8 text with CRLF normalized to LF"
+  "hashNormalization": "UTF-8 text with CRLF normalized to LF",
+  "sourceAvailability": "local-canonical-snapshot",
+  "sourcePublished": false
 }
