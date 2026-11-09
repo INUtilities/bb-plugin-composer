@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "75fc18ff66c736d1605a6b1741ce52341e57fbee",
+  "integratedCommit": "d8c7b14cde710e59db8064a007425904bea099b4",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -19,7 +19,7 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "11ff2f57bf613b57470f60938f1bb73025d330a59d59e4f910fc75df5a6ecf13"
+      "sha256": "518dddfe37dfe4c801a991470b74dd5827f3ded2add0963c8d25dfb4c72e9804"
     },
     {
       "source": "composer/FluidComposer.tsx",
@@ -44,7 +44,7 @@
     {
       "source": "composer/FluidComposerDetails.tsx",
       "destination": "composer/FluidComposerDetails.tsx",
-      "sha256": "a62a32cfa6073a27d506283ba9ec79bd8fc63750b11b1673ae76aa334c5438fe"
+      "sha256": "31cebc5ae5a6c507e19398a4cd2ba3d807abde473775bf6903f3a1e5a85081df"
     },
     {
       "source": "composer/FluidComposerToggle.tsx",
@@ -205,7 +205,7 @@
     {
       "source": "composer/notices.ts",
       "destination": "composer/notices.ts",
-      "sha256": "eb9cff7c08449f5a76805cc51a1b6f85052e5d807fa260e2cda41af2340ffd3e"
+      "sha256": "b0f99c5028719afb0f6cf433665bf84d66124e0d1a0f02c2c73ba23c4b3543f2"
     },
     {
       "source": "composer/src/AttachmentPreview.tsx",

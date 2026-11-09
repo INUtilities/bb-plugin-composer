@@ -54,7 +54,7 @@ it('places the settings icon before send inside the input and reuses the existin
  const actions=v.container.querySelector('[data-bb-chat-ui-fluid-actions]')!;
  expect(actions.contains(toggle)).toBe(true);expect(actions.contains(send)).toBe(true);
  expect(toggle.compareDocumentPosition(send)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
- expect(toggle.querySelector('[data-icon="Settings2"]')).toBeTruthy();
+ expect(toggle.querySelector('svg[data-bb-chat-ui-fluid-settings-icon]')).toBeTruthy();
  fireEvent.click(toggle);const region=screen.getByRole('region',{name:'컴포저 정보와 설정'});
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.contains(region)).toBe(false);
  expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();expect(v.container.querySelector('.ProseMirror')).toBe(editor);
@@ -227,4 +227,18 @@ it('closes details on a scope change without remounting the input layout',async(
  v.rerender(<TestComposer/>);
  await waitFor(()=>expect(screen.getByRole('button',{name:'정보와 설정'}).getAttribute('aria-expanded')).toBe('false'));
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')).toBe(viewport);v.unmount();
+});
+
+// 시안과 실제 입력창이 같은 고정 SVG를 쓰고 호스트의 이름 해석을 거치지 않는지 확인한다.
+it('renders the approved settings drawing directly in the real information button',async()=>{
+ const {v,run}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+ const button=screen.getByRole('button',{name:'정보와 설정'}),icon=button.querySelector<SVGSVGElement>('svg[data-bb-chat-ui-fluid-settings-icon]')!;
+ expect(icon).toBeTruthy();expect(icon.getAttribute('viewBox')).toBe('0 0 24 24');
+ expect(icon.getAttribute('width')).toBe('16');expect(icon.getAttribute('height')).toBe('16');
+ expect(icon.style.width).toBe('16px');expect(icon.style.height).toBe('16px');
+ expect(icon.getAttribute('stroke')).toBe('currentColor');expect(icon.getAttribute('stroke-width')).toBe('2');expect(icon.getAttribute('aria-hidden')).toBe('true');
+ expect([...icon.querySelectorAll('path')].map(path=>path.getAttribute('d'))).toEqual(['M10 17H19','M5 7h9']);
+ expect([...icon.querySelectorAll('circle')].map(circle=>[circle.getAttribute('cx'),circle.getAttribute('cy'),circle.getAttribute('r')])).toEqual([['7','17','3'],['17','7','3']]);
+ expect(button.querySelector('[data-icon="Settings2"]')).toBeNull();
+ fireEvent.click(button);expect(screen.getByRole('region',{name:'컴포저 정보와 설정'})).toBeTruthy();expect(run).not.toHaveBeenCalled();v.unmount();
 });
