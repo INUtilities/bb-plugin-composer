@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "8ebc08c70337d091decffe2001953faafbfb4f50",
+  "integratedCommit": "6827ecf3e5d7d81e9de0e6499cbcbb122680b74c",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -89,7 +89,7 @@
     {
       "source": "composer/README.md",
       "destination": "composer/README.md",
-      "sha256": "b877ce14327cb69a918fa2405d6c129e9fbb5d7230630612dd176a9721e6dcd4",
+      "sha256": "29ca6c21573f370c67ba31824d6ade5efac6c9140e7f3f713ab9b2cd77b84ff5",
       "checkoutNote": "Git checkout line endings differ from the source; normalized UTF-8 text is identical"
     },
     {
@@ -560,12 +560,187 @@
     {
       "source": "composer/FluidModelControls.tsx",
       "destination": "composer/FluidModelControls.tsx",
-      "sha256": "ff141df28bd824cd52c51ec18193f76484ff54267f5727f79848f7961754a616"
+      "sha256": "7db424ed87013510d23664d1b90a27200748be0816cbdb8ee323279466e14b44"
     },
     {
       "source": "composer/FluidModelControls.test.tsx",
       "destination": "composer/FluidModelControls.test.tsx",
       "sha256": "6f7331f4b283cd29e3c1325a6f1bd97a69af0449fde1616362d0a6a983b015f8"
+    },
+    {
+      "source": "composer/EffortIcon.test.tsx",
+      "destination": "composer/EffortIcon.test.tsx",
+      "sha256": "e5fb0ac4647f670669c58fa41f6a0337f1bb2b8d784248ac1475a9155f1fe9c9"
+    },
+    {
+      "source": "composer/EffortIcon.tsx",
+      "destination": "composer/EffortIcon.tsx",
+      "sha256": "2011837116ae20bfa9eefbd59ef96b2b56a3d5358df749a3da5650361087647e"
+    },
+    {
+      "source": "composer/assets/effort-candidates/LICENSE",
+      "destination": "composer/assets/effort-candidates/LICENSE",
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+    },
+    {
+      "source": "composer/assets/effort-candidates/README.md",
+      "destination": "composer/assets/effort-candidates/README.md",
+      "sha256": "734829f6e448ad9a51892a3e0c2532499e275a1c4da89e2231b73766bc18072a"
+    },
+    {
+      "source": "composer/assets/effort-candidates/asterisk.svg",
+      "destination": "composer/assets/effort-candidates/asterisk.svg",
+      "sha256": "10d8ef9416577f24d2fa0e3c65156671f0da18825344734456a664b20d649250"
+    },
+    {
+      "source": "composer/assets/effort-candidates/atom.svg",
+      "destination": "composer/assets/effort-candidates/atom.svg",
+      "sha256": "9ac2f48402368cb4e4db5c59371698a86f35598c8b8076411bfdfdd63550ffd8"
+    },
+    {
+      "source": "composer/assets/effort-candidates/award.svg",
+      "destination": "composer/assets/effort-candidates/award.svg",
+      "sha256": "4d9818ae68bb0776cbec9e65d26a33c7854eff600f33fcd6268e67b9d1caa06d"
+    },
+    {
+      "source": "composer/assets/effort-candidates/badge-check.svg",
+      "destination": "composer/assets/effort-candidates/badge-check.svg",
+      "sha256": "a83b36e35ed35be896c5e5d39d0a63ba4368735ac22f09a26a31726259467775"
+    },
+    {
+      "source": "composer/assets/effort-candidates/badge.svg",
+      "destination": "composer/assets/effort-candidates/badge.svg",
+      "sha256": "b1a904606688d5c8e4b8fb00ed70a65bfbeb97c532bda3eb773e1e8734b816fb"
+    },
+    {
+      "source": "composer/assets/effort-candidates/ban.svg",
+      "destination": "composer/assets/effort-candidates/ban.svg",
+      "sha256": "2eba67f86d70bbd5d22e4211d44d7dda86c3397410f714765a12c3cd3ca0ebe3"
+    },
+    {
+      "source": "composer/assets/effort-candidates/brain-circuit.svg",
+      "destination": "composer/assets/effort-candidates/brain-circuit.svg",
+      "sha256": "134231b12f68aca2943d6a7a6aa891dd2e26d89b5658a2c78c7094fbe29797e9"
+    },
+    {
+      "source": "composer/assets/effort-candidates/catalog.json",
+      "destination": "composer/assets/effort-candidates/catalog.json",
+      "sha256": "744d1219502def0f86fa126a8052a270a385ffb07bdf49e26a51f0a6f330cf8b"
+    },
+    {
+      "source": "composer/assets/effort-candidates/chevrons-up.svg",
+      "destination": "composer/assets/effort-candidates/chevrons-up.svg",
+      "sha256": "dcc30f99a1e3177505dee39749fec4722cf567d420d6829780990ef744ea533c"
+    },
+    {
+      "source": "composer/assets/effort-candidates/circle-dashed.svg",
+      "destination": "composer/assets/effort-candidates/circle-dashed.svg",
+      "sha256": "9b964be491a821be8ffd714baf3b94ca2d70af789bddcfc1bda6bde250d89187"
+    },
+    {
+      "source": "composer/assets/effort-candidates/circle-minus.svg",
+      "destination": "composer/assets/effort-candidates/circle-minus.svg",
+      "sha256": "d1a47f5249d6aaedc89bb6caf0a4f172084171a369e5656b88ad8f32d8d8386e"
+    },
+    {
+      "source": "composer/assets/effort-candidates/circle-off.svg",
+      "destination": "composer/assets/effort-candidates/circle-off.svg",
+      "sha256": "0d79af6d7b882eeb2d84c4fad7c965a4d20a043f7d2eeb42b16cd74ef0381c54"
+    },
+    {
+      "source": "composer/assets/effort-candidates/circle-slash.svg",
+      "destination": "composer/assets/effort-candidates/circle-slash.svg",
+      "sha256": "86bba60e60134a9fe08300401ff9886f07d48bb275860016bbaadd8da9de16b0"
+    },
+    {
+      "source": "composer/assets/effort-candidates/circle.svg",
+      "destination": "composer/assets/effort-candidates/circle.svg",
+      "sha256": "3a991bd47beaf9874fba6fdf87bbba442970a89b5e6aa391558bc8b0a00a0513"
+    },
+    {
+      "source": "composer/assets/effort-candidates/cpu.svg",
+      "destination": "composer/assets/effort-candidates/cpu.svg",
+      "sha256": "ec83bb69ec029d367d749afc445b39c8e95891ebf99b0400652677c2b149b99c"
+    },
+    {
+      "source": "composer/assets/effort-candidates/crown.svg",
+      "destination": "composer/assets/effort-candidates/crown.svg",
+      "sha256": "544c1b6181749ae4b4c98861a5a6ed1242940239cda97cc13c74e84a03fd68c0"
+    },
+    {
+      "source": "composer/assets/effort-candidates/diamond.svg",
+      "destination": "composer/assets/effort-candidates/diamond.svg",
+      "sha256": "2a2f4ccad87409bed020191ebfb30ff806dca49a1b687d0be96f4d7343da8d7c"
+    },
+    {
+      "source": "composer/assets/effort-candidates/flame.svg",
+      "destination": "composer/assets/effort-candidates/flame.svg",
+      "sha256": "cede1462a46a7a3b3daf9d101f0b59484b1d882a4c42a75670810a6d4f8d42fb"
+    },
+    {
+      "source": "composer/assets/effort-candidates/gem.svg",
+      "destination": "composer/assets/effort-candidates/gem.svg",
+      "sha256": "377618223555b2847b553a81f6974c76b7ce14d1207bcc0e98baa27a6a36d40e"
+    },
+    {
+      "source": "composer/assets/effort-candidates/minus.svg",
+      "destination": "composer/assets/effort-candidates/minus.svg",
+      "sha256": "a0c743ab6dbf545d8a6e19ef3874f48ede686ce68d25e231bd81f540d97b1f19"
+    },
+    {
+      "source": "composer/assets/effort-candidates/orbit.svg",
+      "destination": "composer/assets/effort-candidates/orbit.svg",
+      "sha256": "e2b8b7d7f82044181860cbc2dab9b7e8d3c4778fbbce9a62f5c4038175f4faf4"
+    },
+    {
+      "source": "composer/assets/effort-candidates/power-off.svg",
+      "destination": "composer/assets/effort-candidates/power-off.svg",
+      "sha256": "c94776ca666caa783897f457a12c007bcd5504b0831d1b11d52a0117527da7c8"
+    },
+    {
+      "source": "composer/assets/effort-candidates/slash.svg",
+      "destination": "composer/assets/effort-candidates/slash.svg",
+      "sha256": "2e8b636164f057c3113b04d36a5bb958f78aff454c4a644642da790ae2addbc8"
+    },
+    {
+      "source": "composer/assets/effort-candidates/sparkle.svg",
+      "destination": "composer/assets/effort-candidates/sparkle.svg",
+      "sha256": "b5906ce99aaa1f3894dc4d30201a267508b57646f7010d5d6ecdb019764fe0b7"
+    },
+    {
+      "source": "composer/assets/effort-candidates/sparkles.svg",
+      "destination": "composer/assets/effort-candidates/sparkles.svg",
+      "sha256": "f5499f33f09d7158151e9bd2ec0faf79ff8fb57292f84fdd7286d96d0f0424d8"
+    },
+    {
+      "source": "composer/assets/effort-candidates/star.svg",
+      "destination": "composer/assets/effort-candidates/star.svg",
+      "sha256": "c59da86b889569387db28e69ad00a89f96af22863ad9eea9aa12c4876a14338c"
+    },
+    {
+      "source": "composer/assets/effort-candidates/sun-medium.svg",
+      "destination": "composer/assets/effort-candidates/sun-medium.svg",
+      "sha256": "6e4ba404e99515a2856269cf281abb2f03f635307d0627147dadd34e72d669a3"
+    },
+    {
+      "source": "composer/assets/effort-candidates/sun.svg",
+      "destination": "composer/assets/effort-candidates/sun.svg",
+      "sha256": "a3955c8b0425fcc5c9ba12d2bdd77fe53b2cd5dd05e7742a56f342e996fb2ef8"
+    },
+    {
+      "source": "composer/assets/effort-candidates/trophy.svg",
+      "destination": "composer/assets/effort-candidates/trophy.svg",
+      "sha256": "c641553befdb899b2eb01075c0962c73b4b0e0d1835d9d407f5d5d4d70f77d03"
+    },
+    {
+      "source": "composer/assets/effort-candidates/unplug.svg",
+      "destination": "composer/assets/effort-candidates/unplug.svg",
+      "sha256": "469819bc5dbdb54f9c1ccc06415f45c73b995b567016f07fb560af1eeeb0cf2e"
+    },
+    {
+      "source": "composer/assets/effort-candidates/zap.svg",
+      "destination": "composer/assets/effort-candidates/zap.svg",
+      "sha256": "4c395891eab4d1e5627c5d414a16db037317cb2f12453de0f3a1130964c6d444"
     }
   ]
 }

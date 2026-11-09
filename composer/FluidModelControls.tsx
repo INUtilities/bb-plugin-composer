@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useComposer, useSdk } from '@get-bb/plugin-sdk/app';
 import { Button } from './components/ui/button';
+import { EffortIcon } from './EffortIcon';
 import { useDeviceChrome } from '../lib/use-device';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
 
@@ -8,18 +9,6 @@ type Effort = { reasoningEffort: string; label?: string; description: string };
 const labels: Record<string, string> = { none: 'None', minimal: 'Minimal', low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra high', max: 'Max', ultra: 'Ultra' };
 const EFFORT_LABEL_MS = 300;
 const EFFORT_WIDTH_EASING = 'cubic-bezier(.175,.885,.32,1.275)';
-
-// 일반 단계는 올라가는 막대로, max와 ultra는 서로 다른 기호로 표시한다.
-function EffortIcon({ level, index, count }: { level: string; index: number; count: number }) {
-  const special = level === 'max' || level === 'ultra';
-  const bars = level === 'none' ? 0 : ({ minimal: 1, low: 1, medium: 2, high: 3, xhigh: 4 }[level] ?? Math.max(1, Math.ceil((index + 1) * 4 / Math.max(1, count))));
-  return <svg data-effort-icon={special ? level : 'steps'} width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    {special ? level === 'max'
-      ? <path d="M10 2 12.2 7.8 18 10 12.2 12.2 10 18 7.8 12.2 2 10 7.8 7.8Z"/>
-      : <><circle cx="10" cy="10" r="3"/><path d="M10 1v3m0 12v3M1 10h3m12 0h3M3.6 3.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/></>
-      : [5, 8, 11, 14].map((height, i) => <path key={height} d={`M${4 + i * 4} 17v-${height}`} strokeWidth="2.5" opacity={i < bars ? 1 : .22}/>)}
-  </svg>;
-}
 
 // 기존 모델 메뉴를 유지하고 현재 환경에서 지원하는 effort만 순서대로 선택한다.
 export function FluidModelControls({ controls, disabled = false, onError }: { controls: ReactNode; disabled?: boolean; onError(message: string): void }) {
