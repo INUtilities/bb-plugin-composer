@@ -1,0 +1,73 @@
+/* BB 플러그인 공용 모션 CSS. motion.ts와 짝이다. 복사해 쓰고 고치지 않는다.
+   클래스는 bbk- 접두사를 쓴다. 값은 2026-10-11 사용자가 데모에서 고른 것이다. */
+
+:root {
+  --bbk-ease-out: cubic-bezier(.22,1,.36,1);
+  --bbk-ease-droplet: cubic-bezier(.36,0,.18,1);
+  --bbk-ease-overshoot: cubic-bezier(.2,.9,.22,1.25);
+  --bbk-ease-exit: cubic-bezier(.4,0,.2,1);
+}
+
+/* 물방울 등장 · CSS로 붙일 때. JS는 motion.ts의 dropletIn을 쓴다. */
+.bbk-droplet-in { animation: bbk-droplet 460ms var(--bbk-ease-droplet) backwards; }
+@keyframes bbk-droplet {
+  0% { transform: translateY(8px) scale(.82,.72); }
+  35% { transform: translateY(-4px) scale(.94,1.16); }
+  65% { transform: translateY(0) scale(1.1,.94); }
+  82% { transform: translateY(-1px) scale(.985,1.015); }
+  100% { transform: none; }
+}
+
+/* 로딩 점 · 점 세 개를 span으로 넣는다. 900ms 반복, 120ms 간격. */
+.bbk-dots { display: inline-flex; gap: 3px; align-items: center; }
+.bbk-dots > span { width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: bbk-dot 900ms ease-in-out infinite; }
+.bbk-dots > span:nth-child(2) { animation-delay: 120ms; }
+.bbk-dots > span:nth-child(3) { animation-delay: 240ms; }
+@keyframes bbk-dot { 0%, 80%, 100% { opacity: .35; transform: none; } 40% { opacity: 1; transform: translateY(-2px); } }
+
+/* 숫자 룰렛 칸 · motion.ts의 rollNumber와 함께 쓴다. */
+.bbk-roll { display: inline-grid; overflow: hidden; height: 1.35em; line-height: 1.35em; vertical-align: bottom; }
+.bbk-roll > .bbk-roll-n { grid-area: 1 / 1; font-variant-numeric: tabular-nums; }
+
+/* 떠 있는 버튼 등장·퇴장 · 가운데 아래에 뜨는 버튼. data-shown이 있으면 보인다.
+   등장: opacity 280ms + 이동·크기 460ms 감속 등장. 퇴장: opacity 220ms + 340ms 표준 퇴장. */
+.bbk-float {
+  position: absolute; left: 50%;
+  translate: -50% 10px; scale: .92; opacity: 0; pointer-events: none;
+  transition: opacity 220ms ease-in, translate 340ms var(--bbk-ease-exit), scale 340ms var(--bbk-ease-exit);
+}
+.bbk-float[data-shown] {
+  translate: -50% 0; scale: 1; opacity: 1; pointer-events: auto;
+  transition: opacity 280ms ease-out, translate 460ms var(--bbk-ease-out), scale 460ms var(--bbk-ease-out);
+}
+
+/* 스크롤 흐림 힌트 · 스크롤 상자 위·아래에 겹쳐 둔다. 내용이 더 있을 때만 hidden을 뗀다.
+   --bbk-hint-face에 그 상자의 표면색을 넣는다. mask-image의 black은 투명도만 쓰므로 색값 규칙의 예외다. */
+.bbk-scroll-hint {
+  position: absolute; left: 0; right: 0; height: 26px; pointer-events: none;
+  backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+}
+.bbk-scroll-hint[data-edge="top"] {
+  top: 0; border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+  background: linear-gradient(to bottom, var(--bbk-hint-face, transparent), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent); mask-image: linear-gradient(to bottom, black 30%, transparent);
+}
+.bbk-scroll-hint[data-edge="bottom"] {
+  bottom: 0; border-radius: inherit; border-top-left-radius: 0; border-top-right-radius: 0;
+  background: linear-gradient(to top, var(--bbk-hint-face, transparent), transparent);
+  -webkit-mask-image: linear-gradient(to top, black 30%, transparent); mask-image: linear-gradient(to top, black 30%, transparent);
+}
+
+/* 끈적 분리 방울 · motion.ts의 stickyDrop이 만든다. 표면은 플러그인의 frost 표면을 따른다. */
+.bbk-drop {
+  z-index: 50; border-radius: 50%;
+  background: var(--bbk-drop-face, color-mix(in oklab, var(--background) 60%, transparent));
+  border: 1px solid var(--bbk-drop-edge, color-mix(in oklab, var(--foreground) 12%, transparent));
+  backdrop-filter: blur(14px) saturate(1.25); -webkit-backdrop-filter: blur(14px) saturate(1.25);
+}
+
+/* 동작 줄이기면 모두 끈다. */
+@media (prefers-reduced-motion: reduce) {
+  .bbk-droplet-in, .bbk-dots > span { animation: none !important; }
+  .bbk-float, .bbk-float[data-shown] { transition: none !important; }
+}

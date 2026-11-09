@@ -3,11 +3,13 @@ import { Button } from './components/ui/button';
 import { Icon } from './components/ui/icon';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
 
-/** 기존 정보 줄과 설정을 같은 컴포저 안에서 열며 host DOM은 옮기지 않는다. */
-export function FluidComposerDetails({ controls, onOpen, suspended = false }: { controls: ReactNode; onOpen(): void; suspended?: boolean }) {
+// 기존 정보 영역을 유지하고 여닫기 버튼을 입력창의 전송 왼쪽에 전달한다.
+export function FluidComposerDetails({ controls, onOpen, scopeKey, suspended = false, children }: { controls: ReactNode; onOpen(): void; scopeKey: string; suspended?: boolean; children(toggle: ReactNode, details: ReactNode): ReactNode }) {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const id = useId();
+  // 대화 변경은 정보만 닫고 같은 입력 배치와 editor를 유지한다.
+  useLayoutEffect(() => { setOpen(false); }, [scopeKey]);
   useLayoutEffect(() => {
     if (!open || suspended) return;
     const shell = button.current?.closest('[data-promptbox-shell]');
@@ -31,8 +33,9 @@ export function FluidComposerDetails({ controls, onOpen, suspended = false }: { 
       else shell.setAttribute(mark, previous);
     };
   }, [open, suspended]);
+  // 정보를 닫고 같은 버튼으로 키보드 포커스를 돌린다.
   const close = () => { setOpen(false); button.current?.focus({ preventScroll: true }); };
-  return <>
+  return children(
     <Button ref={button} hidden={suspended} type="button" size="icon" variant="ghost" data-bb-chat-ui-fluid-details-toggle=""
       aria-label="정보와 설정" aria-expanded={open && !suspended} aria-controls={id}
       onClick={event => {
@@ -43,9 +46,8 @@ export function FluidComposerDetails({ controls, onOpen, suspended = false }: { 
         setOpen(value => !value);
       }}
       onKeyDown={event => { if (open && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); } }}>
-      <span data-bb-chat-ui-fluid-details-face="" aria-hidden="true"/>
-      <Icon name="SlidersHorizontal" className="relative size-4" />
-    </Button>
+      <Icon name="Settings2" className="relative size-4" />
+    </Button>,
     <div id={id} role="region" aria-label="컴포저 정보와 설정" data-bb-chat-ui-fluid-details=""
       hidden={!open || suspended} inert={!open || suspended || undefined} aria-hidden={!open || suspended || undefined}
       onKeyDown={event => {
@@ -53,5 +55,5 @@ export function FluidComposerDetails({ controls, onOpen, suspended = false }: { 
       }}>
       <div data-bb-chat-ui-fluid-native-controls="">{controls}</div>
     </div>
-  </>;
+  );
 }

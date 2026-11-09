@@ -18,8 +18,10 @@ function mount(){
    attachments:{onAttachFiles:vi.fn()},
    submission:{enter:{kind:'send',requiresInput:true,shortcut:{ariaKeyshortcuts:'Enter',label:'Enter'},run},modifier:null,showModifierInMenu:false}},
   threadLinks:{parse:()=>null,cached:()=>null,resolve:async()=>{}},clipboard:{readMessage:()=>null,readMessageImage:async()=>new File([],'unused')},dispatchAppCommandKey:()=>false,showError:vi.fn(),attachmentSrc:()=>''};
- const v=renderSlot({component:()=> <PromptBoxInternal {...renderer.input} fluid/>},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
- return{v,renderer,run};
+ // 같은 컴포넌트 경로로 다시 그려 실제 입력 수명을 검사한다.
+ const TestComposer=()=> <PromptBoxInternal {...renderer.input} fluid/>;
+ const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
+ return{v,renderer,run,TestComposer};
 }
 // 옵션 필을 열어도 같은 입력과 전송을 사용할 수 있는지 확인한다.
 it('opens options above the unchanged input and allows editing and submitting while they remain open',async()=>{
@@ -44,6 +46,19 @@ it('opens options above the unchanged input and allows editing and submitting wh
  expect(screen.queryByRole('region',{name:'컴포저 옵션'})).toBeNull();
  expect(v.inspection.composer.text).toBe('계속 작성한 초안');
  v.unmount();
+});
+// 정보 버튼을 전송 왼쪽의 같은 입력창 안에 두고 기존 정보와 초안을 유지한다.
+it('places the settings icon before send inside the input and reuses the existing information region',async()=>{
+ const {v,run}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+ const editor=v.container.querySelector('.ProseMirror'),toggle=screen.getByRole('button',{name:'정보와 설정'}),send=screen.getByRole('button',{name:'Submit (Enter)'});
+ const actions=v.container.querySelector('[data-bb-chat-ui-fluid-actions]')!;
+ expect(actions.contains(toggle)).toBe(true);expect(actions.contains(send)).toBe(true);
+ expect(toggle.compareDocumentPosition(send)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+ expect(toggle.querySelector('[data-icon="Settings2"]')).toBeTruthy();
+ fireEvent.click(toggle);const region=screen.getByRole('region',{name:'컴포저 정보와 설정'});
+ expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')!.contains(region)).toBe(false);
+ expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+ fireEvent.keyDown(region,{key:'Escape'});expect(toggle.getAttribute('aria-expanded')).toBe('false');expect(document.activeElement).toBe(toggle);expect(run).not.toHaveBeenCalled();v.unmount();
 });
 it('keeps the expanded desktop send controls inside one rounded pill and preserves its menu',async()=>{
  const stop=injectFluidComposer(document),{v,renderer}=mount();
@@ -200,4 +215,16 @@ it('presses only the toggle frost face and cancels its motion on pointer cancell
   fireEvent.pointerDown(toggle,{pointerId:2,isPrimary:true,button:0});v.unmount();
   for(const a of animations.get(face)!)expect(a.cancel).toHaveBeenCalled();
  }finally{Element.prototype.animate=oldAnimate;Element.prototype.getAnimations=oldGet;v.unmount();}
+});
+
+// 대화가 바뀌어도 입력 배치를 다시 만들지 않고 열린 정보만 닫는다.
+it('closes details on a scope change without remounting the input layout',async()=>{
+ const {v,renderer,TestComposer}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+ const viewport=v.container.querySelector('[data-bb-chat-ui-fluid-height]');
+ fireEvent.click(screen.getByRole('button',{name:'정보와 설정'}));
+ expect(screen.getByRole('region',{name:'컴포저 정보와 설정'})).toBeTruthy();
+ renderer.view.scope={kind:'thread',threadId:'thr_next_options_test'};
+ v.rerender(<TestComposer/>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'정보와 설정'}).getAttribute('aria-expanded')).toBe('false'));
+ expect(v.container.querySelector('[data-bb-chat-ui-fluid-height]')).toBe(viewport);v.unmount();
 });

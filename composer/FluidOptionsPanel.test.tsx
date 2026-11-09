@@ -76,41 +76,40 @@ it('does not take focus when retained only for the outgoing morph',()=>{
  const outside=document.createElement('input');document.body.append(outside);outside.focus();
  try{mount({active:false},[plugin()]);expect(document.activeElement).toBe(outside);}finally{outside.remove();}
 });
-it('fades the complete menu once regardless of item count and cancels when closed',()=>{
- const media={matches:false,addEventListener:vi.fn(),removeEventListener:vi.fn()};
- const old=window.matchMedia;window.matchMedia=()=>media as unknown as MediaQueryList;
- const motions:{target:Element;frames:Keyframe[];options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
- const oldAnimate=Element.prototype.animate;
- Element.prototype.animate=function(frames,options){const record={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};motions.push(record);return record as unknown as Animation;};
+// 모든 실제 항목의 배경면에 순서를 주고 해제 때 자체 표식을 제거한다.
+it('staggers droplet faces in item order without animating menu text or hit targets',()=>{
+ const animate=vi.fn(),oldAnimate=Element.prototype.animate;Element.prototype.animate=animate;
  try{
-  const items=Array.from({length:12},(_,i)=>({...plugin(),key:`p/${i}`}));const {v}=mount({},items);
-  expect(motions).toHaveLength(1);expect(motions[0].target.getAttribute('role')).toBe('menu');
-  expect(motions[0].options.delay??0).toBe(0);expect(motions[0].options.duration).toBe(260);
-  expect(motions[0].frames).toEqual([{opacity:0},{opacity:1}]);
-  v.unmount();for(const m of motions)expect(m.cancel).toHaveBeenCalled();expect(media.removeEventListener).toHaveBeenCalled();
- }finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
-});
-it('cancels entering choices immediately when reduced motion is enabled',()=>{
- let change:(()=>void)|undefined;const media={matches:false,addEventListener:(_event:string,fn:()=>void)=>{change=fn;},removeEventListener:vi.fn()};
- const old=window.matchMedia;window.matchMedia=()=>media as unknown as MediaQueryList;
- const cancel=vi.fn(),oldAnimate=Element.prototype.animate;Element.prototype.animate=()=>({cancel}) as unknown as Animation;
- try{const {v}=mount({onAttach:vi.fn()});expect(change).toBeTypeOf('function');media.matches=true;change!();expect(cancel).toHaveBeenCalled();v.unmount();}finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
-});
-it('keeps menu text stationary while its opacity fades in',()=>{
- const oldAnimate=Element.prototype.animate,motions:{frames:Keyframe[];options:KeyframeAnimationOptions}[]=[];
- Element.prototype.animate=function(frames,options){motions.push({frames:frames as Keyframe[],options:options as KeyframeAnimationOptions});return {cancel:vi.fn()} as unknown as Animation;};
- try{
-  mount({onAttach:vi.fn()});expect(motions).toHaveLength(1);
-  const {frames,options}=motions[0];
-  expect(frames.every(frame=>frame.transform===undefined)).toBe(true);
-  expect(frames.at(-1)!.opacity).toBe(1);expect(options.duration).toBe(260);
+  const {v}=mount({onAttach:vi.fn(),actions:[{kind:'plan',text:'/plan '}]},[plugin(true)]);
+  const panel=screen.getByRole('region',{name:'컴포저 옵션'}),items=screen.getAllByRole('menuitem');
+  expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(true);
+  expect(items.map(item=>item.style.getPropertyValue('--bb-chat-ui-fluid-option-delay'))).toEqual(['0ms','45ms','90ms']);
+  expect(animate).not.toHaveBeenCalled();expect(items.every(item=>!item.style.transform)).toBe(true);
+  v.unmount();expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);
+  expect(items.every(item=>!item.style.getPropertyValue('--bb-chat-ui-fluid-option-delay'))).toBe(true);
  }finally{Element.prototype.animate=oldAnimate;}
 });
-it('preserves a disabled choice opacity during its entrance',()=>{
+// 동작 줄이기를 켜면 진행 중인 배경면 효과도 즉시 끝낸다.
+it('cancels droplet faces immediately when reduced motion is enabled',()=>{
+ let change:(()=>void)|undefined;const media={matches:false,addEventListener:(_event:string,fn:()=>void)=>{change=fn;},removeEventListener:vi.fn()};
+ const old=window.matchMedia;window.matchMedia=()=>media as unknown as MediaQueryList;
+ try{const {v}=mount({onAttach:vi.fn()});const panel=screen.getByRole('region',{name:'컴포저 옵션'});expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(true);media.matches=true;change!();expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);v.unmount();expect(media.removeEventListener).toHaveBeenCalled();}finally{window.matchMedia=old;}
+});
+// 처음부터 동작 줄이기이면 필을 지연 없이 표시한다.
+it('does not start a droplet sequence when reduced motion is already enabled',()=>{
+ const old=window.matchMedia;window.matchMedia=()=>({matches:true,addEventListener:vi.fn(),removeEventListener:vi.fn()}) as unknown as MediaQueryList;
+ try{mount({onAttach:vi.fn()});expect(screen.getByRole('region',{name:'컴포저 옵션'}).hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);}finally{window.matchMedia=old;}
+});
+// 직접 조작은 순서를 기다리지 않고 효과를 끝낸다.
+it('finishes droplet faces on pointer and keyboard interactions',()=>{
+ const {v}=mount({onAttach:vi.fn()});let panel=screen.getByRole('region',{name:'컴포저 옵션'});
+ fireEvent.pointerDown(screen.getByRole('menuitem'));expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);v.unmount();
+ mount({onAttach:vi.fn()});panel=screen.getByRole('region',{name:'컴포저 옵션'});fireEvent.keyDown(panel,{key:'ArrowRight'});expect(panel.hasAttribute('data-bb-chat-ui-fluid-entering')).toBe(false);
+});
+// 비활성 항목은 배경 효과와 무관하게 원래 흐림을 유지한다.
+it('preserves a disabled choice opacity during its droplet entrance',()=>{
  const style=document.createElement('style');style.textContent='button:disabled { opacity:.4; }';document.head.append(style);
- const oldAnimate=Element.prototype.animate,frames:Keyframe[][]=[];
- Element.prototype.animate=function(value){frames.push(value as Keyframe[]);return {cancel:vi.fn()} as unknown as Animation;};
- try{mount({},[plugin(true)]);expect(frames).toHaveLength(1);expect(Number(frames[0].at(-1)!.opacity)).toBe(1);expect(getComputedStyle(screen.getByRole('menuitem')).opacity).toBe('0.4');}finally{style.remove();Element.prototype.animate=oldAnimate;}
+ try{mount({},[plugin(true)]);expect(getComputedStyle(screen.getByRole('menuitem')).opacity).toBe('0.4');}finally{style.remove();}
 });
 it('keeps menu wheel scrolling native inside a list but blocks short lists, edges and card padding',()=>{
  mount({onAttach:vi.fn()});

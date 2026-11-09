@@ -5,7 +5,7 @@ import { Icon } from './components/ui/icon';
 import { InlineDropdownMenuItems } from './components/ui/dropdown-menu';
 import { orderedPromptActions, PROMPT_ACTION_PRESENTATION } from './src/PromptBoxActionsMenu';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
-import { EASE } from '../lib/motion';
+import '../lib/motion.css';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 export interface FluidOptionsPanelProps {
@@ -27,25 +27,29 @@ function pulse(): void {
 // 입력창 위의 옵션 필을 그리고 플러그인 항목은 공개 host renderer에 맡긴다.
 export function FluidOptionsPanel({ active = true, actions = [], plugins, onAttach, onAction, onClose, onPluginSelected }: FluidOptionsPanelProps) {
   const root = useRef<HTMLDivElement>(null);
-  const entering = useRef<Animation[]>([]);
-  // 직접 조작과 해제 때 목록의 진입 효과를 끝낸다.
-  const stopEntering = useCallback(() => { for (const animation of entering.current) animation.cancel(); entering.current = []; }, []);
+  // 직접 조작 때 필 배경면의 순차 등장을 즉시 끝낸다.
+  const stopEntering = useCallback(() => { root.current?.removeAttribute('data-bb-chat-ui-fluid-entering'); }, []);
   const visible = orderedPromptActions(actions).filter(action => action.text.length > 0);
   useLayoutEffect(() => {
     if (!active) return;
-    const list = root.current?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-panel-list]');
+    const panel = root.current;
+    const list = panel?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-panel-list]');
     if (list) list.scrollTop = 0;
     (root.current?.querySelector<HTMLElement>(ENABLED_OPTIONS)
       ?? root.current?.closest('[data-bb-chat-ui-fluid-composer]')?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-toggle] button')
       ?? root.current)?.focus({ preventScroll: true });
     const motion = root.current?.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
-    if (!motion?.matches) {
-      const animation = list?.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: EASE.out });
-      if (animation) entering.current.push(animation);
-    }
+    const items = Array.from(list?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    // 공통 droplet의 45ms 간격만 배경 가상 요소에 전달한다.
+    items.forEach((item, index) => item.style.setProperty('--bb-chat-ui-fluid-option-delay', `${index * 45}ms`));
+    if (!motion?.matches) panel?.setAttribute('data-bb-chat-ui-fluid-entering', '');
     const reduce = () => { if (motion?.matches) stopEntering(); };
     motion?.addEventListener('change', reduce);
-    return () => { stopEntering(); motion?.removeEventListener('change', reduce); };
+    return () => {
+      panel?.removeAttribute('data-bb-chat-ui-fluid-entering');
+      for (const item of items) item.style.removeProperty('--bb-chat-ui-fluid-option-delay');
+      motion?.removeEventListener('change', reduce);
+    };
   }, [active, stopEntering]);
 
   useLayoutEffect(() => {

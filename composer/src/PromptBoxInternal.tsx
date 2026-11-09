@@ -3368,8 +3368,9 @@ export function PromptBoxInternal({
       onDrop={event => { if (!onAttachFiles) return; event.preventDefault(); if (event.dataTransfer.files.length) { setFluidOptionsOpen(false); attachFilesWithHistory(Array.from(event.dataTransfer.files)); } }}
       style={maxHeight === undefined ? undefined : { ["--bb-chat-ui-fluid-host-max" as string]: `${Math.max(96, maxHeight)}px` }}>
       <input ref={attachmentInputRef} type="file" multiple className="hidden" onChange={handleAttachmentInputChange} />
-      <FluidComposerDetails key={composerScopeKey} controls={executionControls} suspended={fluidVoiceActive}
-        onOpen={() => { dismissComposerMenu(); setFluidOptionsOpen(false); }} />
+      <FluidComposerDetails scopeKey={composerScopeKey} controls={executionControls} suspended={fluidVoiceActive}
+        onOpen={() => { dismissComposerMenu(); setFluidOptionsOpen(false); }}>
+      {(detailsToggle, details) => <>{details}
       <FluidComposerBody
         options={null}
         decoration={fluidVoiceActive ? <FluidVoiceWaveform appearance="glow" indicator={fluidVoiceGesture === 'hold' ? 'orb' : fluidVoiceBars ? 'bars' : undefined} stream={fluidVoiceStream} exiting={fluidVoiceState.phase !== "starting" && fluidVoiceState.phase !== "recording"}/> : null}
@@ -3403,6 +3404,7 @@ export function PromptBoxInternal({
         </div>}
         actions={<>
           <span data-bb-chat-ui-fluid-extra-actions="" hidden={fluidVoiceActive}><contributions.Actions />{compactBeforeSend}</span>
+          {detailsToggle}
           <div data-promptbox-submit-group="" className="flex shrink-0 flex-row items-center">
             <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream} onGestureChange={setFluidVoiceGesture}
               disabled={!voice?.isSupported || isSubmitting || composerInputLocked || showVoiceActionGroup}
@@ -3430,6 +3432,8 @@ export function PromptBoxInternal({
         voice={voice && showVoiceActionGroup ? <VoiceRecordingBar isCompact state={renderedVoiceActionState} delivery={voice.delivery} stream={voice.stream}
           microphoneWarning={voice.microphoneWarning} submitIcon={submitIcon ?? "CornerDownLeft"} onConfirm={voice.stop} onSend={voice.send} onCancel={cancelVoiceInput} /> : undefined}
       />
+      </>}
+      </FluidComposerDetails>
       <ComposerRoot rootRef={formRef} editor={composerEditor} menuRef={typeaheadMenuRef} menuOpen={composerMenuOpen} />
             <ComposerPopupHost
               open={composerMenuOpen}
