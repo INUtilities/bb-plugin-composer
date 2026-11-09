@@ -3,7 +3,7 @@ import { Button } from './components/ui/button';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
 
 // 기존 정보 영역을 유지하고 시안과 같은 SVG 버튼을 입력창의 전송 왼쪽에 전달한다.
-export function FluidComposerDetails({ controls, onOpen, scopeKey, suspended = false, children }: { controls: ReactNode; onOpen(): void; scopeKey: string; suspended?: boolean; children(toggle: ReactNode, details: ReactNode): ReactNode }) {
+export function FluidComposerDetails({ onOpen, scopeKey, suspended = false, children }: { onOpen(): void; scopeKey: string; suspended?: boolean; children(toggle: ReactNode, details: ReactNode): ReactNode }) {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const id = useId();
@@ -58,7 +58,6 @@ export function FluidComposerDetails({ controls, onOpen, scopeKey, suspended = f
       onKeyDown={event => {
         if (event.key === 'Escape' && !event.defaultPrevented) { event.preventDefault(); event.stopPropagation(); close(); }
       }}>
-      <div data-bb-chat-ui-fluid-native-controls="">{controls}</div>
     </div>
   );
 }

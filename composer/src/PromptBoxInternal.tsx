@@ -1,3 +1,4 @@
+import { FluidModelControls } from '../FluidModelControls';
 import { FluidVoiceControl } from "../FluidVoiceControl";
 import { FluidVoiceWaveform } from "../FluidVoiceWaveform";
 import { IDLE_HOLD_VOICE, holdVoiceIsActive } from "../../lib/hold-voice";
@@ -3368,11 +3369,11 @@ export function PromptBoxInternal({
       onDrop={event => { if (!onAttachFiles) return; event.preventDefault(); if (event.dataTransfer.files.length) { setFluidOptionsOpen(false); attachFilesWithHistory(Array.from(event.dataTransfer.files)); } }}
       style={maxHeight === undefined ? undefined : { ["--bb-chat-ui-fluid-host-max" as string]: `${Math.max(96, maxHeight)}px` }}>
       <input ref={attachmentInputRef} type="file" multiple className="hidden" onChange={handleAttachmentInputChange} />
-      <FluidComposerDetails scopeKey={composerScopeKey} controls={executionControls} suspended={fluidVoiceActive}
+      <FluidComposerDetails scopeKey={composerScopeKey} suspended={fluidVoiceActive}
         onOpen={() => { dismissComposerMenu(); setFluidOptionsOpen(false); }}>
       {(detailsToggle, details) => <>{details}
       <FluidComposerBody
-        options={null}
+        options={<FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/>}
         decoration={fluidVoiceActive ? <FluidVoiceWaveform appearance="glow" indicator={fluidVoiceGesture === 'hold' ? 'orb' : fluidVoiceBars ? 'bars' : undefined} stream={fluidVoiceStream} exiting={fluidVoiceState.phase !== "starting" && fluidVoiceState.phase !== "recording"}/> : null}
         draftText={fluidVoiceActive ? fluidVoicePreview.text : value} editorReady={editor !== null}
         toggle={<FluidComposerToggle open={fluidOptionsOpen}

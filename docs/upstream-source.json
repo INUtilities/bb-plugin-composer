@@ -2,7 +2,7 @@
   "repository": "https://github.com/INUtilities/bb-chat-ui",
   "ref": "experiment/fluid-composer",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "d8c7b14cde710e59db8064a007425904bea099b4",
+  "integratedCommit": "a7b26a87ca84547729f884f2bc919c1de31a309f",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -19,7 +19,7 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "518dddfe37dfe4c801a991470b74dd5827f3ded2add0963c8d25dfb4c72e9804"
+      "sha256": "78eca005420d3f9b25c11fc523048f53911bb4068aa1b78a1c56f0bf05cce993"
     },
     {
       "source": "composer/FluidComposer.tsx",
@@ -44,7 +44,7 @@
     {
       "source": "composer/FluidComposerDetails.tsx",
       "destination": "composer/FluidComposerDetails.tsx",
-      "sha256": "31cebc5ae5a6c507e19398a4cd2ba3d807abde473775bf6903f3a1e5a85081df"
+      "sha256": "85c172909048e255d3167aef753a3db4999d04f76c31b115f489a3ad0018f795"
     },
     {
       "source": "composer/FluidComposerToggle.tsx",
@@ -89,7 +89,7 @@
     {
       "source": "composer/README.md",
       "destination": "composer/README.md",
-      "sha256": "fb50a6a70e57bfdcda0fb4dd3dc33cb31d2825a30ae6d4fe8bc4eb50b05a3334",
+      "sha256": "9c8af30c83dd7fe5d49ac9c582c40f30c4d353c1b9c4ecea28fed7f7341b6d50",
       "checkoutNote": "Git checkout line endings differ from the source; normalized UTF-8 text is identical"
     },
     {
@@ -235,7 +235,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "7b9ed205c2e88eb3bfee78319256440d596a0eb188a5a21f7c7bca84bb8b3753"
+      "sha256": "b8efc77e5d10eae2a0855681766439df92a6752b1abd6dac8b65df59d61aa1ee"
     },
     {
       "source": "composer/src/PromptBoxInternal.unit.test.ts",
@@ -510,7 +510,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "94eb300c75ab4eb2a5a329e8f69a71dd1268a5581dcbfff697133779e08c6449"
+      "sha256": "ba707c4a724c8cda4c19dcd82a759f831b803f3f1560b480dc3ff983871766ea"
     },
     {
       "source": "lib/fluid-composer-height.ts",
@@ -556,6 +556,16 @@
       "source": "lib/send-haptic.ts",
       "destination": "lib/send-haptic.ts",
       "sha256": "8874bf049a4f869e1e3ad261fc6196f4498614b720d91e98fbb7c3a493e34ac4"
+    },
+    {
+      "source": "composer/FluidModelControls.tsx",
+      "destination": "composer/FluidModelControls.tsx",
+      "sha256": "8a06a7bca6c5feed7e853a90787a66ae1551ea369aad6808d0819433b4e02bcb"
+    },
+    {
+      "source": "composer/FluidModelControls.test.tsx",
+      "destination": "composer/FluidModelControls.test.tsx",
+      "sha256": "7a03876d12c831f2d3ae6e2fc15e02cc1d8b8d7e8c23d97cd98df1debb5f37d5"
     }
   ]
 }

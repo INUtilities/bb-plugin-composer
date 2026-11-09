@@ -87,7 +87,7 @@ it.each(['data-follow-up-composer-footer','data-new-thread-footer'])('opens the 
   const editor=v.container.querySelector('.ProseMirror'),model=screen.getByText('모델 선택');
   const toggle=screen.getByRole('button',{name:'정보와 설정'});
   expect(toggle.getAttribute('type')).toBe('button');expect(toggle.getAttribute('aria-expanded')).toBe('false');
-  expect(getComputedStyle(toggle).borderRadius).toBe('999px');expect(screen.queryByRole('button',{name:'모델 선택'})).toBeNull();
+  expect(getComputedStyle(toggle).borderRadius).toBe('999px');expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
   expect(getComputedStyle(bar).display).toBe('none');expect(getComputedStyle(footer).display).toBe('none');
   fireEvent.click(toggle);
   const details=screen.getByRole('region',{name:'컴포저 정보와 설정'});
@@ -99,9 +99,9 @@ it.each(['data-follow-up-composer-footer','data-new-thread-footer'])('opens the 
   expect(getComputedStyle(unrelated).display).toBe('none');
   const replacement=document.createElement('div');replacement.setAttribute(footerMark,'');footer.replaceWith(replacement);
   expect(getComputedStyle(replacement).display).toBe('flex');
-  fireEvent.keyDown(model,{key:'Escape'});
+  fireEvent.keyDown(details,{key:'Escape'});
   expect(toggle.getAttribute('aria-expanded')).toBe('false');expect(document.activeElement).toBe(toggle);
-  expect(getComputedStyle(replacement).display).toBe('none');expect(screen.queryByRole('button',{name:'모델 선택'})).toBeNull();
+  expect(getComputedStyle(replacement).display).toBe('none');expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);expect(v.inspection.composer.text).toBe('보관할 초안');
   fireEvent.click(toggle);expect(getComputedStyle(replacement).display).toBe('flex');
   expect(run).not.toHaveBeenCalled();v.unmount();expect(shell.hasAttribute('data-bb-chat-ui-fluid-details-open')).toBe(false);
@@ -136,7 +136,7 @@ it('keeps the input and options in the same form and returns to the mounted edit
  const panel=await screen.findByRole('region',{name:'컴포저 옵션'});
  expect(form.contains(panel)).toBe(true);expect(v.container.querySelector('form')).toBe(form);
  expect(v.container.querySelector('.ProseMirror')).toBe(editor);
- expect(screen.queryByRole('button',{name:'모델 선택'})).toBeNull();
+ expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
  expect(screen.getByRole('button',{name:'Submit (Enter)'})).toBeTruthy();
  expect(document.querySelector('[data-persistent-drawer-content],[data-radix-popper-content-wrapper]')).toBeNull();
  expect(run).not.toHaveBeenCalled();
@@ -160,9 +160,9 @@ it('opens the existing attachment picker once and restores the input view',async
  try{fireEvent.click(screen.getByRole('button',{name:'Prompt actions'}));fireEvent.click(await screen.findByRole('menuitem',{name:'Attach files'}));
  expect(pick).toHaveBeenCalledTimes(1);expect(screen.queryByRole('region',{name:'컴포저 옵션'})).toBeNull();expect(v.inspection.composer.text).toBe('보관할 초안');}finally{pick.mockRestore();v.unmount();}
 });
-it('temporarily hides native model controls in input mode while keeping their mounted host state',async()=>{
+it('keeps native model controls visible inside the input independently of information',async()=>{
  const{v}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
- expect(screen.queryByRole('button',{name:'모델 선택'})).toBeNull();
+ expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-native-controls] button')?.textContent).toBe('모델 선택');
  expect(screen.getByRole('button',{name:'Prompt actions'})).toBeTruthy();
  v.unmount();

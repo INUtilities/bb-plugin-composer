@@ -63,7 +63,13 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-panel-list] [ro
 [data-bb-chat-ui-fluid-row][data-voice-mode="true"] > [data-bb-chat-ui-fluid-options] { display:none; }
 [data-bb-chat-ui-fluid-row][data-voice-mode="true"] > [data-bb-chat-ui-fluid-actions] { justify-self:center; }
 [data-bb-chat-ui-fluid-options], [data-bb-chat-ui-fluid-actions] { display:flex; align-items:center; min-width:0; gap:4px; }
-[data-bb-chat-ui-fluid-options] { grid-area:options; width:var(--bb-chat-ui-fluid-control-size); height:var(--bb-chat-ui-fluid-control-size); }
+[data-bb-chat-ui-fluid-options] { grid-area:options; padding-left:calc(var(--bb-chat-ui-fluid-control-size) + 4px); height:var(--bb-chat-ui-fluid-control-size); }
+[data-bb-chat-ui-fluid-model-controls] { display:flex; align-items:center; gap:2px; min-width:0; }
+[data-bb-chat-ui-fluid-model-controls] [data-bb-chat-ui-fluid-native-controls] { flex-wrap:nowrap; gap:2px; }
+[data-bb-chat-ui-fluid-details]:not([hidden]) { display:contents; }
+[data-bb-chat-ui-fluid-effort] { gap:5px; height:32px; padding:0 8px; border-radius:999px; font-size:12px; line-height:16px; font-weight:400; white-space:nowrap; color:var(--muted-foreground); }
+[data-bb-chat-ui-fluid-effort] svg { flex:none; width:16px; height:16px; }
+[data-bb-chat-ui-fluid-effort] span { min-width:0; max-width:70px; overflow:hidden; text-overflow:ellipsis; }
 [data-bb-chat-ui-fluid-actions] { grid-area:actions; }
 [data-bb-chat-ui-fluid-actions] > [data-promptbox-submit-group] { display:flex; align-items:center; flex:none; }
 [data-bb-chat-ui-fluid-composer] [data-promptbox-send-menu] { margin-left:0; border-radius:999px; overflow:hidden; }
@@ -78,7 +84,7 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-panel-list] [ro
 [data-bb-chat-ui-fluid-composer] .ProseMirror p.is-editor-empty:first-child { position:relative; }
 [data-bb-chat-ui-fluid-composer] .ProseMirror p.is-editor-empty:first-child::before { content:attr(data-placeholder); position:absolute; inset:0; float:none; height:24px; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
 [data-bb-chat-ui-fluid-composer] :is([data-promptbox-submit-action], button[aria-label="Prompt actions"], button[aria-label="Start voice input"], [data-bb-chat-ui-voice-record]) { width:32px; height:32px; min-width:32px; min-height:32px; padding:0; margin:0; border-radius:999px; }
-[data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] { max-width:160px; min-width:32px; height:32px; margin:0; border-radius:999px; }
+[data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] { max-width:140px; min-width:32px; height:32px; margin:0; border-radius:999px; }
 [data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
 [data-bb-chat-ui-fluid-composer] [data-promptbox-submit-label] { display:none; }
 [data-bb-chat-ui-fluid-attachments]:empty { display:none; }
