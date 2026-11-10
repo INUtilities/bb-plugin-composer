@@ -5,7 +5,7 @@ import { EASE } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 // 입력 높이와 모서리를 유지하고 옵션 필을 입력창 위에 독립적으로 표시한다.
-export function FluidComposerBody({ editor, options, actions, attachments, voice, voiceMode = false, decoration, auxiliary, panel, panelOpen = false, toggle, draftText, editorReady = true }: {
+export function FluidComposerBody({ editor, options, actions, attachments, voice, voiceMode = false, decoration, auxiliary, panel, panelOpen = false, toggle, draftText, draftEditVersion = 0, editorReady = true }: {
   editor: ReactNode;
   options: ReactNode;
   actions: ReactNode;
@@ -18,6 +18,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   panelOpen?: boolean;
   toggle?: ReactNode;
   draftText?: string;
+  draftEditVersion?: number;
   editorReady?: boolean;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
@@ -42,7 +43,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     return () => { win.clearTimeout(timer); motion.removeEventListener('change', reduce); };
   }, [panelOpen, panelPresent]);
   const multilineRef = useRef(false), layoutFrame = useRef<number | null>(null);
-  const previousDraft = useRef({ text: draftText, voiceMode });
+  const previousDraft = useRef({ text: draftText, voiceMode, editVersion: draftEditVersion });
   const previousPosition = useRef<{ x: number; y: number } | null>(null);
   const inputPosition = useRef<{ x: number; y: number } | null>(null);
   const layoutAnimation = useRef<Animation | null>(null);
@@ -162,13 +163,14 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const dx = previous.x - next.x, dy = previous.y - next.y;
     if (dx || dy) actionAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_MORPH_MS, easing: EASE.out });
   }, [voiceMode]);
-  // 현재 제품 규칙대로 호스트가 초안을 비우면 높이와 입력 모션을 즉시 마친다.
+  // 직접 지울 때는 접힘 전환을 유지하고 호스트가 초안을 비울 때만 즉시 초기화한다.
   useLayoutEffect(() => {
     const cleared = !previousDraft.current.voiceMode && previousDraft.current.text !== undefined && previousDraft.current.text !== '' && draftText === '';
-    previousDraft.current = { text: draftText, voiceMode };
+    const edited = previousDraft.current.editVersion !== draftEditVersion;
+    previousDraft.current = { text: draftText, voiceMode, editVersion: draftEditVersion };
     const element = viewport.current;
     if (!element) return;
-    if (draftText !== '' || voiceMode) { element.removeAttribute('data-bb-chat-ui-fluid-reset'); return; }
+    if (edited || draftText !== '' || voiceMode) { element.removeAttribute('data-bb-chat-ui-fluid-reset'); return; }
     if (!cleared) return;
     element.setAttribute('data-bb-chat-ui-fluid-reset', 'true');
     element.style.transition = 'none';
@@ -178,7 +180,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     editorColumn.current?.removeAttribute('data-bb-chat-ui-fluid-moving');
     if (layoutFrame.current !== null) { element.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current); layoutFrame.current = null; }
     multilineRef.current = false; setMultiline(false);
-  }, [draftText, voiceMode]);
+  }, [draftText, draftEditVersion, voiceMode]);
   // 같은 입력 노드의 가로 위치를 큰 펼침과 빠른 접힘에 맞춰 보정한다.
   useLayoutEffect(() => {
     const previous = previousPosition.current, column = editorColumn.current;

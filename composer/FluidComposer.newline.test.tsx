@@ -43,6 +43,7 @@ afterEach(() => {
   else Reflect.deleteProperty(navigator, 'maxTouchPoints');
 });
 
+// 같은 제품 입력기와 편집 상태를 검증용 호스트에 연결한다.
 async function mount() {
   const run = vi.fn();
   const renderer: ExperimentalComposerRendererApi = {
@@ -411,6 +412,24 @@ it('does not add a second newline when the Return input arrives after the next l
     await vi.advanceTimersByTimeAsync(400);
   });
   expect(lines(editor)).toEqual(['d', '']);
+  expect(run).not.toHaveBeenCalled();
+});
+
+// 데스크톱·폰의 직접 전체 삭제는 전환을 유지하고 호스트 초기화는 즉시 접는다.
+it.each(['desktop','iphone','android'] as const)('keeps shrink motion when the user clears the whole draft on %s', async kind => {
+  device(kind);
+  const {v,editor,run}=await mount();
+  const viewport=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!;
+  await act(async()=>{editor.commands.setContent('<p>첫 줄</p><p>다음 줄</p><p>마지막 줄</p>');});
+  expect(v.inspection.composer.text).toContain('다음 줄');
+  await act(async()=>{editor.chain().selectAll().deleteSelection().run();});
+  expect(v.inspection.composer.text).toBe('');
+  expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(false);
+  expect(editor.isDestroyed).toBe(false);
+  await act(async()=>{await v.setComposerText('호스트가 복구한\n여러 줄');});
+  await act(async()=>{await v.setComposerText('');});
+  expect(viewport.hasAttribute('data-bb-chat-ui-fluid-reset')).toBe(true);
+  expect(viewport.style.transition).toBe('none');
   expect(run).not.toHaveBeenCalled();
 });
 

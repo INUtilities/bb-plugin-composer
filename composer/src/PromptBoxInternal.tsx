@@ -1053,8 +1053,11 @@ export function PromptBoxInternal({
   const composerDraft = composer.draft;
   const value = composerDraft.text;
   const mentionRanges = composerDraft.mentions;
+  const draftEditVersion = useRef(0);
+  // 직접 편집한 초안과 호스트가 초기화한 초안의 높이 전환을 구분한다.
   const onChange = useCallback(
     (text: string, mentions: readonly ComposerMention[]) => {
+      draftEditVersion.current += 1;
       composer.replace({ text, mentions });
     },
     [composer],
@@ -3432,7 +3435,7 @@ export function PromptBoxInternal({
       <FluidComposerBody
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
         decoration={fluidVoiceActive ? <FluidVoiceWaveform appearance="glow" indicator={fluidVoiceGesture === 'hold' ? 'orb' : fluidVoiceBars ? 'bars' : undefined} stream={fluidVoiceStream} exiting={fluidVoiceState.phase !== "starting" && fluidVoiceState.phase !== "recording"}/> : null}
-        draftText={fluidVoiceActive ? fluidVoicePreview.text : value} editorReady={editor !== null}
+        draftText={fluidVoiceActive ? fluidVoicePreview.text : value} draftEditVersion={draftEditVersion.current} editorReady={editor !== null}
         toggle={<FluidComposerToggle open={fluidOptionsOpen}
           disabled={composerInputLocked || isSubmitting || showVoiceActionGroup || fluidVoiceActive || picker.open}
           onClick={() => { if (fluidOptionsOpen) closeFluidOptions(); else openFluidOptions(); }}/>}
