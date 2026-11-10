@@ -41,7 +41,7 @@ it('keeps the real editor and native picker mounted across mode toggles',async()
     await view.setComposerText('새로 작성한 초안');
     fireEvent.click(toggle);
     expect(screen.getByRole('button',{name:'기존 모델 선택'})).toBe(native);
-    expect(screen.getByRole('button',{name:'정보와 설정'}).closest('[data-bb-chat-ui-fluid-actions]')).toBeTruthy();
+    expect(screen.getByRole('button',{name:'정보와 설정'}).closest('[data-bb-chat-ui-slot-toolbar]')).toBeTruthy();
     fireEvent.click(toggle);
     expect(view.container.querySelector('.ProseMirror')).toBe(editor);
     expect(view.container.querySelector('[data-native-model]')).toBe(native);

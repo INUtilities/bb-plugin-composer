@@ -48,12 +48,13 @@ it('opens options above the unchanged input and allows editing and submitting wh
  expect(v.inspection.composer.text).toBe('계속 작성한 초안');
  v.unmount();
 });
-// 정보 버튼을 전송 왼쪽의 같은 입력창 안에 두고 기존 정보와 초안을 유지한다.
-it('places the settings icon before send inside the input and reuses the existing information region',async()=>{
+// 정보 필을 컴포저 위로 옮기고 기존 정보와 초안을 유지한다.
+it('places the information pill above the input and reuses the existing information region',async()=>{
  const {v,run}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
  const editor=v.container.querySelector('.ProseMirror'),toggle=screen.getByRole('button',{name:'정보와 설정'}),send=screen.getByRole('button',{name:'Submit (Enter)'});
  const actions=v.container.querySelector('[data-bb-chat-ui-fluid-actions]')!;
- expect(actions.contains(toggle)).toBe(true);expect(actions.contains(send)).toBe(true);
+ expect(actions.contains(toggle)).toBe(false);expect(actions.contains(send)).toBe(true);
+ expect(toggle.closest('[data-bb-chat-ui-slot-toolbar]')).toBeTruthy();
  expect(toggle.compareDocumentPosition(send)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
  expect(toggle.querySelector('svg[data-bb-chat-ui-fluid-settings-icon]')).toBeTruthy();
  fireEvent.click(toggle);const region=screen.getByRole('region',{name:'컴포저 정보와 설정'});
@@ -89,7 +90,7 @@ it.each(['data-follow-up-composer-footer','data-new-thread-footer'])('opens the 
   const toggle=screen.getByRole('button',{name:'정보와 설정'});
   expect(toggle.getAttribute('type')).toBe('button');expect(toggle.getAttribute('aria-expanded')).toBe('false');
   expect(getComputedStyle(toggle).borderRadius).toBe('999px');expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
-  expect(getComputedStyle(bar).display).toBe('none');expect(getComputedStyle(footer).display).toBe('none');
+  expect(getComputedStyle(bar).display).toBe('flex');expect(getComputedStyle(footer).display).toBe('none');
   fireEvent.click(toggle);
   const details=screen.getByRole('region',{name:'컴포저 정보와 설정'});
   const wheel=new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:40});details.dispatchEvent(wheel);
@@ -97,6 +98,7 @@ it.each(['data-follow-up-composer-footer','data-new-thread-footer'])('opens the 
   expect(toggle.getAttribute('aria-controls')).toBe(details.id);expect(toggle.getAttribute('aria-expanded')).toBe('true');
   expect(screen.getByRole('button',{name:'모델 선택'})).toBe(model);
   expect(getComputedStyle(bar).display).toBe('flex');expect(getComputedStyle(footer).display).toBe('flex');
+  expect(getComputedStyle(footer).position).toBe('absolute');
   expect(getComputedStyle(unrelated).display).toBe('none');
   const replacement=document.createElement('div');replacement.setAttribute(footerMark,'');footer.replaceWith(replacement);
   expect(getComputedStyle(replacement).display).toBe('flex');
@@ -202,20 +204,16 @@ it('does not return focus to the editor when options reopen before the closing f
  expect(toggle.getAttribute('aria-expanded')).toBe('true');expect(refocus).not.toHaveBeenCalled();
  expect(document.activeElement?.closest('[data-bb-chat-ui-fluid-panel]')).toBeTruthy();v.unmount();
 });
-it('presses only the toggle frost face and cancels its motion on pointer cancellation and unmount',async()=>{
- const{v}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
- const toggle=screen.getByRole('button',{name:'Prompt actions'}),animations=new Map<Element,{cancel:ReturnType<typeof vi.fn>}[]>();
- const oldAnimate=Element.prototype.animate,oldGet=Element.prototype.getAnimations;
- Element.prototype.animate=function(){const a={cancel:vi.fn()};animations.set(this,[...(animations.get(this)??[]),a]);return a as unknown as Animation;};
- Element.prototype.getAnimations=function(){return(animations.get(this)??[]) as unknown as Animation[];};
+it('keeps the plus button and glyph at their base size through pointer activation',async()=>{
+ const stop=injectFluidComposer(document),{v}=mount();
  try{
-  fireEvent.pointerDown(toggle,{pointerId:1,isPrimary:true,button:0});
-  expect([...animations.keys()]).toHaveLength(1);const face=[...animations.keys()][0];expect(face.hasAttribute('data-bb-chat-ui-fluid-toggle-face')).toBe(true);
-  expect(animations.has(toggle)).toBe(false);expect(animations.has(toggle.querySelector('[data-bb-chat-ui-fluid-toggle-glyph]')!)).toBe(false);
-  fireEvent.pointerCancel(toggle,{pointerId:1});expect(animations.get(face)![0].cancel).toHaveBeenCalled();
-  fireEvent.pointerDown(toggle,{pointerId:2,isPrimary:true,button:0});v.unmount();
-  for(const a of animations.get(face)!)expect(a.cancel).toHaveBeenCalled();
- }finally{Element.prototype.animate=oldAnimate;Element.prototype.getAnimations=oldGet;v.unmount();}
+  await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+  const toggle=screen.getByRole('button',{name:'Prompt actions'}),glyph=toggle.querySelector('[data-bb-chat-ui-fluid-toggle-glyph]')!;
+  const height=getComputedStyle(glyph).height;
+  const animate=vi.fn();toggle.animate=animate;
+  fireEvent.pointerDown(toggle,{pointerId:1,isPrimary:true,button:0});fireEvent.pointerUp(toggle,{pointerId:1});fireEvent.click(toggle);
+  expect(toggle.getAttribute('aria-expanded')).toBe('true');expect(getComputedStyle(glyph).height).toBe(height);expect(animate).not.toHaveBeenCalled();
+ }finally{v.unmount();stop();}
 });
 
 // 대화가 바뀌어도 입력 배치를 다시 만들지 않고 열린 정보만 닫는다.
@@ -231,15 +229,15 @@ it('closes details on a scope change without remounting the input layout',async(
 });
 
 // 시안과 실제 입력창이 같은 고정 SVG를 쓰고 호스트의 이름 해석을 거치지 않는지 확인한다.
-it('renders the approved settings drawing directly in the real information button',async()=>{
+it('renders the information drawing directly in the upper metadata pill',async()=>{
  const {v,run}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
  const button=screen.getByRole('button',{name:'정보와 설정'}),icon=button.querySelector<SVGSVGElement>('svg[data-bb-chat-ui-fluid-settings-icon]')!;
  expect(icon).toBeTruthy();expect(icon.getAttribute('viewBox')).toBe('0 0 24 24');
  expect(icon.getAttribute('width')).toBe('16');expect(icon.getAttribute('height')).toBe('16');
  expect(icon.style.width).toBe('16px');expect(icon.style.height).toBe('16px');
  expect(icon.getAttribute('stroke')).toBe('currentColor');expect(icon.getAttribute('stroke-width')).toBe('2');expect(icon.getAttribute('aria-hidden')).toBe('true');
- expect([...icon.querySelectorAll('path')].map(path=>path.getAttribute('d'))).toEqual(['M10 17H19','M5 7h9']);
- expect([...icon.querySelectorAll('circle')].map(circle=>[circle.getAttribute('cx'),circle.getAttribute('cy'),circle.getAttribute('r')])).toEqual([['7','17','3'],['17','7','3']]);
+ expect([...icon.querySelectorAll('path')].map(path=>path.getAttribute('d'))).toEqual(['M12 11v6M12 7h.01']);
+ expect([...icon.querySelectorAll('circle')].map(circle=>[circle.getAttribute('cx'),circle.getAttribute('cy'),circle.getAttribute('r')])).toEqual([['12','12','9']]);
  expect(button.querySelector('[data-icon="Settings2"]')).toBeNull();
  fireEvent.click(button);expect(screen.getByRole('region',{name:'컴포저 정보와 설정'})).toBeTruthy();expect(run).not.toHaveBeenCalled();v.unmount();
 });

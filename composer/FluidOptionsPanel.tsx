@@ -5,7 +5,7 @@ import { Icon } from './components/ui/icon';
 import { InlineDropdownMenuItems } from './components/ui/dropdown-menu';
 import { orderedPromptActions, PROMPT_ACTION_PRESENTATION } from './src/PromptBoxActionsMenu';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
-import { staggerIn } from '../lib/motion';
+import { dropletIn, EASE } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 export interface FluidOptionsPanelProps {
@@ -28,6 +28,7 @@ function pulse(): void {
 export function FluidOptionsPanel({ active = true, actions = [], plugins, onAttach, onAction, onClose, onPluginSelected }: FluidOptionsPanelProps) {
   const root = useRef<HTMLDivElement>(null);
   const entering = useRef<Animation[]>([]);
+  const fading = useRef<Animation[]>([]);
   // 직접 조작과 해제 때 필 전체의 순차 등장을 즉시 끝낸다.
   const stopEntering = useCallback(() => { for (const animation of entering.current) animation.cancel(); entering.current = []; }, []);
   const visible = orderedPromptActions(actions).filter(action => action.text.length > 0);
@@ -42,11 +43,32 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
       ?? root.current)?.focus({ preventScroll: true });
     const motion = root.current?.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
     const items = Array.from(list?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
-    if (!motion?.matches) entering.current = staggerIn(items).filter((animation): animation is Animation => animation !== null);
-    const reduce = () => { if (motion?.matches) stopEntering(); };
+    const shell = panel?.closest('[data-promptbox-shell]') ?? panel?.closest('form');
+    const bars = Array.from(shell?.querySelectorAll<HTMLElement>('[data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]') ?? []);
+    const pills = bars.flatMap(bar => Array.from(bar.children));
+    const priorInert = bars.map(bar => bar.inert);
+    shell?.setAttribute('data-bb-chat-ui-fluid-options-open', '');
+    bars.forEach(bar => { bar.inert = true; });
+    if (!motion?.matches) {
+      fading.current = pills.map((pill,index) => pill.animate?.([{opacity:1},{opacity:0}], {duration:200,delay:index*45,easing:EASE.exit,fill:'both'})).filter((animation): animation is Animation => !!animation);
+      const delay = pills.length ? 200 + (pills.length - 1) * 45 : 0;
+      entering.current = items.map((item,index) => {
+        const animation = dropletIn(item, {delay:delay+index*45});
+        const effect = animation?.effect as KeyframeEffect | null;
+        const opacity = Number.parseFloat(getComputedStyle(item).opacity);
+        if (effect?.getKeyframes && effect.setKeyframes) effect.setKeyframes(effect.getKeyframes().map((frame,index) => ({...frame,opacity:index===0 ? 0:Number.isFinite(opacity) ? opacity:1})));
+        return animation;
+      }).filter((animation): animation is Animation => animation !== null);
+    }
+    // 동작 줄이기는 등장과 퇴장을 모두 즉시 끝낸다.
+    const reduce = () => { if (motion?.matches) { stopEntering(); for (const animation of fading.current) animation.cancel(); fading.current = []; } };
     motion?.addEventListener('change', reduce);
     return () => {
       stopEntering();
+      for (const animation of fading.current) animation.cancel();
+      fading.current = [];
+      shell?.removeAttribute('data-bb-chat-ui-fluid-options-open');
+      bars.forEach((bar,index) => { bar.inert = priorInert[index]; });
       motion?.removeEventListener('change', reduce);
     };
   }, [active, stopEntering]);

@@ -7,6 +7,24 @@ import { FluidOptionsPanel, type FluidOptionsPanelProps } from './FluidOptionsPa
 import { DropdownMenuItem } from './components/ui/dropdown-menu';
 
 afterEach(()=>{cleanup();vi.restoreAllMocks();});
+
+// 기존 필의 퇴장이 끝난 뒤 옵션이 투명한 상태에서 시작하고 해제 때 원래 필을 복원한다.
+it('fades existing pills before options appear and restores their interaction on close',()=>{
+ const previous=Element.prototype.animate,entries:{target:Element;frames:Keyframe[];options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
+ Element.prototype.animate=function(frames,options){
+  const entry={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};entries.push(entry);
+  return {...entry,effect:{getKeyframes:()=>entry.frames,setKeyframes:(frames:Keyframe[])=>{entry.frames=frames;}}} as unknown as Animation;
+ };
+ try{
+  const v=renderSlot({component:()=> <div data-promptbox-shell=""><div data-bb-chat-ui-info-bar=""><button>Goal</button><button>Diff</button></div><div data-bb-chat-ui-slot-toolbar=""><button>06 슬롯</button></div><FluidOptionsPanel plugins={{plusMenuItems:[],MenuEntry:()=>null}} onAttach={()=>{}} onClose={()=>{}} onAction={()=>{}} onPluginSelected={()=>{}}/></div>},{},{});
+  const shell=v.container.querySelector('[data-promptbox-shell]')!,bar=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-info-bar]')!;
+  expect(shell.hasAttribute('data-bb-chat-ui-fluid-options-open')).toBe(true);expect(bar.inert).toBe(true);
+  const fades=entries.filter(entry=>entry.options.duration===200),entrance=entries.find(entry=>entry.options.duration===460)!;
+  expect(fades.map(entry=>entry.options.delay)).toEqual([0,45,90]);
+  expect(entrance.options.delay).toBe(290);expect(entrance.frames[0].opacity).toBe(0);
+  v.unmount();expect(shell.hasAttribute('data-bb-chat-ui-fluid-options-open')).toBe(false);expect(bar.inert).toBeFalsy();expect(entries.every(entry=>entry.cancel.mock.calls.length===1)).toBe(true);
+ }finally{Element.prototype.animate=previous;}
+});
 const plugin=(disabled:ExperimentalComposerPlusMenuContribution['item']['disabled']=false):ExperimentalComposerPlusMenuContribution=>({key:'p/item',pluginId:'p',customizationId:'c',generation:1,item:{id:'item',label:'Plugin option',icon:'Zap',description:'플러그인 옵션 설명',disabled,run:vi.fn()}});
 function mount(overrides:Partial<Omit<FluidOptionsPanelProps,'plugins'>>={},items:ExperimentalComposerPlusMenuContribution[]=[],afterSelected=()=>{}){
  const restore=vi.fn();
@@ -79,14 +97,14 @@ it('does not take focus when retained only for the outgoing morph',()=>{
 // 기존 상단 pill과 같은 구간별 모션을 필 전체에 순서대로 적용한다.
 it('matches the existing upper-pill droplet on each whole option with 45ms spacing',()=>{
  const oldAnimate=Element.prototype.animate,entries:{target:Element;frames:Keyframe[];options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
- Element.prototype.animate=function(frames,options){const entry={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};entries.push(entry);return entry as unknown as Animation;};
+ Element.prototype.animate=function(frames,options){const entry={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};entries.push(entry);return {...entry,effect:{getKeyframes:()=>entry.frames,setKeyframes:(frames:Keyframe[])=>{entry.frames=frames;}}} as unknown as Animation;};
  try{const {v}=mount({onAttach:vi.fn(),actions:[{kind:'plan',text:'/plan '}]},[plugin(true)]);const items=screen.getAllByRole('menuitem');
   expect(entries.map(entry=>entry.target)).toEqual(items);
   expect(entries.map(entry=>entry.options.delay)).toEqual([0,45,90]);
   expect(entries[0].frames.map(frame=>frame.transform)).toEqual(['translateY(8px) scale(.82,.72)','translateY(-4px) scale(.94,1.16)','translateY(0) scale(1.1,.94)','translateY(-1px) scale(.985,1.015)','none']);
   expect(entries[0].frames.map(frame=>frame.offset)).toEqual([0,.35,.65,.82,1]);
   expect(entries[0].frames.slice(0,-1).every(frame=>frame.easing==='cubic-bezier(.36,0,.18,1)')).toBe(true);
-  expect(entries.every(entry=>entry.options.duration===460&&entry.options.fill==='backwards'&&entry.frames.every(frame=>frame.opacity===undefined))).toBe(true);
+  expect(entries.every(entry=>entry.options.duration===460&&entry.options.fill==='backwards'&&entry.frames[0].opacity===0&&entry.frames.slice(1).every(frame=>frame.opacity===1))).toBe(true);
   v.unmount();expect(entries.every(entry=>entry.cancel.mock.calls.length===1)).toBe(true);
  }finally{Element.prototype.animate=oldAnimate;}
 });

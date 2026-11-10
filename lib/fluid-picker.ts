@@ -1,14 +1,14 @@
 import { LIGHT_GLASS_FACE, DARK_GLASS_FACE } from './glass-surface.ts';
 import { EASE } from './motion.ts';
+import { pillStyle } from './pill.ts';
 
 export const fluidPickerCss=`
 @property --bb-slot-open { syntax:"<number>"; inherits:true; initial-value:0; }
 [data-bb-chat-ui-slot-toolbar] { display:flex; align-items:center; gap:8px; margin-bottom:8px; min-width:0; }
-[data-bb-chat-ui-slot-toolbar] > [data-bb-chat-ui-fluid-details-toggle] { margin-left:auto; }
-[data-bb-chat-ui-slot-mode] { display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:4px 12px; min-height:28px; font-size:12px; line-height:18px; color:var(--muted-foreground); background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); }
-.dark [data-bb-chat-ui-slot-mode] { background:${DARK_GLASS_FACE}; }
+[data-bb-chat-ui-slot-mode], [data-bb-chat-ui-slot-toolbar] > [data-bb-chat-ui-fluid-details-toggle] { ${pillStyle.navigation} min-height:32px; color:var(--foreground); background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); box-shadow:0 6px 18px -12px color-mix(in oklab,var(--foreground) 22%,transparent),inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
+.dark [data-bb-chat-ui-slot-mode], .dark [data-bb-chat-ui-slot-toolbar] > [data-bb-chat-ui-fluid-details-toggle] { background:${DARK_GLASS_FACE}; }
 [data-bb-chat-ui-slot-mode][aria-pressed="true"] { color:var(--foreground); }
-[data-bb-chat-ui-slot-mode] > span { font-size:11px; opacity:.72; }
+[data-bb-chat-ui-slot-mode] > span { font-size:inherit; opacity:.72; }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-slot-mode] { min-height:32px; font-size:13px; }
 [data-bb-chat-ui-fluid-composer] { --bb-slot-row:40px; --bb-slot-font:13px; --bb-slot-icon:40px; }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --bb-slot-row:44px; --bb-slot-font:14px; --bb-slot-icon:44px; }

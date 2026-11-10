@@ -63,3 +63,6 @@
 
 - 모델·Effort와 06 슬롯은 같은 editor·초안·첨부 수명을 유지한다. 기본 06은 컴포저 위 토글로 기존 모드와 전환하며 설정 확인은 메시지를 보내지 않는다. 기존 모드의 한 줄 컨트롤은 오른쪽 전송·정보 버튼 왼쪽에 둔다. 실제 지원 Effort·Fast만 표시하며 공급자 변경은 공개 Composer 핸드오프를 사용한다.
 - 병합 결과는 Chat UI 정본과 원격 Composer 입력 수정의 통합본이다. sourceSha256과 sha256을 구분하고 400ms 펼침·150ms 접힘·호스트 초기화 즉시 접힘·독립 옵션 필과 iPhone native Enter/beforeinput·첫 프레임·caret 보정을 함께 유지한다.
+
+
+- Fluid 상단의 기존 정보 필과 `06 슬롯` 토글·`i` 메타데이터 필은 평소 항상 표시한다. 토글은 공통 navigation pill 규격을 쓰며 `i`는 기존 Project·Branch·Permission·Context를 컴포저 위의 카드로 연다. 하단에는 메타데이터나 예약 공간을 남기지 않는다. `+`는 버튼·기호의 기본 크기를 유지하고 45도 회전만 한다. 옵션을 열면 기존 상단 필을 200ms·45ms 간격으로 순차 fade out한 뒤 옵션 필이 opacity 0에서 기존 460ms droplet·45ms 간격으로 등장한다. 닫기·해제는 원래 필과 상호작용을 복원하며 reduced motion은 즉시 반영한다. 이 규칙은 이전 정보 숨김·기호 길이 확대·pressPop 규칙을 대체한다.
