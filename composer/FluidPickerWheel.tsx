@@ -10,6 +10,7 @@ export function FluidPickerWheel({label,items,index,onPick,rowSize,disabled=fals
   const latest=useRef({index,items,onPick,disabled}); latest.current={index,items,onPick,disabled};
   const frame=useRef(0), timer=useRef(0), clickTimer=useRef(0), suppress=useRef(false);
   const scrollTrusted=useRef(false), userScroll=useRef(false);
+  const previous=useRef<{keys:string;index:number;disabled:boolean} | null>(null);
   const drag=useRef<{id:number; y:number; top:number; moving:boolean} | null>(null);
   const keys=items.map(item=>item.key).join('|')+':'+rowSize;
   // 가운데와 떨어진 거리를 CSS에 전달하며 새 프레임 반복은 만들지 않는다.
@@ -42,23 +43,32 @@ export function FluidPickerWheel({label,items,index,onPick,rowSize,disabled=fals
       else element.scrollTop=next*rowSize;
     }
   },[pick,rowSize]);
-  // 목록·기기·열림이 바뀌면 선택 위치를 맞추고 사용자 스크롤만 선택에 반영한다.
+  // 열린 같은 목록의 선택은 부드럽게 옮기고 목록·열림 변경은 즉시 맞춘다.
   useLayoutEffect(()=>{
     const element=scroller.current;
     if(!element) return;
+    const before=previous.current;
+    previous.current={keys,index,disabled};
+    const animate=before && before.keys===keys && !before.disabled && !disabled && before.index!==index
+      && !matchMedia('(prefers-reduced-motion: reduce)').matches;
     userScroll.current=false;
     const top=index*rowSize;
-    if(Math.abs(element.scrollTop-top)>1) {
-      if(element.scrollTo) element.scrollTo({top,behavior:'instant'});
-      else element.scrollTop=top;
-    }
+    if(element.scrollTo) element.scrollTo({top,behavior:animate ? 'smooth':'instant'});
+    else element.scrollTop=top;
     paint();
   },[index,keys,paint,rowSize,disabled]);
   // 스크롤 종료와 동작 줄이기 변경을 처리하고 예약 작업을 정리한다.
   useEffect(()=>{
     const element=scroller.current, motion=matchMedia('(prefers-reduced-motion: reduce)');
     // 동작 줄이기를 켜면 진행 중 스크롤을 선택 위치에서 마친다.
-    const reduce=()=>{if(motion.matches && element){element.scrollTop=latest.current.index*rowSize;paint();}};
+    const reduce=()=>{
+      if(motion.matches && element){
+        const top=latest.current.index*rowSize;
+        if(element.scrollTo) element.scrollTo({top,behavior:'instant'});
+        else element.scrollTop=top;
+        paint();
+      }
+    };
     // 브라우저가 보정한 마지막 위치도 다시 그리되 자동 스크롤은 선택하지 않는다.
     const end=()=>{paint();settle();};
     element?.addEventListener('scrollend',end); motion.addEventListener('change',reduce);

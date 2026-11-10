@@ -1,8 +1,8 @@
 {
   "repository": "https://github.com/MORPHLET/bb-chat-ui",
-  "ref": "3015ec0206ebb8bb77cad9415b49e355f7ae8486",
+  "ref": "095d011c142459572b473f76ecb252818a75abfe",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "3015ec0206ebb8bb77cad9415b49e355f7ae8486",
+  "integratedCommit": "095d011c142459572b473f76ecb252818a75abfe",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -11,7 +11,8 @@
     "Latest approved 400ms expand / 150ms collapse, immediate host-clear and independent option pills supersede the older standalone 380ms/160ms/card-morph design.",
     "sourceSha256 records the canonical source; sha256 records the merged destination. Differences are explicit standalone integration overlays.",
     "No Chat UI message, quote, TOC or information-card controller is imported.",
-    "The canonical commit is a local source reference, not an advertised remote branch. All merged product files required to build are included in this PR."
+    "The canonical commit is a local source reference, not an advertised remote branch. All merged product files required to build are included in this PR.",
+    "2026-11-10: active same-list slot selections use native smooth scrolling; list/open-state changes and reduced motion finish immediately. The 06 mode pill remains available."
   ],
   "files": [
     {
@@ -923,8 +924,8 @@
     {
       "source": "composer/FluidPickerWheel.tsx",
       "destination": "composer/FluidPickerWheel.tsx",
-      "sha256": "cc0bfe197f3d9a8450a6c2aeec289209c131686e7bb9856d309e6403b96e4f16",
-      "sourceSha256": "cc0bfe197f3d9a8450a6c2aeec289209c131686e7bb9856d309e6403b96e4f16"
+      "sha256": "7e4412f9217469630b078d326e644d8b62ac499052c7434a2775c4e8d8ed800f",
+      "sourceSha256": "7e4412f9217469630b078d326e644d8b62ac499052c7434a2775c4e8d8ed800f"
     },
     {
       "source": "composer/useFluidPicker.ts",
@@ -985,6 +986,12 @@
       "destination": "docs/design-references/composer-model-effort/slot-review.tsx",
       "sha256": "5b1edf9a9487b4aedd7a5d1f7efb76790c65090e2236d1dd475ae147721a2c1e",
       "sourceSha256": "5b1edf9a9487b4aedd7a5d1f7efb76790c65090e2236d1dd475ae147721a2c1e"
+    },
+    {
+      "source": "composer/FluidPickerWheel.test.tsx",
+      "destination": "composer/FluidPickerWheel.test.tsx",
+      "sha256": "589e91de11e380439796ac8bf67adfb5113aad9397c94b76e1f14c618aebe33e",
+      "sourceSha256": "589e91de11e380439796ac8bf67adfb5113aad9397c94b76e1f14c618aebe33e"
     }
   ],
   "upstreamComposerCommit": "41108c7",
