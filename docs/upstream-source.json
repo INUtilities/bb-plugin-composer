@@ -8,7 +8,8 @@
   "notes": [
     "Fluid product source and direct helpers copied without code changes; README checkout line endings are recorded separately",
     "Integrated source includes the approved input-only squircle",
-    "No Chat UI message, TOC or information-card controller is included"
+    "No Chat UI message, TOC or information-card controller is included",
+    "동일 문서의 활성 Composer가 stylesheet와 mode 표식을 공유한다. 마지막 owner 해제 시 style·표식을 기존처럼 즉시 복구한다. timer·지연 정리·기기 또는 입력 엔진 변경은 없다."
   ],
   "files": [
     {
@@ -510,7 +511,10 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "a6b26dc6c1868718aae4358abd8b550ba44e4cef86f8574aea25552936d43fca"
+      "sha256": "6010e7a8b181211ea7c93cfd736b9c0e3faaf1c870acccaff6d1ccc3541c646d",
+      "sourceSha256": "a6b26dc6c1868718aae4358abd8b550ba44e4cef86f8574aea25552936d43fca",
+      "integrationOverlay": true,
+      "integrationReason": "활성 Composer의 스타일 중복 제거와 마지막 owner의 즉시 정리"
     },
     {
       "source": "lib/fluid-composer-height.ts",

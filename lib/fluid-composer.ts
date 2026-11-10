@@ -195,18 +195,27 @@ html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] [data-bb-chat-
 html [data-bb-plugin="composer"] [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-split="true"] > [data-bb-chat-ui-voice-neck] { animation-duration:520ms; }
 `;
 
-// Fluid 컴포저의 스타일과 활성 표식을 설치하고 해제 시 원래 상태로 돌린다.
+type FluidStyleOwner={style:HTMLStyleElement;count:number;previous:string|null};
+const fluidStyleOwners=new WeakMap<Document,FluidStyleOwner>();
+
+// 같은 문서의 활성 입력기끼리만 스타일을 공유하며 마지막 해제는 즉시 처리한다.
 export function injectFluidComposer(document: Document): () => void {
-  const attribute = 'data-bb-chat-ui-fluid-mode';
-  const previous = document.documentElement.getAttribute(attribute);
-  document.documentElement.setAttribute(attribute, '');
-  const style = document.createElement('style');
-  style.id = 'bb-chat-ui-fluid-composer';
-  style.textContent = fluidComposerCss;
-  document.head.append(style);
-  return () => {
-    style.remove();
-    if (previous === null) document.documentElement.removeAttribute(attribute);
-    else document.documentElement.setAttribute(attribute, previous);
+  const attribute='data-bb-chat-ui-fluid-mode';
+  let installed=fluidStyleOwners.get(document);
+  if(!installed){
+    const previous=document.documentElement.getAttribute(attribute);
+    document.documentElement.setAttribute(attribute,'');
+    const style=document.createElement('style');style.id='bb-chat-ui-fluid-composer';style.textContent=fluidComposerCss;
+    document.head.append(style);
+    installed={style,count:0,previous};fluidStyleOwners.set(document,installed);
+  }
+  const owner=installed;owner.count++;
+  let released=false;
+  return()=>{
+    if(released)return;released=true;
+    if(--owner.count!==0)return;
+    owner.style.remove();fluidStyleOwners.delete(document);
+    if(owner.previous===null)document.documentElement.removeAttribute(attribute);
+    else document.documentElement.setAttribute(attribute,owner.previous);
   };
 }
