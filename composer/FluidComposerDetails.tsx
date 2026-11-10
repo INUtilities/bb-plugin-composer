@@ -15,7 +15,7 @@ export function FluidComposerDetails({ onOpen, scopeKey, suspended = false, chil
     if (!shell) return;
     const mark = 'data-bb-chat-ui-fluid-details-open', previous = shell.getAttribute(mark);
     shell.setAttribute(mark, '');
-    const owner = button.current?.closest('[data-follow-up-composer]');
+    const owner = button.current?.closest('[data-follow-up-composer]') ?? shell.querySelector('[data-follow-up-composer]');
     const view = shell.ownerDocument.defaultView;
     // 카드 밖 누르기와 Escape는 메타데이터만 닫는다.
     const dismiss = (event: Event) => {

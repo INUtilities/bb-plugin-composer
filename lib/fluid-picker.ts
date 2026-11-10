@@ -5,6 +5,8 @@ import { pillStyle } from './pill.ts';
 export const fluidPickerCss=`
 @property --bb-slot-open { syntax:"<number>"; inherits:true; initial-value:0; }
 [data-bb-chat-ui-slot-toolbar] { display:flex; align-items:center; gap:8px; margin-bottom:8px; min-width:0; }
+[data-bb-chat-ui-slot-toolbar][data-shared-row] { flex:none; margin:0; }
+[data-bb-chat-ui-slot-toolbar][hidden] { display:none !important; }
 [data-bb-chat-ui-slot-mode], [data-bb-chat-ui-slot-toolbar] > [data-bb-chat-ui-fluid-details-toggle] { ${pillStyle.navigation} min-height:32px; color:var(--foreground); background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); box-shadow:0 6px 18px -12px color-mix(in oklab,var(--foreground) 22%,transparent),inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
 .dark [data-bb-chat-ui-slot-mode], .dark [data-bb-chat-ui-slot-toolbar] > [data-bb-chat-ui-fluid-details-toggle] { background:${DARK_GLASS_FACE}; }
 [data-bb-chat-ui-slot-mode][aria-pressed="true"] { color:var(--foreground); }

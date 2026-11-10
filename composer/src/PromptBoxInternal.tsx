@@ -8,6 +8,7 @@ import { FluidComposerBody } from "../FluidComposerBody";
 import { FluidComposerToggle } from "../FluidComposerToggle";
 import { FluidOptionsPanel } from "../FluidOptionsPanel";
 import { FluidComposerDetails } from "../FluidComposerDetails";
+import { FluidComposerToolbar } from "../FluidComposerToolbar";
 import {
   experimental_ComposerRoot as ComposerRoot,
   experimental_FailedVoiceRecordings as FailedVoiceRecordings,
@@ -3426,7 +3427,7 @@ export function PromptBoxInternal({
       {picker => <FluidComposerDetails scopeKey={composerScopeKey} suspended={fluidVoiceActive}
         onOpen={() => { picker.close(); dismissComposerMenu(); setFluidOptionsOpen(false); }}>
       {(detailsToggle, details) => <>
-      <div data-bb-chat-ui-slot-toolbar="" hidden={fluidVoiceActive}>{picker.modeToggle}{detailsToggle}</div>
+      <FluidComposerToolbar hidden={fluidVoiceActive}>{picker.modeToggle}{detailsToggle}</FluidComposerToolbar>
       {details}
       <FluidComposerBody
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}

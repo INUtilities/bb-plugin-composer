@@ -87,11 +87,13 @@ it.each(['data-follow-up-composer-footer','data-new-thread-footer'])('opens the 
  try{
   await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
   const editor=v.container.querySelector('.ProseMirror'),model=screen.getByText('모델 선택');
-  const toggle=screen.getByRole('button',{name:'정보와 설정'});
+  let toggle=screen.getByRole('button',{name:'정보와 설정'});
   expect(toggle.getAttribute('type')).toBe('button');expect(toggle.getAttribute('aria-expanded')).toBe('false');
   expect(getComputedStyle(toggle).borderRadius).toBe('999px');expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
   expect(getComputedStyle(bar).display).toBe('flex');expect(getComputedStyle(footer).display).toBe('none');
   fireEvent.click(toggle);
+  toggle=screen.getByRole('button',{name:'정보와 설정'});
+  expect(bar.contains(toggle)).toBe(true);
   const details=screen.getByRole('region',{name:'컴포저 정보와 설정'});
   const wheel=new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:40});details.dispatchEvent(wheel);
   expect(wheel.defaultPrevented).toBe(true);
@@ -114,7 +116,8 @@ it('asks a collapsed host to mount its footer without leaving focus on the edito
  const stop=injectFluidComposer(document),{v,run}=mount();
  const shell=document.createElement('div'),owner=document.createElement('div');
  shell.setAttribute('data-promptbox-shell','');owner.setAttribute('data-follow-up-composer','');
- document.body.append(shell);shell.append(owner);owner.append(v.container);
+ const bar=document.createElement('div');bar.setAttribute('data-bb-chat-ui-info-bar','');
+ document.body.append(shell);shell.append(bar,owner);owner.append(v.container);
  try{
   await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
   const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!;

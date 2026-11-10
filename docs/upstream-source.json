@@ -1,8 +1,8 @@
 {
   "repository": "https://github.com/MORPHLET/bb-chat-ui",
-  "ref": "8d2275ddf15a800f85a9911f453e5dae3e3f49e3",
+  "ref": "4f42740005daf477c73e063fd3beefb88a31179d",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "8d2275ddf15a800f85a9911f453e5dae3e3f49e3",
+  "integratedCommit": "4f42740005daf477c73e063fd3beefb88a31179d",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -13,7 +13,8 @@
     "No Chat UI message, quote, TOC or information-card controller is imported.",
     "The canonical commit is a local source reference, not an advertised remote branch. All merged product files required to build are included in this PR.",
     "2026-11-10: active same-list slot selections use native smooth scrolling; list/open-state changes and reduced motion finish immediately. The 06 mode pill remains available.",
-    "2026-11-10: persistent upper information pills, shared navigation-pill mode toggle and i metadata popover above the composer; sequential exit followed by transparent option entrance; plus keeps its base size and rotates only."
+    "2026-11-10: persistent upper information pills, shared navigation-pill mode toggle and i metadata popover above the composer; sequential exit followed by transparent option entrance; plus keeps its base size and rotates only.",
+    "Temporary shared row: 06 and information pills use a local scoped portal into the existing Chat UI information row. Chat UI PR #16 reserves their width; without the row the composer retains its own toolbar. Editor and native menus remain mounted."
   ],
   "files": [
     {
@@ -26,8 +27,8 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "a258f5ec84b08099b16671654e28b8dce7d9f6c2226a5ff974f2720d46c209d1",
-      "sourceSha256": "a258f5ec84b08099b16671654e28b8dce7d9f6c2226a5ff974f2720d46c209d1"
+      "sha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6",
+      "sourceSha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6"
     },
     {
       "source": "composer/FluidComposer.tsx",
@@ -58,8 +59,8 @@
     {
       "source": "composer/FluidComposerDetails.tsx",
       "destination": "composer/FluidComposerDetails.tsx",
-      "sha256": "893d7be033363287b00d06077f3875307b312566b0dc115242c313e334c67199",
-      "sourceSha256": "893d7be033363287b00d06077f3875307b312566b0dc115242c313e334c67199"
+      "sha256": "ddf2c84c51b64c73f7b98e0ab0f012090b3cb12e1ee71a65701bb56e3c1a434e",
+      "sourceSha256": "ddf2c84c51b64c73f7b98e0ab0f012090b3cb12e1ee71a65701bb56e3c1a434e"
     },
     {
       "source": "composer/FluidComposerToggle.tsx",
@@ -76,8 +77,8 @@
     {
       "source": "composer/FluidOptionsPanel.tsx",
       "destination": "composer/FluidOptionsPanel.tsx",
-      "sha256": "7c7cdd28709b2c3e04bc7c2ca2450fef615f7ca788a81de34d127cc1e98b1a50",
-      "sourceSha256": "7c7cdd28709b2c3e04bc7c2ca2450fef615f7ca788a81de34d127cc1e98b1a50"
+      "sha256": "4ae70d12972512ad7d8627ec23bfa12e45f35bfa43acc8c5cc701d47cdae3815",
+      "sourceSha256": "4ae70d12972512ad7d8627ec23bfa12e45f35bfa43acc8c5cc701d47cdae3815"
     },
     {
       "source": "composer/FluidVoiceControl.test.tsx",
@@ -288,8 +289,8 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "0d7054da03317cc808541ff84a5f09f504943e0e635a2bdc809d66f56e06cd50",
-      "sourceSha256": "039a776b3deade46354cd64ba1dee98b22c393574411d92fd029b775fd19a299",
+      "sha256": "a2fd3e41cfc3b5d760a765830ae7836b9382617778af200a1410f19b91cb5a66",
+      "sourceSha256": "fa3b85470e5b81c2e16800a4136bb46d666987bba1a19c8112e8b021d0f51111",
       "integrationOverlay": true
     },
     {
@@ -623,8 +624,8 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "bbd47073cfd5979a10741d40dbcdf53a89201a990936eb9f8adff756d4be0d3b",
-      "sourceSha256": "b7b8bf3ee64bb92d68dec3b57e6a5cf708418852d485dcf03e0d7aa26530afa9",
+      "sha256": "5aa282f3f6925929f641a511e503f3b28a0d720176bd9d09cc8da8a4d685cbe9",
+      "sourceSha256": "ee25984e6588cdba978d0a8e546cba4491299e11cca9210fb1869c4fa6d14eb7",
       "integrationOverlay": true
     },
     {
@@ -937,8 +938,8 @@
     {
       "source": "lib/fluid-picker.ts",
       "destination": "lib/fluid-picker.ts",
-      "sha256": "da7159c9d091c5c1b7a9f2edfbc57085450fe3e15bfddb247f8d99b6738a625e",
-      "sourceSha256": "da7159c9d091c5c1b7a9f2edfbc57085450fe3e15bfddb247f8d99b6738a625e"
+      "sha256": "0523ae2e51adbccb4f177d1942c5ded2eedf1df7385a94aa0889307996923724",
+      "sourceSha256": "0523ae2e51adbccb4f177d1942c5ded2eedf1df7385a94aa0889307996923724"
     },
     {
       "source": "docs/design-references/composer-model-effort/build-review.mjs",
@@ -997,8 +998,8 @@
     {
       "source": "docs/composer-popovers.md",
       "destination": "docs/composer-popovers.md",
-      "sourceSha256": "9ad47ab21dc2efad8df00a79094d586a914dd35f81e969be40411a394b7e178b",
-      "sha256": "f2b20d26bd0f6f93f9557d1a48389cabb003d92e93a78f818bc2e026d3ef46fb",
+      "sourceSha256": "5d135efbb7e596d9d172696427450fa9780e7c35cdfc343edea21160211cec1d",
+      "sha256": "c5f9f0283ee087bf6aa65bcff19bf5ead4b1990c8f4fe8bc7b73b0db47ec66af",
       "integrationOverlay": true
     },
     {
@@ -1006,6 +1007,18 @@
       "destination": "lib/pill.ts",
       "sourceSha256": "2c5ef66d67a06c9f08c8ea989c6a3c08b5df8fbb2c7af3941066a61be6ed26c7",
       "sha256": "2c5ef66d67a06c9f08c8ea989c6a3c08b5df8fbb2c7af3941066a61be6ed26c7"
+    },
+    {
+      "source": "composer/FluidComposerToolbar.tsx",
+      "destination": "composer/FluidComposerToolbar.tsx",
+      "sourceSha256": "3b5ee58e216460cc6b6769c2cea35c1c556735edbf4336827aa89cbf9435e5cb",
+      "sha256": "3b5ee58e216460cc6b6769c2cea35c1c556735edbf4336827aa89cbf9435e5cb"
+    },
+    {
+      "source": "composer/FluidComposerToolbar.test.tsx",
+      "destination": "composer/FluidComposerToolbar.test.tsx",
+      "sourceSha256": "9ee6b28cde51fe9c887d47230da516458a929db0a0be9afc7e122169421ec18d",
+      "sha256": "9ee6b28cde51fe9c887d47230da516458a929db0a0be9afc7e122169421ec18d"
     }
   ],
   "upstreamComposerCommit": "41108c7",

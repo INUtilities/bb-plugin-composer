@@ -12,7 +12,7 @@ html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new
 html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]):not([hidden]) { display:flex !important; position:absolute; bottom:calc(100% + 8px); right:0; z-index:30; width:max-content; max-width:100%; padding:12px 16px; border-radius:18px; background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); box-shadow:0 8px 24px -12px color-mix(in oklab,var(--foreground) 22%,transparent); }
 .dark [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { background:${DARK_GLASS_FACE}; }
 [data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
-[data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > * { opacity:0; }
+[data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > :not([data-bb-chat-ui-slot-toolbar]) { opacity:0; }
 [data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { flex-wrap:wrap; max-height:none; overflow:visible; opacity:1; pointer-events:auto; }
 [data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) > div { flex-wrap:wrap; overflow:visible; }
 [data-bb-chat-ui-fluid-composer] {

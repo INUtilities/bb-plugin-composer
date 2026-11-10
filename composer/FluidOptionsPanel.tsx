@@ -45,7 +45,8 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
     const items = Array.from(list?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
     const shell = panel?.closest('[data-promptbox-shell]') ?? panel?.closest('form');
     const bars = Array.from(shell?.querySelectorAll<HTMLElement>('[data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]') ?? []);
-    const pills = bars.flatMap(bar => Array.from(bar.children));
+    const pills = bars.flatMap(bar => Array.from(bar.children).flatMap(child => child.hasAttribute('data-bb-chat-ui-slot-toolbar') ? []
+      : (child as HTMLElement).style.display==='contents' ? Array.from(child.children):[child]));
     const priorInert = bars.map(bar => bar.inert);
     shell?.setAttribute('data-bb-chat-ui-fluid-options-open', '');
     bars.forEach(bar => { bar.inert = true; });
