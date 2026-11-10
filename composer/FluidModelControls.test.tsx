@@ -10,15 +10,36 @@ import { injectFluidComposer } from '../lib/fluid-composer';
 beforeEach(()=>vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,addEventListener(){},removeEventListener(){}})));
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 // 실제 host 목록과 선택 API를 가진 컴포저를 준비한다.
-function mount(options: { levels?: string[]; load?: () => Promise<any>; scope?: any; selection?: any; controls?: ReactNode } = {}) {
+function mount(options: { levels?: string[]; load?: () => Promise<any>; scope?: any; selection?: any; controls?: ReactNode; singleLine?: boolean } = {}) {
  const models=vi.fn(options.load ?? (async()=>({models:[{id:'model',model:'model',supportedReasoningEfforts:(options.levels ?? ['low','medium','high','max']).map(reasoningEffort=>({reasoningEffort,description:reasoningEffort}))}]})));
  const get=vi.fn(async()=>({environmentId:'env-owned'}));
  const error=vi.fn();
  const selection=options.selection ?? {providerId:'provider',model:'model',reasoningLevel:'medium'};
  const scope=options.scope ?? {kind:'new-thread',projectId:'project'};
- const view=renderSlot({component:()=> <FluidModelControls controls={options.controls ?? <button type="button">모델 선택</button>} onError={error}/>},{},{composer:{scope,selection,text:'남길 초안'},sdk:{providers:{models},threads:{get:get as any}}});
+ const view=renderSlot({component:()=> <div data-bb-chat-ui-fluid-row={options.singleLine ? '':undefined} data-multiline={options.singleLine ? 'false':undefined}><FluidModelControls controls={options.controls ?? <button type="button">모델 선택</button>} onError={error}/></div>},{},{composer:{scope,selection,text:'남길 초안'},sdk:{providers:{models},threads:{get:get as any}}});
  return {view,models,get,error};
 }
+
+// 클릭한 확정 이름만 잠시 보여 주며 연속 선택과 화면 전환은 이전 접힘 예약을 정리한다.
+it('briefly reveals the selected effort, restarts its timeout and clears it on scope changes',async()=>{
+ const stop=injectFluidComposer(document);vi.useFakeTimers();const {view,models}=mount({singleLine:true});
+ try{
+  const button=screen.getByRole('button',{name:'Effort: Medium'}),label=button.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-effort-label]')!;
+  expect(getComputedStyle(label).maxWidth).toBe('0px');
+  await act(async()=>{fireEvent.click(button);});
+  expect(button.getAttribute('aria-label')).toBe('Effort: High');expect(button.hasAttribute('data-bb-chat-ui-fluid-effort-peek')).toBe(true);
+  act(()=>vi.advanceTimersByTime(1400));
+  await act(async()=>{fireEvent.click(button);});
+  expect(button.getAttribute('aria-label')).toBe('Effort: Max');
+  act(()=>vi.advanceTimersByTime(1400));expect(button.hasAttribute('data-bb-chat-ui-fluid-effort-peek')).toBe(true);
+  act(()=>vi.advanceTimersByTime(100));expect(getComputedStyle(label).maxWidth).toBe('0px');
+  await act(async()=>{fireEvent.click(button);});
+  await act(async()=>{await view.setComposerScope({kind:'thread',threadId:'other'});});
+  expect(button.hasAttribute('data-bb-chat-ui-fluid-effort-peek')).toBe(false);expect(models).toHaveBeenCalledTimes(1);expect(view.inspection.composer.text).toBe('남길 초안');
+  await act(async()=>{await view.setComposerScope({kind:'new-thread',projectId:'project'});});
+  expect(button.hasAttribute('data-bb-chat-ui-fluid-effort-peek')).toBe(false);
+ }finally{view.unmount();vi.useRealTimers();stop();}
+});
 // 모델 설정은 정보 열림과 무관하게 입력 안에 유지한다.
 it('keeps native controls and cycles only the current model levels without touching the draft',async()=>{
  const {view,models}=mount(); const native=screen.getByRole('button',{name:'모델 선택'});

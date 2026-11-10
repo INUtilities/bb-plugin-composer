@@ -84,6 +84,11 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb
 [data-bb-chat-ui-fluid-effort]:hover { background:transparent; color:var(--muted-foreground); }
 [data-bb-chat-ui-fluid-effort] > svg { flex:none; width:20px; height:16px; }
 [data-bb-chat-ui-fluid-effort-label] { display:inline-flex; flex:none; align-items:center; justify-content:center; max-width:70px; overflow:clip; }
+[data-bb-chat-ui-fluid-effort] { transition:gap 300ms cubic-bezier(.175,.885,.32,1.275); }
+[data-bb-chat-ui-fluid-effort-label] { transition:max-width 300ms cubic-bezier(.175,.885,.32,1.275),opacity 300ms ease; }
+[data-bb-chat-ui-fluid-row][data-multiline="false"] [data-bb-chat-ui-fluid-effort]:not([data-bb-chat-ui-fluid-effort-peek]) { gap:0; }
+[data-bb-chat-ui-fluid-row][data-multiline="false"] [data-bb-chat-ui-fluid-effort]:not([data-bb-chat-ui-fluid-effort-peek]) > [data-bb-chat-ui-fluid-effort-label] { max-width:0px; opacity:0; }
+@media (prefers-reduced-motion:reduce) { [data-bb-chat-ui-fluid-effort], [data-bb-chat-ui-fluid-effort-label] { transition:none; } }
 [data-bb-chat-ui-fluid-effort-value] { display:block; flex:none; width:max-content; max-width:70px; overflow:hidden; text-overflow:ellipsis; transform-origin:center; color:color-mix(in oklab,var(--muted-foreground) 72%,transparent); }
 [data-bb-chat-ui-fluid-actions] { grid-area:actions; }
 [data-bb-chat-ui-fluid-actions] > [data-promptbox-submit-group] { display:flex; align-items:center; flex:none; }

@@ -1,8 +1,8 @@
 {
   "repository": "https://github.com/MORPHLET/bb-chat-ui",
-  "ref": "4f42740005daf477c73e063fd3beefb88a31179d",
+  "ref": "4c4394f61255be5008f7eda16c9a8b25da7a0661",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "4f42740005daf477c73e063fd3beefb88a31179d",
+  "integratedCommit": "4c4394f61255be5008f7eda16c9a8b25da7a0661",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -14,7 +14,8 @@
     "The canonical commit is a local source reference, not an advertised remote branch. All merged product files required to build are included in this PR.",
     "2026-11-10: active same-list slot selections use native smooth scrolling; list/open-state changes and reduced motion finish immediately. The 06 mode pill remains available.",
     "2026-11-10: persistent upper information pills, shared navigation-pill mode toggle and i metadata popover above the composer; sequential exit followed by transparent option entrance; plus keeps its base size and rotates only.",
-    "Temporary shared row: 06 and information pills use a local scoped portal into the existing Chat UI information row. Chat UI PR #16 reserves their width; without the row the composer retains its own toolbar. Editor and native menus remain mounted."
+    "Temporary shared row: 06 and information pills use a local scoped portal into the existing Chat UI information row. Chat UI PR #16 reserves their width; without the row the composer retains its own toolbar. Editor and native menus remain mounted.",
+    "Single-line original-mode effort uses only its icon; a confirmed click shows the name for 1500ms, repeated clicks renew the deadline. Multiline keeps the name, and collapsed-fit measurement returns to icon width after preview without adding observers."
   ],
   "files": [
     {
@@ -52,8 +53,8 @@
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "9cafcaa63d1ebc1dbf39c6780a673208095ed5cbe4dbe05523850a1011d20ae3",
-      "sourceSha256": "7c1fd405973de8b05155f7cfdd03612d1892f448e62858369bfedd1f626d59ed",
+      "sha256": "cfe0703c71c54a71e50f7e30c828c4dabf999c09d9175a25cd5a346aeef558c1",
+      "sourceSha256": "23278ef8c8c70d695e678b7c9a3d7b730afe26f91f88646eeb69466c5fc22f82",
       "integrationOverlay": true
     },
     {
@@ -624,8 +625,8 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "5aa282f3f6925929f641a511e503f3b28a0d720176bd9d09cc8da8a4d685cbe9",
-      "sourceSha256": "ee25984e6588cdba978d0a8e546cba4491299e11cca9210fb1869c4fa6d14eb7",
+      "sha256": "78306309ecc28d8a1537000328dbe601d2f371c0fec3828db464e51b748a2a1b",
+      "sourceSha256": "f7503d36158a6ef0eabb313c8bd1aa593c8920bbc82fd61884ae98861f76f425",
       "integrationOverlay": true
     },
     {
@@ -644,14 +645,14 @@
     {
       "source": "lib/fluid-composer-layout.ts",
       "destination": "lib/fluid-composer-layout.ts",
-      "sha256": "cffd3ee0607c35f166cbc65222e5af8e7e80123d1a794e08c063cdf78f7ee15b",
-      "sourceSha256": "cffd3ee0607c35f166cbc65222e5af8e7e80123d1a794e08c063cdf78f7ee15b"
+      "sha256": "065d1def4969ea45feba69a0ed13f702026ef041d92ba60753a95c7af12822b7",
+      "sourceSha256": "065d1def4969ea45feba69a0ed13f702026ef041d92ba60753a95c7af12822b7"
     },
     {
       "source": "lib/fluid-composer-layout.test.ts",
       "destination": "lib/fluid-composer-layout.test.ts",
-      "sha256": "baab0ee940509f7a94291245692f7d0196c4e68a0600b454c79f16982b5eb2a6",
-      "sourceSha256": "baab0ee940509f7a94291245692f7d0196c4e68a0600b454c79f16982b5eb2a6"
+      "sha256": "18dc4eae2605748aebc56859471cd93b475fe64647487cd69b9b2c4a6e13ec05",
+      "sourceSha256": "18dc4eae2605748aebc56859471cd93b475fe64647487cd69b9b2c4a6e13ec05"
     },
     {
       "source": "lib/composer-scroll-boundary.ts",
@@ -686,14 +687,14 @@
     {
       "source": "composer/FluidModelControls.tsx",
       "destination": "composer/FluidModelControls.tsx",
-      "sha256": "325e317f7a2495794f8bf708ec04050f5862d7f7d74760ecb564a9f1056bea18",
-      "sourceSha256": "325e317f7a2495794f8bf708ec04050f5862d7f7d74760ecb564a9f1056bea18"
+      "sha256": "effb35eb3ee4cc2dfa002ba50e1dc91b0a2cfbac3af41a98def333575769a2f2",
+      "sourceSha256": "effb35eb3ee4cc2dfa002ba50e1dc91b0a2cfbac3af41a98def333575769a2f2"
     },
     {
       "source": "composer/FluidModelControls.test.tsx",
       "destination": "composer/FluidModelControls.test.tsx",
-      "sha256": "68ec8b66c3f2a1a4701786c652e025ad06c1e37668f33531646f79a42b0966d4",
-      "sourceSha256": "68ec8b66c3f2a1a4701786c652e025ad06c1e37668f33531646f79a42b0966d4"
+      "sha256": "a034e2d8e23863f247d1487b06a50047d9572880a5ee62cb7593d3ce93065462",
+      "sourceSha256": "a034e2d8e23863f247d1487b06a50047d9572880a5ee62cb7593d3ce93065462"
     },
     {
       "source": "composer/EffortIcon.test.tsx",
@@ -998,8 +999,8 @@
     {
       "source": "docs/composer-popovers.md",
       "destination": "docs/composer-popovers.md",
-      "sourceSha256": "5d135efbb7e596d9d172696427450fa9780e7c35cdfc343edea21160211cec1d",
-      "sha256": "c5f9f0283ee087bf6aa65bcff19bf5ead4b1990c8f4fe8bc7b73b0db47ec66af",
+      "sourceSha256": "bc808033a9ab5ba8ad61fd71354f6cb29b30d8d4dd533e3e21bb0917c5dad3bf",
+      "sha256": "09dc873378881dfac4508a1424b7e1a9ad55879ad9e0e4fe40ed3d49cba1a6bc",
       "integrationOverlay": true
     },
     {

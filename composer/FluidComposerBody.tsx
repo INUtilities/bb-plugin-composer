@@ -112,11 +112,13 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const pane = voiceMode ? element.closest<HTMLElement>('[data-thread-window], [data-pane-content]') ?? element : null;
     voicePane.current = pane;
     const observer = new win.ResizeObserver(scheduleLayout);
+    element.addEventListener('bb-chat-ui:fluid-effort-layout', scheduleLayout);
     for (const element of [row.current, optionColumn.current, actionColumn.current]) if (element) observer.observe(element);
     if (pane) { observer.observe(pane); if (pane !== element) observer.observe(element); }
     scheduleLayout();
     return () => {
       observer.disconnect(); voicePane.current = null;
+      element.removeEventListener('bb-chat-ui:fluid-effort-layout', scheduleLayout);
       element.style.removeProperty('--bb-chat-ui-voice-backdrop-width'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-left'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-bottom');
     };
   }, [!!voice, voiceMode, scheduleLayout]);

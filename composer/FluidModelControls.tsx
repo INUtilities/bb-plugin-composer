@@ -8,6 +8,7 @@ import { postHaptic, readHapticBridge } from '../lib/send-haptic';
 type Effort = { reasoningEffort: string; label?: string; description: string };
 const labels: Record<string, string> = { none: 'None', minimal: 'Minimal', low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra high', max: 'Max', ultra: 'Ultra' };
 const EFFORT_LABEL_MS = 300;
+const EFFORT_PEEK_MS = 1500;
 const EFFORT_WIDTH_EASING = 'cubic-bezier(.175,.885,.32,1.275)';
 
 // 기존 모델 메뉴를 유지하고 현재 환경에서 지원하는 effort만 순서대로 선택한다.
@@ -23,6 +24,8 @@ export function FluidModelControls({ controls, disabled = false, onError }: { co
   latest.current = { level, locked: disabled || composer.isSubmitting };
   const [catalog, setCatalog] = useState<{ key: string; efforts: Effort[] } | null>(null);
   const [pending, setPending] = useState<string | null>(null);
+  const [peekKey, setPeekKey] = useState<string | null>(null);
+  const peekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeRequest = useRef<string | null>(null);
   const request = useRef<AbortController | null>(null);
   // 첫 활성화 때만 현재 환경의 목록을 읽고 입력·대화 전환에서는 조회하지 않는다.
@@ -43,11 +46,12 @@ export function FluidModelControls({ controls, disabled = false, onError }: { co
     const selected = result.models.find(item => item.model === model || item.id === model);
     return selected?.supportedReasoningEfforts ?? [];
   };
-  // 화면을 떠난 뒤 도착한 선택 오류는 새 컴포저에 표시하지 않는다.
+  // 화면·잠금 변경과 해제는 요청과 임시 이름의 접힘 예약을 정리한다.
   useEffect(() => {
     current.current = key;
-    return () => { request.current?.abort(); if (current.current === key) current.current = ''; };
-  }, [key]);
+    setPeekKey(null);
+    return () => { request.current?.abort(); if (peekTimer.current !== null) clearTimeout(peekTimer.current); if (current.current === key) current.current = ''; };
+  }, [key, disabled, composer.isSubmitting]);
   const efforts = catalog?.key === key ? catalog.efforts : [];
   const index = efforts.findIndex(item => item.reasoningEffort === level);
   const label = efforts[index]?.label || (level ? labels[level] ?? level : '');
@@ -56,6 +60,8 @@ export function FluidModelControls({ controls, disabled = false, onError }: { co
   const beforeLabelWidth = useRef<number | null>(null);
   const labelAnimations = useRef<Animation[]>([]);
   const labelWidthAnimation = useRef<Animation | null>(null);
+  // 임시 이름이 접히면 기존 컴포저의 배치 예약만 갱신한다.
+  useLayoutEffect(() => { labelBox.current?.closest('[data-bb-chat-ui-fluid-row]')?.dispatchEvent(new Event('bb-chat-ui:fluid-effort-layout', {bubbles:true})); }, [peekKey, key]);
   // 확정된 글자는 레퍼런스처럼 fade·zoom하고 바뀐 길이만큼 폭을 이어 준다.
   useLayoutEffect(() => {
     const box = labelBox.current, value = labelValue.current;
@@ -110,6 +116,11 @@ export function FluidModelControls({ controls, disabled = false, onError }: { co
       const selected = available.findIndex(item => item.reasoningEffort === latest.current.level);
       if (selected < 0 || available.length < 2) return;
       await composer.setSelection({ reasoningLevel: available[(selected + 1) % available.length]!.reasoningEffort });
+      if (current.current === key && !latest.current.locked) {
+        if (peekTimer.current !== null) clearTimeout(peekTimer.current);
+        setPeekKey(key);
+        peekTimer.current = setTimeout(() => { setPeekKey(null); peekTimer.current = null; }, EFFORT_PEEK_MS);
+      }
     }
     catch { if (!controller.signal.aborted && current.current === key) onError('Effort를 바꾸지 못했습니다. 모델 메뉴에서 다시 선택해 주세요.'); }
     finally {
@@ -120,6 +131,7 @@ export function FluidModelControls({ controls, disabled = false, onError }: { co
   return <div data-bb-chat-ui-fluid-model-controls="" data-bb-chat-ui-fluid-separate-effort={showEffort ? '' : undefined}>
     <div data-bb-chat-ui-fluid-native-controls="">{controls}</div>
     {showEffort ? <Button type="button" variant="ghost" size="sm" data-bb-chat-ui-fluid-effort=""
+      data-bb-chat-ui-fluid-effort-peek={peekKey === key || undefined}
       aria-label={`Effort: ${label}`} aria-busy={pending === key || undefined} disabled={blocked}
       aria-description={blocked ? '모델 메뉴에서 선택' : '클릭하면 다음 단계'}
       onClick={event => {
