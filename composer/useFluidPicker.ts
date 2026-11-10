@@ -9,9 +9,10 @@ type Routing = {environmentId:string} | {hostId:string; projectId?:string} | {pr
 type State = {key:string; open:boolean; draft:FluidPickerDraft; models:FluidPickerModel[]; loading:boolean; applying:boolean; error:string};
 const order = ['none','minimal','low','medium','high','xhigh','max','ultra'];
 
-// 실제 모델과 공급자가 허용하는 서비스 등급만 돌려준다.
+// 지원 목록에서 생략된 일반 모드를 보완하고 명시적인 미지원 목록은 유지한다.
 export function fluidServiceTiers(model:FluidPickerModel | undefined, provider:{serviceTiers?:readonly {id:string;label?:string}[]} | undefined) {
-  return model?.supportedServiceTiers ?? provider?.serviceTiers ?? [];
+  const tiers=model?.supportedServiceTiers ?? provider?.serviceTiers ?? [];
+  return tiers.length && !tiers.some(item=>item.id==='default') ? [{id:'default',label:'Default'},...tiers] : tiers;
 }
 
 // 새 모델의 지원 목록에 맞춰 노력 단계와 서비스 등급을 보존하거나 보정한다.

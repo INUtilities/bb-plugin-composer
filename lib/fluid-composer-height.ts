@@ -1,6 +1,7 @@
 import { EASE } from './motion.ts';
 
 export const FLUID_COMPOSER_MORPH_MS = 320;
+export const FLUID_COMPOSER_SLOT_MS = 260;
 export const FLUID_COMPOSER_INPUT_MS = 400;
 export const FLUID_COMPOSER_INPUT_EASING = 'cubic-bezier(.175,.885,.32,1.275)';
 // 베지어 제어점의 최댓값으로 실제 반동보다 넉넉한 여유를 계산한다.
@@ -20,7 +21,7 @@ export function readFluidEditorPosition(editor: HTMLElement, content: HTMLElemen
     y: box.top + (Number.parseFloat(style.paddingTop) || 0) - parent.top - offset, offsetY: offset };
 }
 
-// 큰 펼침은 탄성으로, 줄 변화와 접힘은 빠르게 잇고 빈 초안은 즉시 복귀한다.
+// 큰 펼침은 탄성으로, 접힘은 빠르게 잇고 호스트 초기화는 즉시 반영한다.
 export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement, getEditor?: () => HTMLElement | null): () => void {
   const win = viewport.ownerDocument.defaultView;
   if (!win?.ResizeObserver) return () => {};
@@ -32,9 +33,10 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
   let height = content.offsetHeight;
   let moving = getEditor?.() ?? null;
   let position = moving ? readFluidEditorPosition(moving, content) : null;
-  let inputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode') && !viewport.closest('[data-bb-chat-ui-slot-open]');
+  let slotOpen = !!viewport.closest('[data-bb-chat-ui-slot-open]');
+  let inputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode') && !slotOpen;
   let multiline = viewport.getAttribute('data-multiline') === 'true';
-  let duration = inputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
+  let duration = slotOpen ? FLUID_COMPOSER_SLOT_MS : inputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
   let easing = inputView ? FLUID_COMPOSER_INPUT_EASING : EASE.out;
   let editorMotion: Animation | null = null;
   // 높이·반지름·곡선의 전환 시간을 한 번에 설정한다.
@@ -59,13 +61,14 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     if (!Number.isFinite(next) || next < 0) return;
     const nextMoving = getEditor?.() ?? null;
     const nextPosition = nextMoving ? readFluidEditorPosition(nextMoving, content) : null;
-    const nextInputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode') && !viewport.closest('[data-bb-chat-ui-slot-open]');
+    const nextSlotOpen = !!viewport.closest('[data-bb-chat-ui-slot-open]');
+    const nextInputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode') && !nextSlotOpen;
     const nextMultiline = viewport.getAttribute('data-multiline') === 'true';
     const reset = nextInputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true';
-    if (next === height && !reset) { moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; return; }
+    if (next === height && !reset) { moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; slotOpen = nextSlotOpen; return; }
     const inputChange = inputView && nextInputView;
     const quickInput = inputChange && (next < height || (multiline && nextMultiline));
-    duration = reset ? 0 : quickInput ? FLUID_COMPOSER_LINE_MS
+    duration = reset ? 0 : slotOpen || nextSlotOpen ? FLUID_COMPOSER_SLOT_MS : quickInput ? FLUID_COMPOSER_LINE_MS
       : inputChange ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
     easing = quickInput ? 'ease-out' : inputChange ? FLUID_COMPOSER_INPUT_EASING : EASE.out;
     if (inputChange && !quickInput && !reset) {
@@ -78,7 +81,7 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     const follow = ready && !motion.matches && duration > 0 && inputView && nextInputView && nextMoving === moving && nextPosition;
     const delta = follow && nextPosition ? next - height + (position?.y ?? nextPosition.y) - nextPosition.y + nextPosition.offsetY : 0;
     editorMotion?.cancel(); editorMotion = null;
-    moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline;
+    moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; slotOpen = nextSlotOpen;
     height = next;
     updateMotion();
     viewport.style.height = `${height}px`;

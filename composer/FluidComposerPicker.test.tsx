@@ -42,11 +42,11 @@ it('changes provider only after a user scroll gesture, not a layout scroll',asyn
 // 실제 호스트 모양의 공급자와 모델 목록을 검수용으로 만든다.
 function fixtures() {
   const providers = [
-    {id:'claude',displayName:'Claude Code',logoUrl:null,serviceTiers:[]},
+    {id:'claude',displayName:'Claude Code',logoUrl:null,serviceTiers:[{id:'default',label:'Default'},{id:'fast',label:'Fast'}]},
     {id:'codex',displayName:'Codex',logoUrl:null,serviceTiers:[{id:'default',label:'Standard'},{id:'fast',label:'Fast'}]},
   ];
   const model = (id:string, levels:string[]) => ({id,model:id,displayName:id,description:'',isDefault:true,defaultReasoningEffort:'medium',supportedReasoningEfforts:levels.map(reasoningEffort=>({reasoningEffort,description:reasoningEffort}))});
-  return {providers,opus:model('Opus',['low','medium','high','max']),gpt:{...model('GPT',['low','medium','high']),supportedServiceTiers:[{id:'default'},{id:'fast'}]}};
+  return {providers,opus:model('Opus',['low','medium','high','max']),gpt:{...model('GPT',['low','medium','high']),supportedServiceTiers:[{id:'fast'}]}};
 }
 
 // 제품과 같은 슬롯을 같은 입력 노드 옆에 연결한다.
@@ -57,7 +57,7 @@ function mount(load?: (args:any) => Promise<any>, thread=false) {
   // 렌더링 도중 모드를 바꾸어도 입력을 다시 만들지 않는다.
   function Harness() {
     const form = useRef<HTMLFormElement>(null);
-    return <form ref={form}><FluidComposerPicker formRef={form} onOpen={()=>{}} onError={error}>
+    return <div data-scroll-footer=""><div data-promptbox-shell=""><form ref={form}><FluidComposerPicker formRef={form} onOpen={()=>{}} onError={error}>
       {picker=><>
         {picker.modeToggle}
         <div hidden={picker.enabled}><button type="button">기존 모델 선택</button></div>
@@ -66,7 +66,7 @@ function mount(load?: (args:any) => Promise<any>, thread=false) {
         <div data-bb-chat-ui-slot-submit=""><button type="button">검수 전송</button>{picker.confirm}</div>
         {picker.overlay}
       </>}
-    </FluidComposerPicker></form>;
+    </FluidComposerPicker></form></div></div>;
   }
   const view=renderSlot({component:Harness},{},{providers:{status:'ready',providers:providers as any},
     composer:{scope:thread ? {kind:'thread',threadId:'thread'}:{kind:'new-thread',projectId:'project'},selection:{providerId:'claude',model:'Opus',reasoningLevel:'medium'},text:'보관할 초안'},
@@ -93,6 +93,42 @@ it('toggles the actual mode without replacing the input, clearing the draft or e
   expect(models).not.toHaveBeenCalled();
 });
 
+// 여백 표식은 닫힐 때도 남겨 전환을 잇고 입력기가 해제될 때 원래 상태로 복구한다.
+it('retains the closed shell state for chat motion and restores it on unmount',async()=>{
+  const {view}=mount();
+  const shell=view.container.querySelector('[data-promptbox-shell]')!;
+  expect(shell.getAttribute('data-bb-chat-ui-slot-picker-open')).toBe('false');
+  fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
+  await screen.findByRole('option',{name:'Opus'});
+  expect(shell.getAttribute('data-bb-chat-ui-slot-picker-open')).toBe('true');
+  fireEvent.keyDown(screen.getByRole('listbox',{name:'Effort'}),{key:'Escape'});
+  expect(shell.getAttribute('data-bb-chat-ui-slot-picker-open')).toBe('false');
+  fireEvent.click(screen.getByRole('button',{name:'06 슬롯'}));
+  expect(shell.getAttribute('data-bb-chat-ui-slot-picker-open')).toBe('false');
+  view.unmount();
+  expect(shell.hasAttribute('data-bb-chat-ui-slot-picker-open')).toBe(false);
+});
+
+// 블러 한 장은 닫혀도 하단에 남고 입력기 해제 때 제거된다.
+it('portals one full-width backdrop into the chat footer and cleans it up',async()=>{
+  const {view}=mount();
+  const footer=view.container.querySelector('[data-scroll-footer]')!;
+  const backdrop=footer.querySelector('[data-bb-chat-ui-slot-backdrop]')!;
+  expect(backdrop.parentElement).toBe(footer);
+  expect(backdrop.hasAttribute('data-open')).toBe(false);
+  expect(backdrop.hasAttribute('data-full-width')).toBe(true);
+  expect(view.container.querySelector('form')!.contains(backdrop)).toBe(false);
+  fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
+  await screen.findByRole('option',{name:'Opus'});
+  expect(backdrop.hasAttribute('data-open')).toBe(true);
+  expect(footer.querySelectorAll('[data-bb-chat-ui-slot-backdrop]')).toHaveLength(1);
+  fireEvent.keyDown(screen.getByRole('listbox',{name:'Effort'}),{key:'Escape'});
+  expect(backdrop.hasAttribute('data-open')).toBe(false);
+  expect(backdrop.parentElement).toBe(footer);
+  view.unmount();
+  expect(footer.contains(backdrop)).toBe(false);
+});
+
 // 공급자를 굴리는 동안 초안을 건드리지 않고 확인 때만 실제 호스트 선택을 적용한다.
 it('stages a provider handoff and supported Fast choice until confirmation without submitting',async()=>{
   const {view,models}=mount(undefined,true);
@@ -111,6 +147,66 @@ it('stages a provider handoff and supported Fast choice until confirmation witho
   expect(view.inspection.composer.text).toBe('보관할 초안');
   expect(view.inspection.composer.submits).toHaveLength(0);
   expect(view.inspection.composer.selections).toHaveLength(1);
+});
+
+// 모델 목록이 일반 모드를 생략해도 두 공급자의 Fast를 표시하고 기본값은 켜지 않는다.
+it('keeps Fast available and off for provider tiers and a model declaring only fast',async()=>{
+  const {view}=mount();
+  fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
+  await screen.findByRole('option',{name:'Opus'});
+  expect(screen.getByRole('button',{name:'Fast mode'}).getAttribute('aria-pressed')).toBe('false');
+  fireEvent.click(screen.getByRole('option',{name:'Codex'}));
+  await screen.findByRole('option',{name:'GPT'});
+  const fast=screen.getByRole('button',{name:'Fast mode'});
+  expect(fast.getAttribute('aria-pressed')).toBe('false');
+  fireEvent.click(fast);
+  expect(fast.getAttribute('aria-pressed')).toBe('true');
+  fireEvent.click(fast);
+  expect(fast.getAttribute('aria-pressed')).toBe('false');
+  fireEvent.click(screen.getByRole('button',{name:'설정 완료'}));
+  await waitFor(()=>expect(view.inspection.composer.selection).toMatchObject({providerId:'codex',model:'GPT',serviceTier:'default'}));
+  expect(view.inspection.composer.submits).toHaveLength(0);
+});
+
+// Fast는 마지막 열에 두고 마우스·터치 클릭으로 연 상태 문구를 잠시만 유지한다.
+it('keeps hover and focus compact and briefly reveals Fast text only after clicking',async()=>{
+  const {view}=mount();
+  fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
+  await screen.findByRole('option',{name:'Opus'});
+  const fast=screen.getByRole('button',{name:'Fast mode'});
+  const label=fast.querySelector('[data-bb-chat-ui-slot-fast-label]')!;
+  expect(fast.parentElement?.lastElementChild).toBe(fast);
+  expect(fast.previousElementSibling?.getAttribute('aria-label')).toBe('Effort');
+  vi.useFakeTimers();
+  const scheduled=vi.spyOn(globalThis,'setTimeout'),cancelled=vi.spyOn(globalThis,'clearTimeout');
+  try {
+    fireEvent.mouseEnter(fast);
+    expect(fast.hasAttribute('data-peek')).toBe(false);
+    expect(label.textContent).toBe('Fast Off');
+    act(()=>vi.advanceTimersByTime(1500));
+    expect(fast.hasAttribute('data-peek')).toBe(false);
+    fireEvent.click(fast);
+    expect(label.textContent).toBe('Fast On');
+    expect(fast.hasAttribute('data-peek')).toBe(true);
+    act(()=>vi.advanceTimersByTime(1000));
+    fireEvent.click(fast);
+    expect(label.textContent).toBe('Fast Off');
+    act(()=>vi.advanceTimersByTime(1000));
+    expect(fast.hasAttribute('data-peek')).toBe(true);
+    act(()=>vi.advanceTimersByTime(500));
+    expect(fast.hasAttribute('data-peek')).toBe(false);
+    fireEvent.focus(fast);
+    expect(fast.hasAttribute('data-peek')).toBe(false);
+    fireEvent.click(fast);
+    expect(fast.hasAttribute('data-peek')).toBe(true);
+    const peekTimer=scheduled.mock.results[scheduled.mock.calls.findLastIndex(call=>call[1]===1500)]!.value;
+    fireEvent.keyDown(fast,{key:'Escape'});
+    expect(cancelled).toHaveBeenCalledWith(peekTimer);
+    expect(fast.hasAttribute('data-peek')).toBe(false);
+    expect(fast.hasAttribute('disabled')).toBe(true);
+    expect(view.inspection.composer.selections).toHaveLength(0);
+    view.unmount();
+  } finally {scheduled.mockRestore();cancelled.mockRestore();vi.useRealTimers();}
 });
 
 // 취소와 모드 전환은 아직 확인하지 않은 모델·Effort를 호스트에 쓰지 않는다.

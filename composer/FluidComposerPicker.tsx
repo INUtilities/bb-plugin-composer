@@ -1,13 +1,15 @@
-import { useEffect, useLayoutEffect, useRef, useSyncExternalStore, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from 'react';
 import { experimental_ProviderIcon as ProviderIcon } from '@get-bb/plugin-sdk/app';
+import { createPortal } from 'react-dom';
 import { Button } from './components/ui/button';
 import { EffortIcon } from './EffortIcon';
 import { FluidPickerWheel } from './FluidPickerWheel';
 import { useFluidPicker } from './useFluidPicker';
 import { useDeviceChrome } from '../lib/use-device';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
-import { eventHop } from '../lib/motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
+import { FLUID_COMPOSER_INPUT_MS } from '../lib/fluid-composer-height';
+import { EASE } from '../lib/motion';
 
 const MODE_KEY='bb-chat-ui:fluid-slot-picker';
 const listeners=new Set<()=>void>();
@@ -45,9 +47,13 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
   const picker=useFluidPicker(disabled,onError), {state}=picker;
   const {device}=useDeviceChrome();
   const trigger=useRef<HTMLButtonElement>(null), done=useRef<HTMLButtonElement>(null), layer=useRef<HTMLDivElement>(null);
+  const shellState=useRef<{element:Element;previous:string | null} | null>(null);
+  const [backdropHost,setBackdropHost]=useState<HTMLElement | null>(null);
   const visible=enabled && state.open && !disabled;
   const rowSize=device==='phone'?44:40;
   const locked=disabled || state.applying, wheelDisabled=locked || !visible;
+  // 채팅 하단에 블러 한 겹을 연결해 컴포저 축소와 창 너비 변경을 그대로 따른다.
+  useEffect(()=>{setBackdropHost(formRef.current?.closest<HTMLElement>('[data-scroll-footer]') ?? null);},[formRef,state.key]);
   // 실제 phone 활성화마다 선택 햅틱을 한 번 전달한다.
   const pulse=(trusted:boolean)=>{if(trusted && device==='phone') postHaptic(readHapticBridge(window),'selection');};
   // 취소할 때만 선택 화면을 닫고 필요한 경로에서 설정 버튼에 포커스를 돌린다.
@@ -60,7 +66,7 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
     if(!form) return;
     const marks=['data-bb-chat-ui-slot-enabled','data-bb-chat-ui-slot-open'];
     const previous=marks.map(mark=>form.getAttribute(mark));
-    const sizes=['--bb-chat-ui-slot-compact-width','--bb-chat-ui-slot-model-fr','--bb-chat-ui-slot-effort-fr'];
+    const sizes=['--bb-chat-ui-slot-compact-width','--bb-chat-ui-slot-model-fr','--bb-chat-ui-slot-effort-fr','--bb-slot-fast-peek-width'];
     const previousSizes=sizes.map(size=>form.style.getPropertyValue(size));
     return ()=>{
       marks.forEach((mark,index)=>{if(previous[index]===null) form.removeAttribute(mark);else form.setAttribute(mark,previous[index]!);});
@@ -72,6 +78,39 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
     formRef.current?.toggleAttribute('data-bb-chat-ui-slot-enabled',enabled);
     formRef.current?.toggleAttribute('data-bb-chat-ui-slot-open',visible);
   },[enabled,visible,formRef]);
+  // 확장된 전송 메뉴에서 원형 확인 버튼으로 폭만 줄이고 취소 때 모션을 정리한다.
+  useLayoutEffect(()=>{
+    const button=done.current, form=formRef.current, win=form?.ownerDocument.defaultView;
+    if(!visible || !button || !form || !win) return;
+    const media=win.matchMedia('(prefers-reduced-motion: reduce)');
+    const width=Number.parseFloat(win.getComputedStyle(form).getPropertyValue('--bb-chat-ui-fluid-control-size'));
+    const from=form.querySelector('[data-promptbox-submit-group]')?.getBoundingClientRect().width ?? width;
+    if(media.matches || !Number.isFinite(width) || from<=width) return;
+    const animation=button.animate?.([{width:from+'px'},{width:width+'px'}],{duration:FLUID_COMPOSER_INPUT_MS,easing:EASE.out});
+    // 모션 줄이기를 켜면 진행 중 폭 전환을 즉시 끝낸다.
+    const reduce=()=>{if(media.matches) animation?.cancel();};
+    media.addEventListener('change',reduce);
+    return ()=>{animation?.cancel();media.removeEventListener('change',reduce);};
+  },[visible,formRef]);
+  // 같은 작성창의 채팅 여백과 정보 필을 전환하며 최초 상태는 한 번만 보관한다.
+  const syncShell=()=>{
+    const shell=formRef.current?.closest('[data-promptbox-shell]');
+    if(!shell) return;
+    if(!shellState.current) shellState.current={element:shell,previous:shell.getAttribute('data-bb-chat-ui-slot-picker-open')};
+    shell.setAttribute('data-bb-chat-ui-slot-picker-open',String(visible));
+  };
+  // 열고 닫는 상태 변경은 그리기 전에 반영하되 전환 도중 표식을 제거하지 않는다.
+  useLayoutEffect(syncShell,[visible,formRef]);
+  // 부모 form의 ref 연결 뒤 최초 닫힘을 반영하고 StrictMode 재연결에도 원래 값을 복구한다.
+  useEffect(()=>{
+    syncShell();
+    return ()=>{
+      const saved=shellState.current;
+      if(!saved) return;
+      if(saved.previous===null) saved.element.removeAttribute('data-bb-chat-ui-slot-picker-open');
+      else saved.element.setAttribute('data-bb-chat-ui-slot-picker-open',saved.previous);
+    };
+  },[formRef]);
   // 설정을 여는 동안 바깥 누르기·Escape·전송 차단과 로컬 스크롤 경계를 관리한다.
   useEffect(()=>{
     const form=formRef.current, overlay=layer.current;
@@ -92,20 +131,32 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
     doc.addEventListener('pointerdown',outside,true);doc.addEventListener('keydown',key,true);form.addEventListener('submit',submit,true);
     return ()=>{stopScroll();doc.removeEventListener('pointerdown',outside,true);doc.removeEventListener('keydown',key,true);form.removeEventListener('submit',submit,true);};
   },[visible,locked,formRef]);
-  // 01과 같은 확인 버튼 모션을 쓰며 동작 줄이기와 해제 때 정리한다.
-  useLayoutEffect(()=>{
-    if(!visible || !done.current) return;
-    const animation=eventHop(done.current), media=matchMedia('(prefers-reduced-motion: reduce)');
-    // 동작 줄이기를 켜면 현재 표시 중 모션도 취소한다.
-    const reduce=()=>{if(media.matches) animation?.cancel();};
-    media.addEventListener('change',reduce);
-    return ()=>{animation?.cancel();media.removeEventListener('change',reduce);};
-  },[visible,picker.handoff]);
   const providerIndex=Math.max(0,picker.providers.findIndex(item=>item.id===state.draft.providerId));
   const modelIndex=Math.max(0,state.models.findIndex(item=>item.model===state.draft.model));
   const efforts=picker.model?.supportedReasoningEfforts ?? [];
   const effortIndex=Math.max(0,efforts.findIndex(item=>item.reasoningEffort===state.draft.reasoningLevel));
   const normalTier=picker.tiers.find(item=>item.id!=='fast'), hasFast=picker.tiers.some(item=>item.id==='fast') && !!normalTier;
+  const fastTooltipId=useId();
+  const [fastPeek,setFastPeek]=useState(false);
+  const fastTimer=useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 클릭·키보드 활성화·터치로 바꾼 Fast 상태를 잠시 표시하고 연속 입력은 시간을 갱신한다.
+  const previewFast=()=>{
+    if(!visible || locked) return;
+    if(fastTimer.current!==null) clearTimeout(fastTimer.current);
+    setFastPeek(true);
+    fastTimer.current=setTimeout(()=>{setFastPeek(false);fastTimer.current=null;},1500);
+  };
+  // 슬롯·대상·잠금이 바뀌거나 해제되면 이전 상태 문구와 예약을 정리한다.
+  useEffect(()=>{
+    setFastPeek(false);
+    return ()=>{if(fastTimer.current!==null) clearTimeout(fastTimer.current);fastTimer.current=null;};
+  },[visible,state.key,state.draft.providerId,state.draft.model,state.loading,locked]);
+  // 잠깐 펼치는 Fast 글자만 측정해 휠 폭을 다시 읽지 않고 오른쪽 공간을 확보한다.
+  useLayoutEffect(()=>{
+    const form=formRef.current, label=layer.current?.querySelector<HTMLElement>('[data-bb-chat-ui-slot-fast-label]');
+    const width=visible && fastPeek && hasFast && label ? label.scrollWidth+6 : 0;
+    form?.style.setProperty('--bb-slot-fast-peek-width',width+'px');
+  },[visible,fastPeek,hasFast,state.draft.serviceTier,device,formRef]);
   const targetName=picker.providers.find(item=>item.id===state.draft.providerId)?.displayName ?? state.draft.providerId ?? '';
   // 현재 선택한 세 슬롯과 확인 버튼에 필요한 폭만 계산해 열린 컴포저를 줄인다.
   useLayoutEffect(()=>{
@@ -117,14 +168,15 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
     const selectedWidth=(name:string)=>{
       const wheel=Array.from(overlay.querySelectorAll<HTMLElement>('[data-bb-chat-ui-slot-wheel]'))
         .find(item=>item.getAttribute('aria-label')===name);
-      const selected=wheel?.querySelector<HTMLElement>('[data-bb-chat-ui-slot-item][aria-selected="true"]');
+      return Math.max(0,...Array.from(wheel?.querySelectorAll<HTMLElement>('[data-bb-chat-ui-slot-item]') ?? []).map(selected=>{
       const face=selected?.querySelector<HTMLElement>('[data-bb-chat-ui-slot-item-face]');
       const label=face?.querySelector<HTMLElement>('span');
       const icon=face?.querySelector<HTMLElement>('svg,img');
-      if(!selected || !face) return 0;
+      if(!face) return 0;
       const style=win.getComputedStyle(selected), faceStyle=win.getComputedStyle(face);
       return (label ? label.scrollWidth+2 : 0)+(icon?.getBoundingClientRect().width ?? 0)
-        +(label && icon ? pixels(faceStyle.columnGap) : 0)+pixels(style.paddingLeft)+pixels(style.paddingRight);
+        +(label && icon ? pixels(faceStyle.columnGap) : 0)+pixels(style.paddingLeft)+pixels(style.paddingRight)+12;
+      }));
     };
     const icon=pixels(win.getComputedStyle(form).getPropertyValue('--bb-slot-icon'));
     const confirm=pixels(win.getComputedStyle(form).getPropertyValue('--bb-chat-ui-fluid-control-size'));
@@ -140,12 +192,14 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
       statusWidth=(range.getBoundingClientRect?.().width ?? 0)+pixels(style.paddingLeft)+pixels(style.paddingRight);
       status.style.whiteSpace=previous;
     }
-    const modelWidth=Math.max(1,selectedWidth('모델')+(hasFast?24:0),statusWidth-effortWidth);
-    const width=8+icon+modelWidth+effortWidth+16+confirm;
+    const modelWidth=Math.max(1,selectedWidth('모델'),statusWidth-effortWidth);
+    const compactMinimum=device==='phone'?288:320;
+    const width=Math.max(compactMinimum,8+icon+modelWidth+effortWidth+(hasFast?confirm:0)+16+confirm);
     form.style.setProperty('--bb-chat-ui-slot-model-fr',`${modelWidth}fr`);
     form.style.setProperty('--bb-chat-ui-slot-effort-fr',`${effortWidth}fr`);
     form.style.setProperty('--bb-chat-ui-slot-compact-width',`${Math.ceil(width)}px`);
   },[visible,providerIndex,modelIndex,effortIndex,state.models,efforts,hasFast,formRef]);
+  const backdrop=<span data-bb-chat-ui-slot-backdrop="" data-full-width={backdropHost ? '' : undefined} data-open={visible || undefined} aria-hidden="true"/>;
   return children({enabled,open:visible,close:()=>dismiss(),
     modeToggle:<Button type="button" size="sm" variant="ghost" data-bb-chat-ui-slot-mode="" aria-label="06 슬롯" aria-pressed={enabled} disabled={locked}
       aria-description={enabled?'누르면 기존 모델·Effort 방식으로 전환':'누르면 06 슬롯 방식으로 전환'} onClick={event=>{pulse(event.nativeEvent.isTrusted);dismiss();writeMode(!enabled);}}>06 슬롯<span aria-hidden="true">{enabled?'켜짐':'꺼짐'}</span></Button>,
@@ -159,28 +213,31 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
       onClick={()=>{void picker.confirm().then(()=>trigger.current?.focus({preventScroll:true}));}}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={picker.handoff?'M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4':'M20 6 9 17l-5-5'}/></svg>
     </button>:null,
-    overlay:<>
-      <span data-bb-chat-ui-slot-backdrop="" data-open={visible || undefined} aria-hidden="true"/>
+    overlay:<div data-bb-chat-ui-slot-overlay="">
+      {backdropHost ? createPortal(backdrop,backdropHost) : backdrop}
       <div ref={layer} role="group" aria-label="모델 슬롯" data-bb-chat-ui-slot-layer="" data-open={visible || undefined} inert={!visible || undefined} aria-hidden={!visible || undefined}>
-        <div data-bb-chat-ui-slot-reels="">
+        <div data-bb-chat-ui-slot-reels="" data-fast={hasFast || undefined}>
           <FluidPickerWheel label="Provider" rowSize={rowSize} index={providerIndex} disabled={wheelDisabled} items={picker.providers.map(provider=>({key:provider.id,label:provider.displayName,iconOnly:true,
             icon:<ProviderIcon providerKind="agent" provider={provider} className="size-4"/>}))}
             onPick={(index,trusted)=>{pulse(trusted);picker.pickProvider(picker.providers[index]!.id);}}/>
           {state.loading?<div role="status" data-bb-chat-ui-slot-status="">모델 불러오는 중…</div>:state.error?<div role="alert" data-bb-chat-ui-slot-status="">{state.error}
             <button type="button" onClick={()=>{if(state.draft.providerId) void picker.load(state.draft.providerId,state.draft);}}>다시 불러오기</button></div>:<>
-            <div data-bb-chat-ui-slot-model="" data-fast={hasFast || undefined}>
+            <div data-bb-chat-ui-slot-model="">
               <FluidPickerWheel label="모델" rowSize={rowSize} disabled={wheelDisabled} index={modelIndex} items={state.models.map(model=>({key:model.id,label:model.displayName || model.model}))}
                 onPick={(index,trusted)=>{pulse(trusted);picker.pickModel(index);}}/>
-              {hasFast?<button type="button" aria-label="Fast mode" aria-pressed={state.draft.serviceTier==='fast'} disabled={locked} data-bb-chat-ui-slot-fast="" title={state.draft.serviceTier==='fast'?'Fast mode 켜짐':'Fast mode 꺼짐'}
-                onClick={event=>{pulse(event.nativeEvent.isTrusted);picker.pickTier(state.draft.serviceTier==='fast'?normalTier!.id:'fast');}}><FastGlyph/></button>:null}
             </div>
             <FluidPickerWheel label="Effort" rowSize={rowSize} disabled={wheelDisabled || !efforts.length} index={effortIndex}
               items={efforts.length?efforts.map((effort,index)=>({key:effort.reasoningEffort,label:effort.label || labels[effort.reasoningEffort] || effort.reasoningEffort,
                 icon:<EffortIcon level={effort.reasoningEffort} index={index} count={efforts.length}/>})):[{key:'none',label:'설정 없음'}]}
               onPick={(index,trusted)=>{pulse(trusted);picker.pickEffort(efforts[index]!.reasoningEffort);}}/>
+            {hasFast?<button type="button" aria-label="Fast mode" aria-describedby={fastTooltipId} aria-pressed={state.draft.serviceTier==='fast'} disabled={wheelDisabled} data-bb-chat-ui-slot-fast="" data-peek={fastPeek || undefined}
+              onClick={event=>{pulse(event.nativeEvent.isTrusted);picker.pickTier(state.draft.serviceTier==='fast'?normalTier!.id:'fast');previewFast();}}>
+              <FastGlyph/><span data-bb-chat-ui-slot-fast-label="" aria-hidden="true">Fast {state.draft.serviceTier==='fast'?'On':'Off'}</span>
+              <span id={fastTooltipId} role="tooltip" data-bb-chat-ui-slot-fast-tooltip="">Fast {state.draft.serviceTier==='fast'?'On':'Off'}</span>
+            </button>:null}
           </>}
         </div>
       </div>
-    </>,
+    </div>,
   });
 }
