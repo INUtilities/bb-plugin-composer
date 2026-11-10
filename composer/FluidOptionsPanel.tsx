@@ -29,27 +29,43 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
   const root = useRef<HTMLDivElement>(null);
   const entering = useRef<Animation[]>([]);
   const fading = useRef<Animation[]>([]);
+  const outgoingOpacity = useRef(new Map<Element, string>());
   // 직접 조작과 해제 때 필 전체의 순차 등장을 즉시 끝낸다.
   const stopEntering = useCallback(() => { for (const animation of entering.current) animation.cancel(); entering.current = []; }, []);
   const visible = orderedPromptActions(actions).filter(action => action.text.length > 0);
+  // 옵션 퇴장까지 기존 정보 필의 위치와 비활성 상태를 유지한다.
+  useLayoutEffect(() => {
+    const shell = root.current?.closest('[data-promptbox-shell]') ?? root.current?.closest('form');
+    const bars = Array.from(shell?.querySelectorAll<HTMLElement>('[data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]') ?? []);
+    const priorInert = bars.map(bar => bar.inert);
+    shell?.setAttribute('data-bb-chat-ui-fluid-options-open', '');
+    bars.forEach(bar => { bar.inert = true; });
+    return () => { shell?.removeAttribute('data-bb-chat-ui-fluid-options-open'); bars.forEach((bar,index) => { bar.inert = priorInert[index]; }); };
+  }, []);
   // 기존 상단 pill과 같은 등장 모션을 실제 옵션 항목에 연결한다.
   useLayoutEffect(() => {
-    if (!active) return;
     const panel = root.current;
     const list = panel?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-panel-list]');
+    const items = Array.from(list?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    if (!active) {
+      const motion = panel?.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
+      if (!motion?.matches) fading.current = items.map((item,index) => item.animate?.(
+        [{opacity:outgoingOpacity.current.get(item) || getComputedStyle(item).opacity || 1},{opacity:0}],
+        {duration:200,delay:index*45,easing:EASE.exit,fill:'both'})).filter((animation):animation is Animation => !!animation);
+      // 동작 줄이기는 진행 중인 퇴장도 즉시 끝낸다.
+      const reduce = () => { if (motion?.matches) { for (const animation of fading.current) animation.cancel(); fading.current = []; } };
+      motion?.addEventListener('change', reduce);
+      return () => { for (const animation of fading.current) animation.cancel(); fading.current = []; motion?.removeEventListener('change', reduce); };
+    }
     if (list) list.scrollTop = 0;
     (root.current?.querySelector<HTMLElement>(ENABLED_OPTIONS)
       ?? root.current?.closest('[data-bb-chat-ui-fluid-composer]')?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-toggle] button')
       ?? root.current)?.focus({ preventScroll: true });
     const motion = root.current?.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
-    const items = Array.from(list?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
     const shell = panel?.closest('[data-promptbox-shell]') ?? panel?.closest('form');
     const bars = Array.from(shell?.querySelectorAll<HTMLElement>('[data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]') ?? []);
     const pills = bars.flatMap(bar => Array.from(bar.children).flatMap(child => child.hasAttribute('data-bb-chat-ui-slot-toolbar') ? []
       : (child as HTMLElement).style.display==='contents' ? Array.from(child.children):[child]));
-    const priorInert = bars.map(bar => bar.inert);
-    shell?.setAttribute('data-bb-chat-ui-fluid-options-open', '');
-    bars.forEach(bar => { bar.inert = true; });
     if (!motion?.matches) {
       fading.current = pills.map((pill,index) => pill.animate?.([{opacity:1},{opacity:0}], {duration:200,delay:index*45,easing:EASE.exit,fill:'both'})).filter((animation): animation is Animation => !!animation);
       const delay = pills.length ? 200 + (pills.length - 1) * 45 : 0;
@@ -65,11 +81,10 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
     const reduce = () => { if (motion?.matches) { stopEntering(); for (const animation of fading.current) animation.cancel(); fading.current = []; } };
     motion?.addEventListener('change', reduce);
     return () => {
+      outgoingOpacity.current = new Map(items.map(item => [item,getComputedStyle(item).opacity]));
       stopEntering();
       for (const animation of fading.current) animation.cancel();
       fading.current = [];
-      shell?.removeAttribute('data-bb-chat-ui-fluid-options-open');
-      bars.forEach((bar,index) => { bar.inert = priorInert[index]; });
       motion?.removeEventListener('change', reduce);
     };
   }, [active, stopEntering]);

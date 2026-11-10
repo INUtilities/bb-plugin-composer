@@ -184,7 +184,7 @@ it('mounts options above the input without hiding or replacing the editor',()=>{
  const viewport=v.container.querySelector('[data-bb-chat-ui-fluid-height]')!;
  expect(viewport.contains(panel)).toBe(false);expect(viewport.getAttribute('data-bb-chat-ui-fluid-view')).toBe('input');
  expect(panel.compareDocumentPosition(viewport)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
- v.rerender(view());expect(panel.isConnected).toBe(false);
+ v.rerender(view());expect(panel.isConnected).toBe(true);expect(panel.hasAttribute('inert')).toBe(true);
  expect(v.queryByRole('region',{name:'옵션'})).toBeNull();
  act(()=>vi.advanceTimersByTime(320));expect(panel.isConnected).toBe(false);expect(v.container.querySelector('textarea')).toBe(editor);expect(editor.value).toBe('보존할 초안');
 });
@@ -192,7 +192,7 @@ it('mounts options above the input without hiding or replacing the editor',()=>{
 it('reopens the pill tray without a stale closing timer or a replacement editor',()=>{
  const v=render(view());v.rerender(view(true));const panel=v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')!;
  const editor=v.container.querySelector('textarea');
- v.rerender(view());expect(panel.isConnected).toBe(false);act(()=>vi.advanceTimersByTime(120));v.rerender(view(true));
+ v.rerender(view());expect(panel.isConnected).toBe(true);act(()=>vi.advanceTimersByTime(120));v.rerender(view(true));
  const reopened=v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')!;
  act(()=>vi.advanceTimersByTime(500));expect(reopened.isConnected).toBe(true);expect(reopened.hasAttribute('inert')).toBe(false);expect(v.container.querySelector('textarea')).toBe(editor);
 });
@@ -207,9 +207,9 @@ it('preserves the open tray on reduced motion changes and releases local resourc
  expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).toBeNull();
  v.unmount();expect(listeners.size).toBe(0);expect(vi.getTimerCount()).toBe(0);
 });
-// 필 닫기에 지연 타이머를 만들지 않고 컴포저 해제 때 리스너도 제거한다.
-it('closes the tray without a closing timer and cleans up on unmount',()=>{
- const v=render(view(true));act(()=>vi.advanceTimersByTime(20));v.rerender(view());expect(vi.getTimerCount()).toBe(0);v.unmount();expect(listeners.size).toBe(0);expect(vi.getTimerCount()).toBe(0);
+// 필 퇴장만 기다리고 컴포저 해제 때 예약과 리스너를 제거한다.
+it('retains the tray for its exit and cleans up on unmount',()=>{
+ const v=render(view(true));act(()=>vi.advanceTimersByTime(20));v.rerender(view());expect(vi.getTimerCount()).toBe(1);v.unmount();expect(listeners.size).toBe(0);expect(vi.getTimerCount()).toBe(0);
 });
 it('keeps native wheel scrolling inside the composer without blocking zoom and removes its listener on unmount',()=>{
  const v=render(view()),host=v.container,viewport=host.querySelector('[data-bb-chat-ui-fluid-height]')!,editor=host.querySelector('textarea')!;

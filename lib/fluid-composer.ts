@@ -60,7 +60,7 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --b
 [aria-expanded="true"] > [data-bb-chat-ui-fluid-toggle-glyph]::after { transform:translate(-50%,-50%) rotate(135deg); }
 [data-bb-chat-ui-fluid-content] { position:relative; min-width:0; flex:none; width:100%; display:flex; flex-direction:column; max-height:var(--bb-chat-ui-fluid-max-height); }
 [data-bb-chat-ui-fluid-input] { position:relative; display:flex; flex-direction:column; min-width:0; min-height:0; }
-[data-bb-chat-ui-fluid-panel-layer] { position:relative; width:100%; min-width:0; margin-bottom:8px; }
+[data-bb-chat-ui-fluid-panel-layer] { position:absolute; bottom:calc(100% + 8px); left:0; z-index:20; width:100%; min-width:0; }
 [data-bb-chat-ui-fluid-native-controls][hidden] { display:none !important; }
 [data-bb-chat-ui-fluid-panel] { display:flex; flex-direction:column; width:100%; min-width:0; }
 [data-bb-chat-ui-fluid-panel-list] { display:flex; flex-wrap:wrap; gap:8px; min-height:0; max-height:var(--bb-chat-ui-fluid-max-height); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding:8px; }

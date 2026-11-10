@@ -25,6 +25,22 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const row = useRef<HTMLDivElement>(null), editorColumn = useRef<HTMLDivElement>(null);
   const optionColumn = useRef<HTMLDivElement>(null), actionColumn = useRef<HTMLDivElement>(null);
   const [multiline, setMultiline] = useState(false);
+  const [panelPresent, setPanelPresent] = useState(panelOpen);
+  const panelLayer = useRef<HTMLDivElement>(null);
+  // 퇴장이 끝날 때까지 옵션 노드를 유지하고 재열림·동작 줄이기·해제 때 예약을 정리한다.
+  useLayoutEffect(() => {
+    if (panelOpen) { setPanelPresent(true); return; }
+    if (!panelPresent) return;
+    const win = panelLayer.current?.ownerDocument.defaultView;
+    if (!win) return;
+    const motion = win.matchMedia('(prefers-reduced-motion: reduce)');
+    const count = panelLayer.current?.querySelectorAll('[role="menuitem"]').length ?? 0;
+    const timer = win.setTimeout(() => setPanelPresent(false), 200 + Math.max(0, count - 1) * 45);
+    // 동작 줄이기를 켜면 남아 있는 옵션도 즉시 제거한다.
+    const reduce = () => { if (motion.matches) setPanelPresent(false); };
+    reduce(); motion.addEventListener('change', reduce);
+    return () => { win.clearTimeout(timer); motion.removeEventListener('change', reduce); };
+  }, [panelOpen, panelPresent]);
   const multilineRef = useRef(false), layoutFrame = useRef<number | null>(null);
   const previousDraft = useRef({ text: draftText, voiceMode });
   const previousPosition = useRef<{ x: number; y: number } | null>(null);
@@ -183,7 +199,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     };
   }, [multiline]);
   return <>
-    {panelOpen ? <div data-bb-chat-ui-fluid-panel-layer="">{panel}</div> : null}
+    {panelOpen || panelPresent ? <div ref={panelLayer} data-bb-chat-ui-fluid-panel-layer="" inert={!panelOpen || undefined} aria-hidden={!panelOpen || undefined}>{panel}</div> : null}
     <div ref={viewport} data-bb-chat-ui-fluid-height="" data-multiline={multiline} data-bb-chat-ui-fluid-view="input" data-voice-mode={voiceMode || undefined}>
     <div data-bb-chat-ui-fluid-surface="" aria-hidden="true"/>
     {decoration}
