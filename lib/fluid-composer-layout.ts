@@ -3,7 +3,9 @@ const pixels = (value: string): number => Number.parseFloat(value) || 0;
 /** 펼친 입력에서도 접힌 열의 가용 폭으로 판단해 줄바꿈 경계의 왕복을 막는다. */
 export function needsFullWidthComposer(row: HTMLElement, editor: HTMLElement, options: HTMLElement, actions: HTMLElement): boolean {
   const win = row.ownerDocument.defaultView;
-  if (!win || row.getBoundingClientRect().width <= 0) return false;
+  if (!win) return false;
+  const rowWidth = row.getBoundingClientRect().width;
+  if (rowWidth <= 0) return false;
   const rowStyle = win.getComputedStyle(row);
   const lineHeight = pixels(win.getComputedStyle(editor).lineHeight) || 24;
   const label = options.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-effort]:not([data-bb-chat-ui-fluid-effort-peek]) > [data-bb-chat-ui-fluid-effort-label]');
@@ -13,7 +15,7 @@ export function needsFullWidthComposer(row: HTMLElement, editor: HTMLElement, op
 
   const scroll = editor.closest<HTMLElement>('[data-promptbox-editor-scroll]');
   const scrollStyle = scroll ? win.getComputedStyle(scroll) : null;
-  const available = row.getBoundingClientRect().width - pixels(rowStyle.paddingLeft) - pixels(rowStyle.paddingRight)
+  const available = rowWidth - pixels(rowStyle.paddingLeft) - pixels(rowStyle.paddingRight)
     - options.getBoundingClientRect().width + compactSpace - actions.getBoundingClientRect().width - 2 * pixels(rowStyle.columnGap)
     - (scrollStyle ? pixels(scrollStyle.paddingLeft) + pixels(scrollStyle.paddingRight) : 0);
   const range = row.ownerDocument.createRange();

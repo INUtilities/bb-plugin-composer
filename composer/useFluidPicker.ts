@@ -52,7 +52,9 @@ export function useFluidPicker(disabled:boolean, onError:(message:string)=>void)
   const close=()=>{
     if(applying.current===key) return;
     request.current?.abort();
-    setStored(previous=>({...previous,open:false,loading:false,error:''}));
+    // 이미 닫혔고 정리할 상태가 없으면 기존 객체를 유지한다.
+    setStored(previous=>!previous.open && !previous.loading && !previous.error
+      ? previous : {...previous,open:false,loading:false,error:''});
   };
   // 입력 잠금과 음성 모드에서는 설정 화면을 닫는다.
   useEffect(()=>{if(disabled) close();},[disabled,key]);

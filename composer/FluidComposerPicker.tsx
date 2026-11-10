@@ -83,9 +83,10 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
     const button=done.current, form=formRef.current, win=form?.ownerDocument.defaultView;
     if(!visible || !button || !form || !win) return;
     const media=win.matchMedia('(prefers-reduced-motion: reduce)');
+    if(media.matches) return;
     const width=Number.parseFloat(win.getComputedStyle(form).getPropertyValue('--bb-chat-ui-fluid-control-size'));
     const from=form.querySelector('[data-promptbox-submit-group]')?.getBoundingClientRect().width ?? width;
-    if(media.matches || !Number.isFinite(width) || from<=width) return;
+    if(!Number.isFinite(width) || from<=width) return;
     const animation=button.animate?.([{width:from+'px'},{width:width+'px'}],{duration:FLUID_COMPOSER_INPUT_MS,easing:EASE.out});
     // 모션 줄이기를 켜면 진행 중 폭 전환을 즉시 끝낸다.
     const reduce=()=>{if(media.matches) animation?.cancel();};
@@ -153,8 +154,9 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
   },[visible,state.key,state.draft.providerId,state.draft.model,state.loading,locked]);
   // 잠깐 펼치는 Fast 글자만 측정해 휠 폭을 다시 읽지 않고 오른쪽 공간을 확보한다.
   useLayoutEffect(()=>{
-    const form=formRef.current, label=layer.current?.querySelector<HTMLElement>('[data-bb-chat-ui-slot-fast-label]');
-    const width=visible && fastPeek && hasFast && label ? label.scrollWidth+6 : 0;
+    const form=formRef.current;
+    const label=visible && fastPeek && hasFast ? layer.current?.querySelector<HTMLElement>('[data-bb-chat-ui-slot-fast-label]') : null;
+    const width=label ? label.scrollWidth+6 : 0;
     form?.style.setProperty('--bb-slot-fast-peek-width',width+'px');
   },[visible,fastPeek,hasFast,state.draft.serviceTier,device,formRef]);
   const targetName=picker.providers.find(item=>item.id===state.draft.providerId)?.displayName ?? state.draft.providerId ?? '';
@@ -162,24 +164,25 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
   useLayoutEffect(()=>{
     const form=formRef.current, overlay=layer.current, win=form?.ownerDocument.defaultView;
     if(!visible || !form || !overlay || !win) return;
+    const wheels=Array.from(overlay.querySelectorAll<HTMLElement>('[data-bb-chat-ui-slot-wheel]'));
     // 계산된 CSS 길이를 픽셀 수로 읽는다.
     const pixels=(value:string)=>Number.parseFloat(value)||0;
     // 각 슬롯에서 현재 선택한 항목의 글자·아이콘·여백을 합한다.
     const selectedWidth=(name:string)=>{
-      const wheel=Array.from(overlay.querySelectorAll<HTMLElement>('[data-bb-chat-ui-slot-wheel]'))
-        .find(item=>item.getAttribute('aria-label')===name);
+      const wheel=wheels.find(item=>item.getAttribute('aria-label')===name);
       return Math.max(0,...Array.from(wheel?.querySelectorAll<HTMLElement>('[data-bb-chat-ui-slot-item]') ?? []).map(selected=>{
       const face=selected?.querySelector<HTMLElement>('[data-bb-chat-ui-slot-item-face]');
       const label=face?.querySelector<HTMLElement>('span');
       const icon=face?.querySelector<HTMLElement>('svg,img');
       if(!face) return 0;
-      const style=win.getComputedStyle(selected), faceStyle=win.getComputedStyle(face);
+      const style=win.getComputedStyle(selected);
       return (label ? label.scrollWidth+2 : 0)+(icon?.getBoundingClientRect().width ?? 0)
-        +(label && icon ? pixels(faceStyle.columnGap) : 0)+pixels(style.paddingLeft)+pixels(style.paddingRight)+12;
+        +(label && icon ? pixels(win.getComputedStyle(face).columnGap) : 0)+pixels(style.paddingLeft)+pixels(style.paddingRight)+12;
       }));
     };
-    const icon=pixels(win.getComputedStyle(form).getPropertyValue('--bb-slot-icon'));
-    const confirm=pixels(win.getComputedStyle(form).getPropertyValue('--bb-chat-ui-fluid-control-size'));
+    const formStyle=win.getComputedStyle(form);
+    const icon=pixels(formStyle.getPropertyValue('--bb-slot-icon'));
+    const confirm=pixels(formStyle.getPropertyValue('--bb-chat-ui-fluid-control-size'));
     const effortWidth=Math.max(1,selectedWidth('Effort'));
     const status=overlay.querySelector<HTMLElement>('[data-bb-chat-ui-slot-status][role="status"]');
     let statusWidth=0;

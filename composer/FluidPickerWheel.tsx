@@ -18,8 +18,9 @@ export function FluidPickerWheel({label,items,index,onPick,rowSize,disabled=fals
     frame.current=0;
     const element=scroller.current;
     if(!element) return;
+    const position=element.scrollTop/rowSize;
     for(const [index,option] of element.querySelectorAll<HTMLElement>('[role="option"]').entries()) {
-      const distance=Math.max(-3,Math.min(3,index-element.scrollTop/rowSize));
+      const distance=Math.max(-3,Math.min(3,index-position));
       option.style.setProperty('--bb-slot-distance',distance.toFixed(3));
       option.style.setProperty('--bb-slot-opacity',String(Math.max(.08,1-Math.abs(distance)*.55)));
       option.style.setProperty('--bb-slot-scale',String(1-Math.abs(distance)*.05));
