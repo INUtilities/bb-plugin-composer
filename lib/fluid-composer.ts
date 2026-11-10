@@ -24,6 +24,13 @@ html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-de
   border:0; border-radius:var(--bb-chat-ui-fluid-input-radius); color:var(--foreground);
   background:transparent;
 }
+/* 슬롯 설정은 선택한 세 칸과 확인 버튼만 남기고 오른쪽 끝에서 한 줄로 줄인다. */
+[data-bb-chat-ui-slot-enabled] { margin-left:auto; transition:width ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
+[data-bb-chat-ui-slot-open] { width:min(100%,var(--bb-chat-ui-slot-compact-width,100%)); }
+[data-bb-chat-ui-slot-open] :is([data-bb-chat-ui-fluid-auxiliary],[data-bb-chat-ui-fluid-attachments],[data-bb-chat-ui-fluid-editor],[data-bb-chat-ui-fluid-options],[data-bb-chat-ui-fluid-extra-actions]) { display:none !important; }
+[data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-row][data-multiline] { grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto; grid-template-areas:". actions"; row-gap:0; }
+[data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-actions] { justify-self:end; }
+[data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-height][data-multiline="true"] { border-radius:var(--bb-chat-ui-fluid-input-radius); }
 [data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face], [data-bb-chat-ui-fluid-details] {
   position:absolute; inset:0; pointer-events:none; border-radius:inherit;
   background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25);
@@ -198,6 +205,8 @@ html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-visual] > [data-bb-
   [data-bb-chat-ui-fluid-height] { corner-shape:round; }
   [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"] { border-radius:50.6px; corner-shape:squircle; }
   html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"] { border-radius:54.9px; }
+  [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"],
+  html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"] { border-radius:var(--bb-chat-ui-fluid-input-radius); corner-shape:round; }
   [data-bb-chat-ui-fluid-height] > [data-bb-chat-ui-fluid-surface],
   [data-bb-chat-ui-fluid-height] > [data-bb-chat-ui-voice-glow] { corner-shape:inherit; }
 }

@@ -60,7 +60,12 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
     if(!form) return;
     const marks=['data-bb-chat-ui-slot-enabled','data-bb-chat-ui-slot-open'];
     const previous=marks.map(mark=>form.getAttribute(mark));
-    return ()=>marks.forEach((mark,index)=>{if(previous[index]===null) form.removeAttribute(mark);else form.setAttribute(mark,previous[index]!);});
+    const sizes=['--bb-chat-ui-slot-compact-width','--bb-chat-ui-slot-model-fr','--bb-chat-ui-slot-effort-fr'];
+    const previousSizes=sizes.map(size=>form.style.getPropertyValue(size));
+    return ()=>{
+      marks.forEach((mark,index)=>{if(previous[index]===null) form.removeAttribute(mark);else form.setAttribute(mark,previous[index]!);});
+      sizes.forEach((size,index)=>{if(previousSizes[index]) form.style.setProperty(size,previousSizes[index]!);else form.style.removeProperty(size);});
+    };
   },[formRef]);
   // 표시 상태만 갱신하며 이전 렌더의 정리에서 표식을 지우지 않는다.
   useLayoutEffect(()=>{
@@ -102,6 +107,45 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
   const effortIndex=Math.max(0,efforts.findIndex(item=>item.reasoningEffort===state.draft.reasoningLevel));
   const normalTier=picker.tiers.find(item=>item.id!=='fast'), hasFast=picker.tiers.some(item=>item.id==='fast') && !!normalTier;
   const targetName=picker.providers.find(item=>item.id===state.draft.providerId)?.displayName ?? state.draft.providerId ?? '';
+  // 현재 선택한 세 슬롯과 확인 버튼에 필요한 폭만 계산해 열린 컴포저를 줄인다.
+  useLayoutEffect(()=>{
+    const form=formRef.current, overlay=layer.current, win=form?.ownerDocument.defaultView;
+    if(!visible || !form || !overlay || !win) return;
+    // 계산된 CSS 길이를 픽셀 수로 읽는다.
+    const pixels=(value:string)=>Number.parseFloat(value)||0;
+    // 각 슬롯에서 현재 선택한 항목의 글자·아이콘·여백을 합한다.
+    const selectedWidth=(name:string)=>{
+      const wheel=Array.from(overlay.querySelectorAll<HTMLElement>('[data-bb-chat-ui-slot-wheel]'))
+        .find(item=>item.getAttribute('aria-label')===name);
+      const selected=wheel?.querySelector<HTMLElement>('[data-bb-chat-ui-slot-item][aria-selected="true"]');
+      const face=selected?.querySelector<HTMLElement>('[data-bb-chat-ui-slot-item-face]');
+      const label=face?.querySelector<HTMLElement>('span');
+      const icon=face?.querySelector<HTMLElement>('svg,img');
+      if(!selected || !face) return 0;
+      const style=win.getComputedStyle(selected), faceStyle=win.getComputedStyle(face);
+      return (label ? label.scrollWidth+2 : 0)+(icon?.getBoundingClientRect().width ?? 0)
+        +(label && icon ? pixels(faceStyle.columnGap) : 0)+pixels(style.paddingLeft)+pixels(style.paddingRight);
+    };
+    const icon=pixels(win.getComputedStyle(form).getPropertyValue('--bb-slot-icon'));
+    const confirm=pixels(win.getComputedStyle(form).getPropertyValue('--bb-chat-ui-fluid-control-size'));
+    const effortWidth=Math.max(1,selectedWidth('Effort'));
+    const status=overlay.querySelector<HTMLElement>('[data-bb-chat-ui-slot-status][role="status"]');
+    let statusWidth=0;
+    if(status){
+      const previous=status.style.whiteSpace;
+      status.style.whiteSpace='nowrap';
+      const range=form.ownerDocument.createRange();
+      range.selectNodeContents(status);
+      const style=win.getComputedStyle(status);
+      statusWidth=(range.getBoundingClientRect?.().width ?? 0)+pixels(style.paddingLeft)+pixels(style.paddingRight);
+      status.style.whiteSpace=previous;
+    }
+    const modelWidth=Math.max(1,selectedWidth('모델')+(hasFast?24:0),statusWidth-effortWidth);
+    const width=8+icon+modelWidth+effortWidth+16+confirm;
+    form.style.setProperty('--bb-chat-ui-slot-model-fr',`${modelWidth}fr`);
+    form.style.setProperty('--bb-chat-ui-slot-effort-fr',`${effortWidth}fr`);
+    form.style.setProperty('--bb-chat-ui-slot-compact-width',`${Math.ceil(width)}px`);
+  },[visible,providerIndex,modelIndex,effortIndex,state.models,efforts,hasFast,formRef]);
   return children({enabled,open:visible,close:()=>dismiss(),
     modeToggle:<Button type="button" size="sm" variant="ghost" data-bb-chat-ui-slot-mode="" aria-label="06 슬롯" aria-pressed={enabled} disabled={locked}
       aria-description={enabled?'누르면 기존 모델·Effort 방식으로 전환':'누르면 06 슬롯 방식으로 전환'} onClick={event=>{pulse(event.nativeEvent.isTrusted);dismiss();writeMode(!enabled);}}>06 슬롯<span aria-hidden="true">{enabled?'켜짐':'꺼짐'}</span></Button>,

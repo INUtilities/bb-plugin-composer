@@ -47,6 +47,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
       }
       return;
     }
+    if (viewport.current?.closest('[data-bb-chat-ui-slot-open]')) return;
     const input = editorColumn.current?.querySelector<HTMLElement>('[data-bb-chat-ui-voice-transcript], .ProseMirror');
     if (!input || !row.current || !optionColumn.current || !actionColumn.current || !editorColumn.current || !content.current) return;
     if (!draftText && !voiceMode) actionPosition.current = actionColumn.current.getBoundingClientRect();

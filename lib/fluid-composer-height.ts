@@ -32,7 +32,7 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
   let height = content.offsetHeight;
   let moving = getEditor?.() ?? null;
   let position = moving ? readFluidEditorPosition(moving, content) : null;
-  let inputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode');
+  let inputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode') && !viewport.closest('[data-bb-chat-ui-slot-open]');
   let multiline = viewport.getAttribute('data-multiline') === 'true';
   let duration = inputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
   let easing = inputView ? FLUID_COMPOSER_INPUT_EASING : EASE.out;
@@ -59,7 +59,7 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     if (!Number.isFinite(next) || next < 0) return;
     const nextMoving = getEditor?.() ?? null;
     const nextPosition = nextMoving ? readFluidEditorPosition(nextMoving, content) : null;
-    const nextInputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode');
+    const nextInputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode') && !viewport.closest('[data-bb-chat-ui-slot-open]');
     const nextMultiline = viewport.getAttribute('data-multiline') === 'true';
     const reset = nextInputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true';
     if (next === height && !reset) { moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; return; }

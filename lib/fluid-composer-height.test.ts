@@ -135,6 +135,23 @@ test('expanded input briefly follows subsequent line heights while layout and op
   } finally { f.stop(); f.dom.window.close(); }
 });
 
+// 여러 줄 입력에서 슬롯을 여닫을 때 입력 전환보다 설정 전환의 속도를 적용한다.
+test('slot opening and closing use the settings morph for a multiline draft', async () => {
+  const f = fixture();
+  try {
+    await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
+    f.viewport.setAttribute('data-multiline', 'true'); f.resize(140);
+    f.dom.window.document.body.setAttribute('data-bb-chat-ui-slot-open', '');
+    f.resize(52);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.equal(f.viewport.style.height, '52px');
+    f.dom.window.document.body.removeAttribute('data-bb-chat-ui-slot-open');
+    f.resize(140);
+    assert.match(f.viewport.style.transition, /height 320ms/);
+    assert.equal(f.viewport.style.height, '140px');
+  } finally { f.stop(); f.dom.window.close(); }
+});
+
 // 상한에 가까운 큰 펼침과 읽을 수 없는 상한에서는 반동을 빼고 목표 높이를 유지한다.
 test('input expansion near the height cap uses the same bounded curve for the box and editor', async () => {
   for (const cap of ['280px', 'calc(100% - 1px)']) {

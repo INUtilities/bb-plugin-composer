@@ -1,8 +1,8 @@
 {
   "repository": "https://github.com/MORPHLET/bb-chat-ui",
-  "ref": "4c4394f61255be5008f7eda16c9a8b25da7a0661",
+  "ref": "c80e8da369ad0d669c4785528aaebff7b521c857",
   "remoteCommit": "7ad97e54c514aac6527a408305989c3996b8ff07",
-  "integratedCommit": "4c4394f61255be5008f7eda16c9a8b25da7a0661",
+  "integratedCommit": "c80e8da369ad0d669c4785528aaebff7b521c857",
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
@@ -15,7 +15,8 @@
     "2026-11-10: active same-list slot selections use native smooth scrolling; list/open-state changes and reduced motion finish immediately. The 06 mode pill remains available.",
     "2026-11-10: persistent upper information pills, shared navigation-pill mode toggle and i metadata popover above the composer; sequential exit followed by transparent option entrance; plus keeps its base size and rotates only.",
     "Temporary shared row: 06 and information pills use a local scoped portal into the existing Chat UI information row. Chat UI PR #16 reserves their width; without the row the composer retains its own toolbar. Editor and native menus remain mounted.",
-    "Single-line original-mode effort uses only its icon; a confirmed click shows the name for 1500ms, repeated clicks renew the deadline. Multiline keeps the name, and collapsed-fit measurement returns to icon width after preview without adding observers."
+    "Single-line original-mode effort uses only its icon; a confirmed click shows the name for 1500ms, repeated clicks renew the deadline. Multiline keeps the name, and collapsed-fit measurement returns to icon width after preview without adding observers.",
+    "2026-11-10: opening the 06 picker compacts the composer to the selected slot labels and one line, then restores the mounted draft and prior shape when closed."
   ],
   "files": [
     {
@@ -53,8 +54,8 @@
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "cfe0703c71c54a71e50f7e30c828c4dabf999c09d9175a25cd5a346aeef558c1",
-      "sourceSha256": "23278ef8c8c70d695e678b7c9a3d7b730afe26f91f88646eeb69466c5fc22f82",
+      "sha256": "a1a012982a0a739821eea1f8021a219f14f51926c4c05a9aec30c7c7ef00ecfc",
+      "sourceSha256": "a31c9660a0479e857d4b244e8516e1b980d29aae62d57053e1006865529e19fd",
       "integrationOverlay": true
     },
     {
@@ -625,22 +626,22 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "78306309ecc28d8a1537000328dbe601d2f371c0fec3828db464e51b748a2a1b",
-      "sourceSha256": "f7503d36158a6ef0eabb313c8bd1aa593c8920bbc82fd61884ae98861f76f425",
+      "sha256": "3cf708ec3c03f76815607daff1a32d9e9b7e7492c4e8ff785e766182a5df4e6c",
+      "sourceSha256": "a395f0f5ff8726ca6bc8b883ac264c37298ca4ea96f18c93484ce13779bd1cfd",
       "integrationOverlay": true
     },
     {
       "source": "lib/fluid-composer-height.ts",
       "destination": "lib/fluid-composer-height.ts",
-      "sha256": "b8956f78e6029ffda2b5b5a1a6348ca82cc6eebd1e72cb6fbbc2a7256226e745",
-      "sourceSha256": "b78994d34f36f0c83cd06f84616d319d599a14d891bc6208052c2341d9f8044c",
+      "sha256": "1b8970c45643d0396c129bb5a9667a44f5ad5edac712e946fe6ad8dd68ed75db",
+      "sourceSha256": "93bb7e3ec496e6535dffb054cf5c4d0fa8873511ce0d14bab1535030ca752f1a",
       "integrationOverlay": true
     },
     {
       "source": "lib/fluid-composer-height.test.ts",
       "destination": "lib/fluid-composer-height.test.ts",
-      "sha256": "4473747683abf781b54bec6fa029370e832f5de4bf812345bf7305629d1f0e03",
-      "sourceSha256": "4473747683abf781b54bec6fa029370e832f5de4bf812345bf7305629d1f0e03"
+      "sha256": "381904ef0a14cced95a8318b00615e09e15d042b217fcea8a5a11dccdd4a1af0",
+      "sourceSha256": "381904ef0a14cced95a8318b00615e09e15d042b217fcea8a5a11dccdd4a1af0"
     },
     {
       "source": "lib/fluid-composer-layout.ts",
@@ -921,8 +922,8 @@
     {
       "source": "composer/FluidComposerPicker.tsx",
       "destination": "composer/FluidComposerPicker.tsx",
-      "sha256": "38666b8ade3a1042839a2fddce75ac804e962146517b3884b701a690370d03df",
-      "sourceSha256": "38666b8ade3a1042839a2fddce75ac804e962146517b3884b701a690370d03df"
+      "sha256": "30f0cc978589aa1a481238ca85f9ca5588e5dd9db54c9a3a7c64adbec25180e7",
+      "sourceSha256": "30f0cc978589aa1a481238ca85f9ca5588e5dd9db54c9a3a7c64adbec25180e7"
     },
     {
       "source": "composer/FluidPickerWheel.tsx",
@@ -939,8 +940,8 @@
     {
       "source": "lib/fluid-picker.ts",
       "destination": "lib/fluid-picker.ts",
-      "sha256": "0523ae2e51adbccb4f177d1942c5ded2eedf1df7385a94aa0889307996923724",
-      "sourceSha256": "0523ae2e51adbccb4f177d1942c5ded2eedf1df7385a94aa0889307996923724"
+      "sha256": "d23c0069f68c2681c06f719f4ed1ebfd2c7ed7e3073f253674db72ac9b346389",
+      "sourceSha256": "d23c0069f68c2681c06f719f4ed1ebfd2c7ed7e3073f253674db72ac9b346389"
     },
     {
       "source": "docs/design-references/composer-model-effort/build-review.mjs",
