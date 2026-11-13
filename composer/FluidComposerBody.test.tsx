@@ -327,3 +327,28 @@ it('makes the moving caret transparent on phone only',()=>{
  expect(fluidComposerCss).toContain('html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }');
  expect(fluidComposerCss).not.toMatch(/(^|\n)\[data-bb-chat-ui-fluid-editor\]\[data-bb-chat-ui-fluid-moving\]/);
 });
+
+// 여러 줄 commit을 그리기 전에 목표 높이도 함께 바꾸고 뒤따른 ResizeObserver가 모션을 재시작하지 않는다.
+it('sets the expanded height in the multiline commit before a delayed resize delivery',()=>{
+ let lines=1;
+ const observers:{callback:ResizeObserverCallback;targets:Element[]}[]=[];
+ vi.stubGlobal('ResizeObserver',class{
+  state:{callback:ResizeObserverCallback;targets:Element[]};
+  constructor(callback:ResizeObserverCallback){this.state={callback,targets:[]};observers.push(this.state);}
+  observe(target:Element){this.state.targets.push(target);}disconnect(){}
+ });
+ const heights=vi.spyOn(HTMLElement.prototype,'offsetHeight','get').mockImplementation(function(this:HTMLElement){return this.hasAttribute('data-bb-chat-ui-fluid-content')?(this.querySelector('[data-multiline="true"]')?lines*24+68:52):lines*24;});
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){const editor=this.classList.contains('ProseMirror'),h=editor?lines*24:this.offsetHeight;return{left:0,top:0,x:0,y:0,width:this.hasAttribute('data-bb-chat-ui-fluid-options')||this.hasAttribute('data-bb-chat-ui-fluid-actions')?36:400,height:h,bottom:h,right:400} as DOMRect;});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={null} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('한 줄'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const editor=v.container.querySelector('.ProseMirror'),viewport=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!,content=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-content]')!;
+  expect(viewport.style.height).toBe('52px');lines=2;v.rerender(draw('첫 줄\n다음 줄'));
+  expect(viewport.getAttribute('data-multiline')).toBe('true');expect(content.offsetHeight).toBe(116);
+  expect(viewport.style.height).toBe('116px');expect(viewport.style.transition).toContain('height 400ms');
+  const transition=viewport.style.transition,resize=observers.find(observer=>observer.targets.includes(content))!;
+  act(()=>resize.callback([{target:content,borderBoxSize:[{blockSize:116}]}] as unknown as ResizeObserverEntry[],{} as ResizeObserver));
+  expect(viewport.style.height).toBe('116px');expect(viewport.style.transition).toBe(transition);expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+ }finally{v.unmount();heights.mockRestore();bounds.mockRestore();}
+});

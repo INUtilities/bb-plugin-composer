@@ -22,9 +22,9 @@ export function readFluidEditorPosition(editor: HTMLElement, content: HTMLElemen
 }
 
 // 큰 펼침은 탄성으로, 접힘은 빠르게 잇고 호스트 초기화는 즉시 반영한다.
-export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement, getEditor?: () => HTMLElement | null): () => void {
+export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElement, getEditor?: () => HTMLElement | null): (() => void) & { sync(): void } {
   const win = viewport.ownerDocument.defaultView;
-  if (!win?.ResizeObserver) return () => {};
+  if (!win?.ResizeObserver) return Object.assign(() => {}, { sync() {} });
   const previousHeight = viewport.style.height;
   const previousTransition = viewport.style.transition;
   const motion = win.matchMedia('(prefers-reduced-motion: reduce)');
@@ -53,12 +53,9 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     ready = true;
     updateMotion();
   });
-  const observer = new win.ResizeObserver(entries => {
-    if (disposed) return;
-    const entry = entries.find(entry => entry.target === content);
-    if (!entry) return;
-    const next = entry.borderBoxSize?.[0]?.blockSize ?? content.offsetHeight;
-    if (!Number.isFinite(next) || next < 0) return;
+  // 같은 commit의 배치 변경과 ResizeObserver가 하나의 높이 상태를 공유한다.
+  const measure = (next: number) => {
+    if (disposed || !Number.isFinite(next) || next < 0) return;
     const nextMoving = getEditor?.() ?? null;
     const nextPosition = nextMoving ? readFluidEditorPosition(nextMoving, content) : null;
     const nextSlotOpen = !!viewport.closest('[data-bb-chat-ui-slot-open]');
@@ -89,10 +86,14 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
       editorMotion = moving.animate([{ translate: `0px ${delta}px` }, { translate: '0px 0px' }], { duration, easing });
       editorMotion.id = FLUID_EDITOR_FOLLOW_ANIMATION;
     }
+  };
+  const observer = new win.ResizeObserver(entries => {
+    const entry = entries.find(entry => entry.target === content);
+    if (entry) measure(entry.borderBoxSize?.[0]?.blockSize ?? content.offsetHeight);
   });
   observer.observe(content, { box: 'border-box' });
   motion.addEventListener('change', updateMotion);
-  return () => {
+  return Object.assign(() => {
     disposed = true;
     editorMotion?.cancel(); editorMotion = null;
     observer.disconnect();
@@ -100,5 +101,5 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     motion.removeEventListener('change', updateMotion);
     viewport.style.height = previousHeight;
     viewport.style.transition = previousTransition;
-  };
+  }, { sync: () => measure(content.offsetHeight) });
 }

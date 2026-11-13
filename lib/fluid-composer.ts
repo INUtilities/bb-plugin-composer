@@ -26,7 +26,7 @@ html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-de
 }
 /* 슬롯 설정은 선택한 세 칸과 확인 버튼만 남기고 가운데에서 한 줄로 줄인다. */
 [data-bb-chat-ui-slot-enabled] { margin-inline:auto; transform:translateY(0); transition:width ${FLUID_COMPOSER_INPUT_MS}ms ${EASE.out},transform ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.out}; }
-[data-bb-chat-ui-slot-open] { width:min(100%,calc(var(--bb-chat-ui-slot-compact-width,100%) + var(--bb-slot-fast-peek-width,0px))); transform:translateY(calc(-1 * var(--bb-chat-ui-fluid-control-size))); }
+[data-bb-chat-ui-slot-open] { width:min(100%,calc(var(--bb-chat-ui-slot-compact-width,100%) + var(--bb-slot-fast-peek-width,0px))); transform:translateY(calc(-2 * var(--bb-slot-row))); }
 [data-bb-chat-ui-slot-open] :is([data-bb-chat-ui-fluid-auxiliary],[data-bb-chat-ui-fluid-attachments],[data-bb-chat-ui-fluid-editor],[data-bb-chat-ui-fluid-options],[data-bb-chat-ui-fluid-extra-actions]) { display:none !important; }
 [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-row][data-multiline] { grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto; grid-template-areas:". actions"; row-gap:0; }
 [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-actions] { justify-self:end; }

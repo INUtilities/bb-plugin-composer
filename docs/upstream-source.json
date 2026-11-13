@@ -18,7 +18,8 @@
     "Single-line original-mode effort uses only its icon; a confirmed click shows the name for 1500ms, repeated clicks renew the deadline. Multiline keeps the name, and collapsed-fit measurement returns to icon width after preview without adding observers.",
     "2026-11-10: opening the 06 picker compacts the composer to the selected slot labels and one line, then restores the mounted draft and prior shape when closed.",
     "2026-11-10: opening the 06 picker compacts the composer to the selected slot labels and one line, then restores the mounted draft and prior shape when closed.",
-    "2026-11-10: 원격 PR #1·#2의 디자인·트랜지션에 로컬 78807cc의 활성 스타일 공유와 음성 입력을 통합했다. 프로젝트 조회·늦은 확인 포커스·숨긴 정보 행 키보드 접근·전역 property 등록을 수정하고, 기존 음성의 빠른 전사 뒤 호환 클릭 전송도 방지했다."
+    "2026-11-10: 원격 PR #1·#2의 디자인·트랜지션에 로컬 78807cc의 활성 스타일 공유와 음성 입력을 통합했다. 프로젝트 조회·늦은 확인 포커스·숨긴 정보 행 키보드 접근·전역 property 등록을 수정하고, 기존 음성의 빠른 전사 뒤 호환 클릭 전송도 방지했다.",
+    "2026-11-11: WebKit이 지원하지 않는 overflow-clip-margin 의존을 fixed overlay로 대체하고 슬롯 다섯 행을 화면 안으로 배치했다. 여러 줄 commit에서 기존 높이 controller를 동기화해 ResizeObserver 전달 전의 목표 높이 지연을 줄였으며 기존 모션과 음성을 유지한다."
   ],
   "files": [
     {
@@ -50,14 +51,14 @@
     {
       "source": "composer/FluidComposerBody.test.tsx",
       "destination": "composer/FluidComposerBody.test.tsx",
-      "sha256": "23ec3c68925da164fc72d1555c86cf72feefebf82e66e2a188a4af2bde056fae",
+      "sha256": "4e4b4e592f314a43fb2817c0d94b79a61fa0cc8f68b8c39cd3b5d0a86a7a5232",
       "sourceSha256": "100675e790bdf672401a542f5ddfcac89336cc515d63b880f85f9978fc8736ba",
       "integrationOverlay": true
     },
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "7d74b2da0da82e56d4e101966ba502312aab62090774b8c5bc3a077756bf4277",
+      "sha256": "d6765fa19cf28f38f423fff5e3afeb89be9246121accb9288568c895fb99edad",
       "sourceSha256": "c197522d8ac0c0c00c1905412f422ff8d7a651c1d97b2e8f50cd94afbb331632",
       "integrationOverlay": true
     },
@@ -631,7 +632,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "a217f5023ece0daef1f1adc9d63d477798e67003fcaa003cd2c57d8330e44fbe",
+      "sha256": "7ecbfc0e6b836deec65bb9e0c76f44de28d83793770f7fb7670c447e7aca0745",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"
@@ -639,7 +640,7 @@
     {
       "source": "lib/fluid-composer-height.ts",
       "destination": "lib/fluid-composer-height.ts",
-      "sha256": "09d8731fab0e8d307d422c5761c4237dedceca46e03d0baaab5f61c36b8847ac",
+      "sha256": "58e1e1fad50bb55f1835f0e8ca60403a6defe8f8c7bd34894fd6466902c1b9f0",
       "sourceSha256": "93bb7e3ec496e6535dffb054cf5c4d0fa8873511ce0d14bab1535030ca752f1a",
       "integrationOverlay": true
     },
@@ -954,7 +955,7 @@
     {
       "source": "lib/fluid-picker.ts",
       "destination": "lib/fluid-picker.ts",
-      "sha256": "275375609e3b9ef34d85807b137355c2d7f17c6242b0f8847f3da0a9c3017a34",
+      "sha256": "f8dbad394a080993a9e407f9170121a22b7a725eaef73872cf53170b3d5d2eba",
       "sourceSha256": "e6b163aa4507af7614ebb35043468b669ad23d31be2a51ed800820c39d68f131",
       "integrationOverlay": true
     },

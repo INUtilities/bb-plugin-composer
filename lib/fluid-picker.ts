@@ -23,7 +23,7 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --b
 [data-bb-chat-ui-slot-current-models][hidden] { display:none !important; }
 [data-bb-chat-ui-slot-submit] { position:relative; display:flex; flex:none; }
 /* 휠은 바깥에 그리되 숨은 목록과 휠의 아래쪽이 부모 스크롤 범위를 늘리지 않게 한다. */
-[data-bb-chat-ui-slot-overlay] { position:absolute; inset:0; contain:layout; overflow:clip; overflow-clip-margin:120px; pointer-events:none; }
+[data-bb-chat-ui-slot-overlay] { position:fixed; inset:0; contain:layout; overflow:visible; pointer-events:none; }
 [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-slot-trigger] { position:relative; display:flex; align-items:center; justify-content:center; width:var(--bb-chat-ui-fluid-control-size); height:var(--bb-chat-ui-fluid-control-size); min-width:var(--bb-chat-ui-fluid-control-size); padding:0; border-radius:999px; background:transparent; }
 [data-bb-chat-ui-slot-fast-badge] { position:absolute; right:-2px; top:0; color:var(--brand,var(--ring)); pointer-events:none; }
 [data-bb-chat-ui-slot-fast-badge] > svg { width:10px; height:10px; }

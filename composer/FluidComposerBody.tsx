@@ -23,6 +23,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
+  const syncHeight = useRef<() => void>(() => {});
   const row = useRef<HTMLDivElement>(null), editorColumn = useRef<HTMLDivElement>(null);
   const optionColumn = useRef<HTMLDivElement>(null), actionColumn = useRef<HTMLDivElement>(null);
   const [multiline, setMultiline] = useState(false);
@@ -84,6 +85,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const win = viewport.current.ownerDocument.defaultView!;
     const element = viewport.current;
     const stopHeight = bindFluidComposerHeight(element, content.current, () => editorColumn.current);
+    syncHeight.current = stopHeight.sync;
     const stopScroll = bindComposerScrollBoundary(element.closest<HTMLElement>('[data-bb-chat-ui-fluid-composer]') ?? element);
     const interruptPosition = (event: Event) => {
       if (!(event.target instanceof win.Element) || !event.target.closest('[data-bb-chat-ui-fluid-editor]')) return;
@@ -115,6 +117,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const reduce = () => { if (motion.matches) { layoutAnimation.current?.cancel(); actionAnimation.current?.cancel(); } };
     motion.addEventListener('change', reduce);
     return () => {
+      syncHeight.current = () => {};
       stopHeight(); layoutAnimation.current?.cancel(); actionAnimation.current?.cancel();
       stopScroll();
       element.removeEventListener('beforeinput', interruptPosition, true);
@@ -183,6 +186,8 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   }, [draftText, draftEditVersion, voiceMode]);
   // 같은 입력 노드의 가로 위치를 큰 펼침과 빠른 접힘에 맞춰 보정한다.
   useLayoutEffect(() => {
+    // 여러 줄 commit의 첫 paint부터 목표 높이를 적용하고 기존 전환은 유지한다.
+    syncHeight.current();
     const previous = previousPosition.current, column = editorColumn.current;
     previousPosition.current = null;
     if (!previous || !column?.animate || column.ownerDocument.defaultView!.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
