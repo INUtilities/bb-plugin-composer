@@ -1,3 +1,4 @@
+import { attachComposerInputTrace, traceComposerInput, traceComposerAnimation } from '../lib/composer-input-trace';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_INPUT_EASING, FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND, FLUID_COMPOSER_LINE_MS, FLUID_COMPOSER_MORPH_MS, FLUID_EDITOR_FOLLOW_ANIMATION, readFluidEditorPosition } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
@@ -56,6 +57,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const layoutProbe = useRef((_beforeInput?: { x: number; y: number }) => {});
   // 입력 전 위치를 사용해 원격의 첫 프레임 보정과 현재 높이 곡선을 함께 유지한다.
   layoutProbe.current = beforeInput => {
+    traceComposerInput(viewport.current, 'layoutProbe.enter', {composing:composing.current});
     if (voiceMode) {
       const element = viewport.current, pane = voicePane.current;
       if (!element || !pane) return;
@@ -71,6 +73,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!input || !row.current || !optionColumn.current || !actionColumn.current || !editorColumn.current || !content.current) return;
     if (!draftText && !voiceMode) actionPosition.current = actionColumn.current.getBoundingClientRect();
     const next = voiceMode || needsFullWidthComposer(row.current, input, optionColumn.current, actionColumn.current);
+    traceComposerInput(viewport.current, 'layoutProbe.result', {composing:composing.current, needsFullWidth:next});
     // 한글 IME 조합 중에는 임시 글자 폭으로 접힘 판정이 흔들릴 수 있다.
     if (composing.current && multilineRef.current && !next) return;
     if (next === multilineRef.current) return;
@@ -81,17 +84,20 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const scheduleLayout = useCallback(() => {
     const win = viewport.current?.ownerDocument.defaultView;
     if (!win || layoutFrame.current !== null) return;
-    layoutFrame.current = win.requestAnimationFrame(() => { layoutFrame.current = null; layoutProbe.current(); });
+    traceComposerInput(viewport.current, 'raf.schedule');
+    layoutFrame.current = win.requestAnimationFrame(() => { traceComposerInput(viewport.current, 'raf.run'); layoutFrame.current = null; layoutProbe.current(); });
   }, []);
   useLayoutEffect(() => {
     if (!viewport.current || !content.current) return;
     const win = viewport.current.ownerDocument.defaultView!;
     const element = viewport.current;
+    const stopTrace = attachComposerInputTrace(element);
     const stopHeight = bindFluidComposerHeight(element, content.current, () => editorColumn.current);
     syncHeight.current = stopHeight.sync;
     const stopScroll = bindComposerScrollBoundary(element.closest<HTMLElement>('[data-bb-chat-ui-fluid-composer]') ?? element);
     const interruptPosition = (event: Event) => {
       if (!(event.target instanceof win.Element) || !event.target.closest('[data-bb-chat-ui-fluid-editor]')) return;
+      if (event.type === 'beforeinput') traceComposerInput(element, 'beforeinput', {composing:composing.current, inputType:(event as InputEvent).inputType});
       if (!multilineRef.current) {
         // 좁은 열에서 이미 줄바꿈된 좌표를 모션 시작점으로 삼지 않는다.
         inputPosition.current = editorColumn.current && content.current ? readFluidEditorPosition(editorColumn.current, content.current) : null;
@@ -121,6 +127,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     motion.addEventListener('change', reduce);
     return () => {
       syncHeight.current = () => {};
+      stopTrace();
       stopHeight(); layoutAnimation.current?.cancel(); actionAnimation.current?.cancel();
       stopScroll();
       element.removeEventListener('beforeinput', interruptPosition, true);
@@ -132,8 +139,8 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   useLayoutEffect(() => {
     const input = editorColumn.current?.querySelector<HTMLElement>('.ProseMirror');
     if (!input) return;
-    const start = () => { composing.current = true; };
-    const end = () => { composing.current = false; scheduleLayout(); };
+    const start = () => { composing.current = true; traceComposerInput(viewport.current,'compositionstart',{composing:true}); };
+    const end = () => { composing.current = false; traceComposerInput(viewport.current,'compositionend',{composing:false}); scheduleLayout(); };
     input.addEventListener('compositionstart', start);
     input.addEventListener('compositionend', end);
     return () => {
@@ -148,7 +155,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const element = viewport.current!;
     const pane = voiceMode ? element.closest<HTMLElement>('[data-thread-window], [data-pane-content]') ?? element : null;
     voicePane.current = pane;
-    const observer = new win.ResizeObserver(scheduleLayout);
+    const observer = new win.ResizeObserver(() => {traceComposerInput(element,'ResizeObserver.layout');scheduleLayout();});
     element.addEventListener('bb-chat-ui:fluid-effort-layout', scheduleLayout);
     for (const element of [row.current, optionColumn.current, actionColumn.current]) if (element) observer.observe(element);
     if (pane) { observer.observe(pane); if (pane !== element) observer.observe(element); }
@@ -162,6 +169,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   useLayoutEffect(() => {
     // 입력이 좁은 열에서 먼저 줄바꿈된 한 프레임을 그리지 않게 한다.
     if (layoutFrame.current !== null) {
+      traceComposerInput(viewport.current,'raf.cancel');
       viewport.current?.ownerDocument.defaultView?.cancelAnimationFrame(layoutFrame.current);
       layoutFrame.current = null;
     }
@@ -213,6 +221,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!dx) return;
     const horizontalEase = next.x - Math.max(0, dx) * FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND < 0 ? EASE.out : FLUID_COMPOSER_INPUT_EASING;
     const animation = column.animate([{ transform: `translate(${dx}px, 0px)` }, { transform: 'translate(0, 0)' }], { duration: multiline ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_LINE_MS, easing: multiline ? horizontalEase : 'ease-out' });
+    if (viewport.current) traceComposerAnimation(viewport.current,animation);
     layoutAnimation.current = animation;
     // iOS draws its caret outside the page and does not follow this transform,
     // so phone CSS hides the caret until the column reaches its new place.

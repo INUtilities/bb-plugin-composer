@@ -1,3 +1,4 @@
+import { traceComposerInput, traceComposerAnimation } from './composer-input-trace.ts';
 import { EASE } from './motion.ts';
 
 export const FLUID_COMPOSER_MORPH_MS = 320;
@@ -48,13 +49,16 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
   };
   viewport.style.height = `${height}px`;
   updateMotion();
+  traceComposerInput(viewport,'raf.schedule');
   const frame = win.requestAnimationFrame(() => {
+    traceComposerInput(viewport,'raf.run');
     if (disposed) return;
     ready = true;
     updateMotion();
   });
   // 같은 commit의 배치 변경과 ResizeObserver가 하나의 높이 상태를 공유한다.
   const measure = (next: number) => {
+    traceComposerInput(viewport,'height.measure');
     if (disposed || !Number.isFinite(next) || next < 0) return;
     const nextMoving = getEditor?.() ?? null;
     const nextPosition = nextMoving ? readFluidEditorPosition(nextMoving, content) : null;
@@ -85,9 +89,11 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     if (moving?.animate && Number.isFinite(delta) && Math.abs(delta) > .5) {
       editorMotion = moving.animate([{ translate: `0px ${delta}px` }, { translate: '0px 0px' }], { duration, easing });
       editorMotion.id = FLUID_EDITOR_FOLLOW_ANIMATION;
+      traceComposerAnimation(viewport,editorMotion,'height-follow');
     }
   };
   const observer = new win.ResizeObserver(entries => {
+    traceComposerInput(viewport,'ResizeObserver.height');
     const entry = entries.find(entry => entry.target === content);
     if (entry) measure(entry.borderBoxSize?.[0]?.blockSize ?? content.offsetHeight);
   });

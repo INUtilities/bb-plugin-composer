@@ -328,6 +328,10 @@ it('makes the moving caret transparent on phone only',()=>{
  expect(fluidComposerCss).not.toMatch(/(^|\n)\[data-bb-chat-ui-fluid-editor\]\[data-bb-chat-ui-fluid-moving\]/);
 });
 
+it('keeps the phone editor at 16px to prevent iPhone focus zoom',()=>{
+ expect(fluidComposerCss).toContain('html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] [data-promptbox-editor-scroll] { font-size:16px; }');
+});
+
 // 여러 줄 commit을 그리기 전에 목표 높이도 함께 바꾸고 뒤따른 ResizeObserver가 모션을 재시작하지 않는다.
 it('sets the expanded height in the multiline commit before a delayed resize delivery',()=>{
  let lines=1;
