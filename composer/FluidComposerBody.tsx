@@ -7,7 +7,7 @@ import { fluidOptionCloseDuration } from '../lib/fluid-options-motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 // 입력 높이와 모서리를 유지하고 옵션 필을 입력창 위에 독립적으로 표시한다.
-export function FluidComposerBody({ editor, options, actions, attachments, voice, voiceMode = false, decoration, auxiliary, panel, panelOpen = false, toggle, draftText, draftEditVersion = 0, editorReady = true }: {
+export function FluidComposerBody({ editor, options, actions, attachments, voice, voiceMode = false, decoration, auxiliary, panel, panelOpen = false, toggle, draftText, draftEditVersion = 0, editorReady = true, phone = false }: {
   editor: ReactNode;
   options: ReactNode;
   actions: ReactNode;
@@ -22,6 +22,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   draftText?: string;
   draftEditVersion?: number;
   editorReady?: boolean;
+  phone?: boolean;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -47,6 +48,10 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   }, [panelOpen, panelPresent]);
   const multilineRef = useRef(false), layoutFrame = useRef<number | null>(null);
   const composing = useRef(false);
+  // iPhone 한글은 composition 없이 삭제→삽입으로도 조합한다. 중간 초안은 접힘에 쓰지 않는다.
+  const nativeDeletePending = useRef(false);
+  const phoneRef = useRef(phone);
+  phoneRef.current = phone;
   const previousDraft = useRef({ text: draftText, voiceMode, editVersion: draftEditVersion });
   const previousPosition = useRef<{ x: number; y: number } | null>(null);
   const inputPosition = useRef<{ x: number; y: number } | null>(null);
@@ -66,7 +71,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const next = voiceMode || needsFullWidthComposer(row.current, input, optionColumn.current, actionColumn.current);
     traceComposerInput(viewport.current, 'layoutProbe.result', {composing:composing.current, needsFullWidth:next});
     // 한글 IME 조합 중에는 임시 글자 폭으로 접힘 판정이 흔들릴 수 있다.
-    if (composing.current && multilineRef.current && !next) return;
+    if ((composing.current || (phoneRef.current && nativeDeletePending.current)) && multilineRef.current && !next) return;
     if (next === multilineRef.current) return;
     previousPosition.current = beforeInput ?? readFluidEditorPosition(editorColumn.current, content.current);
     layoutAnimation.current?.cancel();
@@ -76,7 +81,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const win = viewport.current?.ownerDocument.defaultView;
     if (!win || layoutFrame.current !== null) return;
     traceComposerInput(viewport.current, 'raf.schedule');
-    layoutFrame.current = win.requestAnimationFrame(() => { traceComposerInput(viewport.current, 'raf.run'); layoutFrame.current = null; layoutProbe.current(); });
+    layoutFrame.current = win.requestAnimationFrame(() => { traceComposerInput(viewport.current, 'raf.run'); layoutFrame.current = null; nativeDeletePending.current = false; layoutProbe.current(); });
   }, []);
   useLayoutEffect(() => {
     if (!viewport.current || !content.current) return;
@@ -93,6 +98,18 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
         // 좁은 열에서 이미 줄바꿈된 좌표를 모션 시작점으로 삼지 않는다.
         inputPosition.current = editorColumn.current && content.current ? readFluidEditorPosition(editorColumn.current, content.current) : null;
       }
+      if (phoneRef.current && event.type === 'beforeinput') {
+        const type = (event as InputEvent).inputType;
+        if (type === 'deleteContentBackward') {
+          nativeDeletePending.current = true;
+          scheduleLayout();
+          return;
+        }
+        if (nativeDeletePending.current && (type === 'insertText' || type === 'insertReplacementText')) return;
+      }
+      // ㅎ→호→회의 각 조합 입력으로 펼침을 강제 완료하면 높이·글자가 중간에서 튄다.
+      // phone의 같은 조합은 모션을 이어가고 다음 일반 입력과 Enter는 기존처럼 해제한다.
+      if (phoneRef.current && composing.current && event.type === 'beforeinput') return;
       const followers = editorColumn.current?.getAnimations?.().filter(animation => animation.id === FLUID_EDITOR_FOLLOW_ANIMATION && animation.playState === 'running') ?? [];
       if (layoutAnimation.current?.playState !== 'running' && !followers.length) return;
       if (element.getAttribute('data-bb-chat-ui-fluid-view') !== 'input') return;
@@ -126,7 +143,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
       if (layoutFrame.current !== null) win.cancelAnimationFrame(layoutFrame.current);
       motion.removeEventListener('change', reduce);
     };
-  }, []);
+  }, [scheduleLayout]);
   useLayoutEffect(() => {
     const input = editorColumn.current?.querySelector<HTMLElement>('.ProseMirror');
     if (!input) return;

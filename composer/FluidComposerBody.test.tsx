@@ -4,7 +4,7 @@ import { act, cleanup, render } from '@testing-library/react';
 import { FluidComposerBody } from './FluidComposerBody';
 import { useEffect, useState } from 'react';
 import { EASE } from '../lib/motion';
-import { fluidComposerCss } from '../lib/fluid-composer';
+import { fluidComposerCss, injectFluidComposer } from '../lib/fluid-composer';
 import { FLUID_EDITOR_FOLLOW_ANIMATION, FLUID_COMPOSER_INPUT_EASING } from '../lib/fluid-composer-height';
 
 let reduced=false;
@@ -72,6 +72,38 @@ it.each([[52,FLUID_COMPOSER_INPUT_EASING],[252,EASE.out]] as const)('keeps the h
  }finally{bounds.mockRestore();delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
 });
 // 합성 초안과 옵션을 사용해 입력 영역의 수명을 확인한다.
+// 같은 한글 글자를 조합하는 후속 입력은 진행 중인 펼침을 강제 완료하지 않는다.
+it.each([true,false])('preserves an in-flight composition transition on phone=%s',phone=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  return {x:editor?(full?20:52):0,y:0,left:editor?(full?20:52):0,top:0,width:400,height:editor?lines*24:116} as DOMRect;
+ });
+ const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
+ const animate=vi.fn(()=>({cancel:vi.fn(),playState:'running'}));
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody phone={phone} draftText={text} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('슬롯 '));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!,height=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!;
+  act(()=>editor.dispatchEvent(new CompositionEvent('compositionstart',{bubbles:true})));
+  lines=2;v.rerender(draw('슬롯 ㅎ'));
+  const animation=animate.mock.results.at(-1)!.value,transition=height.style.transition,target=height.style.height;
+  for(const text of ['호','회']){
+   const input=new InputEvent('beforeinput',{inputType:'insertCompositionText',data:text,isComposing:true,bubbles:true,cancelable:true});
+   act(()=>editor.dispatchEvent(input));v.rerender(draw(`슬롯 ${text}`));
+   expect(input.defaultPrevented).toBe(false);
+  }
+  if(phone){expect(animation.cancel).not.toHaveBeenCalled();expect(height.style.height).toBe(target);expect(height.style.transition).toBe(transition);}
+  else expect(animation.cancel).toHaveBeenCalled();
+  // 조합이 끝난 다음 일반 입력·Enter는 기존 즉시 커서 해제 경로를 유지한다.
+  act(()=>editor.dispatchEvent(new CompositionEvent('compositionend',{bubbles:true})));
+  act(()=>editor.dispatchEvent(new InputEvent('beforeinput',{inputType:'insertText',bubbles:true})));
+  expect(animation.cancel).toHaveBeenCalled();expect(height.style.height).toBe('116px');
+ }finally{v.unmount();bounds.mockRestore();if(descriptor)Object.defineProperty(HTMLElement.prototype,'animate',descriptor);else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
+});
 const view=(open=false)=><FluidComposerBody panelOpen={open} panel={<div role="region" aria-label="옵션"><button>선택</button></div>} editor={<textarea defaultValue="보존할 초안"/>} options={<button>＋</button>} actions={<button>전송</button>} attachments={null}/>;
 // 빈 초안의 접힘과 호스트가 보존·복구한 초안을 같은 입력 노드에서 확인한다.
 it('resets a host-cleared draft before the next frame without losing a retained or restored draft',()=>{
@@ -331,12 +363,24 @@ it('hides the phone caret only while the editor column slides into its new layou
 
 // 원격 입력·caret 회귀 검증을 현재 400ms 높이 규격으로 유지한다.
 it('makes the moving caret transparent on phone only',()=>{
- expect(fluidComposerCss).toContain('html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }');
+ expect(fluidComposerCss).toContain('[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }');
  expect(fluidComposerCss).not.toMatch(/(^|\n)\[data-bb-chat-ui-fluid-editor\]\[data-bb-chat-ui-fluid-moving\]/);
 });
 
 it('keeps the phone editor at 16px to prevent iPhone focus zoom',()=>{
- expect(fluidComposerCss).toContain('html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] [data-promptbox-editor-scroll] { font-size:16px; }');
+ expect(fluidComposerCss).toContain('[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-promptbox-editor-scroll] { font-size:16px; }');
+});
+
+it.each(['phone','desktop'])('keeps %s sizing when a replaced bundle restores the opposite document device marker',device=>{
+ const root=document.documentElement,previous=root.getAttribute('data-bb-chat-ui-root-device');
+ root.setAttribute('data-bb-chat-ui-root-device',device==='phone'?'desktop':'phone');
+ const stop=injectFluidComposer(document);
+ const v=render(<form data-bb-chat-ui-fluid-composer="" data-bb-composer-device={device}><FluidComposerBody editor={<div data-promptbox-editor-scroll=""><div className="ProseMirror"/></div>} options={null} actions={null} attachments={null}/></form>);
+ try{
+  const row=v.container.querySelector('[data-bb-chat-ui-fluid-row]')!,scroll=v.container.querySelector('[data-promptbox-editor-scroll]')!;
+  expect(getComputedStyle(row).minHeight).toBe(device==='phone'?'52px':'48px');
+  expect(getComputedStyle(scroll).fontSize).toBe(device==='phone'?'16px':'14px');
+ }finally{v.unmount();stop();if(previous===null)root.removeAttribute('data-bb-chat-ui-root-device');else root.setAttribute('data-bb-chat-ui-root-device',previous);}
 });
 
 // 여러 줄 commit을 그리기 전에 목표 높이도 함께 바꾸고 뒤따른 ResizeObserver가 모션을 재시작하지 않는다.
@@ -362,6 +406,41 @@ it('sets the expanded height in the multiline commit before a delayed resize del
   act(()=>resize.callback([{target:content,borderBoxSize:[{blockSize:116}]}] as unknown as ResizeObserverEntry[],{} as ResizeObserver));
   expect(viewport.style.height).toBe('116px');expect(viewport.style.transition).toBe(transition);expect(v.container.querySelector('.ProseMirror')).toBe(editor);
  }finally{v.unmount();heights.mockRestore();bounds.mockRestore();}
+});
+
+// 실제 iPhone 기록: composition 없이 deleteContentBackward → insertText가 연달아 들어온다.
+// 삭제 중간의 초안으로 접었다 다시 펴지 않고, 최종 입력을 기존 layout frame에서 판정한다.
+it.each([true,false])('coalesces the iPhone native replacement layout on phone=%s',phone=>{
+ let lines=1;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  const h=editor?lines*24:full?92:52;
+  return {left:editor?(full?20:52):0,top:0,x:0,y:0,width:400,height:h,right:400,bottom:h} as DOMRect;
+ });
+ const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'animate');
+ const animate=vi.fn(()=>({cancel:vi.fn(),playState:'running'}));
+ Object.defineProperty(HTMLElement.prototype,'animate',{configurable:true,value:animate});
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody phone={phone} draftText={text} draftEditVersion={text.length} editor={<div className="ProseMirror" style={{lineHeight:'24px'}}>{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const v=render(draw('슬롯 '));
+ try{
+  act(()=>vi.advanceTimersByTime(20));lines=2;v.rerender(draw('슬롯 ㅎ'));
+  const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!,row=v.container.querySelector('[data-bb-chat-ui-fluid-row]')!;
+  const expanding=animate.mock.results.at(-1)!.value;
+  for(const syllable of ['호','회']){
+   const remove=new InputEvent('beforeinput',{inputType:'deleteContentBackward',bubbles:true,cancelable:true});
+   act(()=>editor.dispatchEvent(remove));lines=1;v.rerender(draw('슬롯 '));
+   expect(row.getAttribute('data-multiline')).toBe(phone?'true':'false');expect(remove.defaultPrevented).toBe(false);
+   const insert=new InputEvent('beforeinput',{inputType:'insertText',data:syllable,bubbles:true,cancelable:true});
+   act(()=>editor.dispatchEvent(insert));lines=2;v.rerender(draw(`슬롯 ${syllable}`));
+   act(()=>vi.advanceTimersByTime(20));expect(row.getAttribute('data-multiline')).toBe('true');expect(insert.defaultPrevented).toBe(false);
+  }
+  if(phone)expect(expanding.cancel).not.toHaveBeenCalled();else expect(expanding.cancel).toHaveBeenCalled();
+  expect(v.container.querySelector('.ProseMirror')).toBe(editor);
+  // 실제 삭제로 한 줄이 되면 기존 예약 frame에서 바로 접힌다. 추가 타이머가 필요 없다.
+  act(()=>editor.dispatchEvent(new InputEvent('beforeinput',{inputType:'deleteContentBackward',bubbles:true})));
+  lines=1;v.rerender(draw('슬롯 '));act(()=>vi.advanceTimersByTime(20));expect(row.getAttribute('data-multiline')).toBe('false');
+ }finally{v.unmount();bounds.mockRestore();if(descriptor)Object.defineProperty(HTMLElement.prototype,'animate',descriptor);else delete (HTMLElement.prototype as Partial<HTMLElement>).animate;}
 });
 
 it('keeps a wrapped composer expanded while Korean IME composition temporarily fits on one line',()=>{

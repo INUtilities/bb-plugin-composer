@@ -3414,7 +3414,7 @@ export function PromptBoxInternal({
     setFluidOptionsOpen(true);
   };
   if (fluid) return (
-    <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-chat-ui-fluid-view="input" data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
+    <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-composer-device={device} data-bb-chat-ui-fluid-view="input" data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
       onSubmit={handleSubmit} onKeyDown={event => {
         if (fluidOptionsOpen && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeFluidOptions(); }
         else handleComposerMenuKeyDown(event.nativeEvent);
@@ -3433,6 +3433,7 @@ export function PromptBoxInternal({
       <FluidComposerToolbar hidden={fluidVoiceActive} inactive={picker.open}>{picker.modeToggle}{detailsToggle}</FluidComposerToolbar>
       {details}
       <FluidComposerBody
+        phone={device === 'phone'}
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
         decoration={fluidVoiceActive ? <FluidVoiceWaveform appearance="glow" indicator={fluidVoiceGesture === 'hold' ? 'orb' : fluidVoiceBars ? 'bars' : undefined} stream={fluidVoiceStream} exiting={fluidVoiceState.phase !== "starting" && fluidVoiceState.phase !== "recording"}/> : null}
         draftText={fluidVoiceActive ? fluidVoicePreview.text : value} draftEditVersion={draftEditVersion.current} editorReady={editor !== null}
