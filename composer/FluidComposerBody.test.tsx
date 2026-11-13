@@ -352,3 +352,25 @@ it('sets the expanded height in the multiline commit before a delayed resize del
   expect(viewport.style.height).toBe('116px');expect(viewport.style.transition).toBe(transition);expect(v.container.querySelector('.ProseMirror')).toBe(editor);
  }finally{v.unmount();heights.mockRestore();bounds.mockRestore();}
 });
+
+it('keeps a wrapped composer expanded while Korean IME composition temporarily fits on one line',()=>{
+ let lines=2;
+ const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const editor=this.classList.contains('ProseMirror'),full=this.closest('[data-bb-chat-ui-fluid-row]')?.getAttribute('data-multiline')==='true';
+  return {left:0,top:0,x:0,y:0,width:400,height:editor?lines*24:full?lines*24+68:52,right:400,bottom:116} as DOMRect;
+ });
+ vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});
+ const draw=(text:string)=><FluidComposerBody draftText={text} editor={<div className="ProseMirror">{text}</div>} options={<button>+</button>} actions={<button>전송</button>} attachments={null}/>;
+ const view=render(draw('슬롯 ㅎ'));
+ try{
+  act(()=>vi.advanceTimersByTime(20));
+  const editor=view.container.querySelector<HTMLElement>('.ProseMirror')!,row=view.container.querySelector('[data-bb-chat-ui-fluid-row]')!;
+  expect(row.getAttribute('data-multiline')).toBe('true');
+  act(()=>editor.dispatchEvent(new CompositionEvent('compositionstart',{bubbles:true})));
+  lines=1;view.rerender(draw('슬롯 호'));
+  expect(row.getAttribute('data-multiline')).toBe('true');
+  act(()=>editor.dispatchEvent(new CompositionEvent('compositionend',{bubbles:true})));
+  act(()=>vi.advanceTimersByTime(20));
+  expect(row.getAttribute('data-multiline')).toBe('false');
+ }finally{view.unmount();bounds.mockRestore();}
+});

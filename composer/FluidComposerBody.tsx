@@ -44,6 +44,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     return () => { win.clearTimeout(timer); motion.removeEventListener('change', reduce); };
   }, [panelOpen, panelPresent]);
   const multilineRef = useRef(false), layoutFrame = useRef<number | null>(null);
+  const composing = useRef(false);
   const previousDraft = useRef({ text: draftText, voiceMode, editVersion: draftEditVersion });
   const previousPosition = useRef<{ x: number; y: number } | null>(null);
   const inputPosition = useRef<{ x: number; y: number } | null>(null);
@@ -70,6 +71,8 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (!input || !row.current || !optionColumn.current || !actionColumn.current || !editorColumn.current || !content.current) return;
     if (!draftText && !voiceMode) actionPosition.current = actionColumn.current.getBoundingClientRect();
     const next = voiceMode || needsFullWidthComposer(row.current, input, optionColumn.current, actionColumn.current);
+    // 한글 IME 조합 중에는 임시 글자 폭으로 접힘 판정이 흔들릴 수 있다.
+    if (composing.current && multilineRef.current && !next) return;
     if (next === multilineRef.current) return;
     previousPosition.current = beforeInput ?? readFluidEditorPosition(editorColumn.current, content.current);
     layoutAnimation.current?.cancel();
@@ -126,6 +129,19 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
       motion.removeEventListener('change', reduce);
     };
   }, []);
+  useLayoutEffect(() => {
+    const input = editorColumn.current?.querySelector<HTMLElement>('.ProseMirror');
+    if (!input) return;
+    const start = () => { composing.current = true; };
+    const end = () => { composing.current = false; scheduleLayout(); };
+    input.addEventListener('compositionstart', start);
+    input.addEventListener('compositionend', end);
+    return () => {
+      input.removeEventListener('compositionstart', start);
+      input.removeEventListener('compositionend', end);
+      composing.current = false;
+    };
+  }, [editorReady, scheduleLayout]);
   useLayoutEffect(() => {
     const win = viewport.current?.ownerDocument.defaultView;
     if (!win?.ResizeObserver || !row.current) return;
