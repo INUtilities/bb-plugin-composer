@@ -153,6 +153,18 @@ it('sizes the voice backdrop to its pane and updates it without widening the com
   v.rerender(draw(false));expect(observer.disconnect).toHaveBeenCalled();expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-width')).toBe('');expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-left')).toBe('');expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-bottom')).toBe('');
  }finally{v.unmount();bounds.mockRestore();}
 });
+it('keeps the composer frost local while a transparent blur covers the voice backdrop',()=>{
+ const v=render(<FluidComposerBody voiceMode editor={<textarea/>} options={null} actions={<button>음성</button>} attachments={null}/>);
+ const viewport=v.container.querySelector('[data-bb-chat-ui-fluid-height]')!;
+ const surface=viewport.querySelector('[data-bb-chat-ui-fluid-surface]')!;
+ const backdrop=viewport.querySelector('[data-bb-chat-ui-voice-backdrop]')!;
+ expect(backdrop).toBeTruthy();
+ expect(surface).toBeTruthy();
+ expect(backdrop).not.toBe(surface);
+ expect(fluidComposerCss).toContain('[data-bb-chat-ui-voice-backdrop] { position:absolute;');
+ expect(fluidComposerCss).toContain('background:transparent; backdrop-filter:blur(14px) saturate(1.25);');
+ expect(fluidComposerCss).not.toContain('[data-voice-mode="true"] > [data-bb-chat-ui-fluid-surface]');
+});
 it('moves the real action column into voice mode and cancels its motion for reduced motion and unmount',()=>{
  const oldAnimate=HTMLElement.prototype.animate;
  const animations:{cancel:ReturnType<typeof vi.fn>;frames:Keyframe[];options:KeyframeAnimationOptions}[]=[];

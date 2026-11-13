@@ -233,6 +233,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   return <>
     {panelOpen || panelPresent ? <div ref={panelLayer} data-bb-chat-ui-fluid-panel-layer="" inert={!panelOpen || undefined} aria-hidden={!panelOpen || undefined}>{panel}</div> : null}
     <div ref={viewport} data-bb-chat-ui-fluid-height="" data-multiline={multiline} data-bb-chat-ui-fluid-view="input" data-voice-mode={voiceMode || undefined}>
+    {voiceMode ? <div data-bb-chat-ui-voice-backdrop="" aria-hidden="true"/> : null}
     <div data-bb-chat-ui-fluid-surface="" aria-hidden="true"/>
     {decoration}
     <div ref={content} data-bb-chat-ui-fluid-content="">
