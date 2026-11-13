@@ -24,6 +24,22 @@ test('viewport width and the actual send-action width participate in compact fit
   f.width(500);assert.equal(f.probe(),false);f.width(250);assert.equal(f.probe(),true);
  }finally{f.dom.window.close();}
 });
+
+// 이름을 다시 접을 때는 아이콘 폭으로 복귀하고 직접 입력한 줄바꿈은 유지한다.
+test('uses the collapsed effort width after a preview without losing explicit newlines',()=>{
+ const f=fixture();try{
+  const options=f.dom.window.document.getElementById('left')!;
+  options.innerHTML='<button data-bb-chat-ui-fluid-effort style="column-gap:6px"><span data-bb-chat-ui-fluid-effort-label>High</span></button>';
+  options.getBoundingClientRect=()=>({width:96} as DOMRect);
+  options.querySelector('span')!.getBoundingClientRect=()=>({width:50} as DOMRect);
+  const button=options.querySelector('button')!;
+  f.text(240);f.height(48);assert.equal(f.probe(),false);
+  button.setAttribute('data-bb-chat-ui-fluid-effort-peek','');assert.equal(f.probe(),true);
+  button.removeAttribute('data-bb-chat-ui-fluid-effort-peek');assert.equal(f.probe(),false);
+  options.hidden=true;assert.equal(f.probe(),true,'hidden original controls must not affect the 06 slot layout');options.hidden=false;
+  f.editor.innerHTML='<p>first</p><p>second</p>';assert.equal(f.probe(),true);
+ }finally{f.dom.window.close();}
+});
 test('measures a clipped mention by its visible outer box instead of its long hidden label',()=>{
  const f=fixture();try{
   f.editor.innerHTML='<p><span style="margin:0 4px">very long clipped mention label</span></p>';

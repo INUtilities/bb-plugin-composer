@@ -1,0 +1,32 @@
+/* 06의 확인 버튼은 01과 같은 자리·표면·eventHop을 쓴다. */
+form[data-proto="6"][data-proto-mode] [data-proto-gear] {
+  transform:none; opacity:0; pointer-events:none; background:transparent; color:var(--foreground);
+}
+form[data-proto="6"][data-proto-mode] [data-proto-send-group] { transform:none; visibility:hidden; }
+[data-review-send-slot] { position:relative; flex:none; }
+[data-review-send-slot] > [data-review-done] { position:absolute; inset:0; width:100%; height:100%; z-index:4; }
+[data-review-fast-badge] { position:absolute; right:-2px; top:0; color:var(--brand,var(--ring)); pointer-events:none; }
+[data-review-fast-badge] svg { width:10px; height:10px; }
+
+/* Fast는 모델 칸의 고정 위치에서 켜고 끄며, 목록의 스크롤과 분리한다. */
+[data-review-model-column] { position:relative; min-width:0; min-height:0; }
+[data-review-model-column][data-fast-available] { padding-right:24px; }
+[data-review-fast] {
+  position:absolute; right:0; top:calc(50% - 16px); display:flex; align-items:center; justify-content:center;
+  width:24px; height:32px; padding:0; border-radius:8px; color:var(--muted-foreground); cursor:pointer;
+}
+[data-review-fast][aria-pressed="true"] { color:var(--brand,var(--ring)); background:var(--state-active); }
+[data-review-fast]:hover { background:var(--state-hover); }
+[data-review-fast]:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+[data-review-inline-controls] { display:flex; align-items:center; gap:2px; min-width:0; }
+[data-review-inline-controls] > button { gap:6px; white-space:nowrap; }
+
+/* 사용자가 요청한 비교 토글을 컴포저 위에 둔다. */
+.case[data-case="6"] .stage { min-height:400px; }
+[data-review-layout-toggle] { position:absolute; top:16px; left:16px; right:16px; z-index:5; }
+[data-review-layout-toggle] .control { flex-wrap:wrap; }
+[data-review-layout-toggle] .segmented { flex-wrap:wrap; border-radius:14px; }
+
+@media (prefers-reduced-motion:reduce) {
+  form[data-proto="6"] [data-review-done] { animation:none !important; transition:none !important; }
+}

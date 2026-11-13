@@ -1,12 +1,18 @@
 import { LIGHT_GLASS_FACE, DARK_GLASS_FACE } from './glass-surface.ts';
-import { FLUID_COMPOSER_MORPH_MS } from './fluid-composer-height.ts';
+import { FLUID_COMPOSER_MORPH_MS, FLUID_COMPOSER_SLOT_MS, FLUID_COMPOSER_INPUT_MS } from './fluid-composer-height.ts';
 import { EASE } from './motion.ts';
+import { fluidPickerCss } from './fluid-picker.ts';
 
 export const fluidComposerCss = `
-/* 정보·설정 버튼이 열린 컴포저의 기존 정보와 footer만 다시 표시한다. */
-html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar],
+${fluidPickerCss}
+/* 정보 필은 유지하며 메타데이터는 i 필을 통해 위쪽 카드에서만 연다. */
+html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { display:flex !important; }
 html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { display:none !important; }
-html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] :is([data-bb-chat-ui-info-bar], [data-follow-up-composer-footer], [data-new-thread-footer]):not([hidden]) { display:flex !important; }
+[data-promptbox-shell][data-bb-chat-ui-fluid-details-open] { position:relative; }
+html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]):not([hidden]) { display:flex !important; position:absolute; bottom:calc(100% + 8px); right:0; z-index:30; width:max-content; max-width:100%; padding:12px 16px; border-radius:18px; background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); box-shadow:0 8px 24px -12px color-mix(in oklab,var(--foreground) 22%,transparent); }
+.dark [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { background:${DARK_GLASS_FACE}; }
+[data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
+[data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > :not([data-bb-chat-ui-slot-toolbar]) { opacity:0; }
 [data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { flex-wrap:wrap; max-height:none; overflow:visible; opacity:1; pointer-events:auto; }
 [data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) > div { flex-wrap:wrap; overflow:visible; }
 [data-bb-chat-ui-fluid-composer] {
@@ -14,18 +20,24 @@ html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-de
   --bb-chat-ui-fluid-control-size:32px;
   --bb-chat-ui-fluid-device-max:40dvh;
   --bb-chat-ui-fluid-max-height:max(96px,min(var(--bb-chat-ui-fluid-device-max),var(--bb-chat-ui-fluid-host-max,100dvh)));
-  --bb-chat-ui-fluid-toggle-size:calc(var(--bb-chat-ui-fluid-control-size) + 16px);
-  --bb-chat-ui-fluid-options-offset:calc(var(--bb-chat-ui-fluid-toggle-size) + 4px);
-  position:relative; width:100%; min-width:0; margin:0; padding:0 calc(var(--bb-chat-ui-fluid-control-size) + 8px) 0 0; box-sizing:border-box;
+  position:relative; width:100%; min-width:0; margin:0; padding:0; box-sizing:border-box;
   border:0; border-radius:var(--bb-chat-ui-fluid-input-radius); color:var(--foreground);
   background:transparent;
 }
-[data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face], [data-bb-chat-ui-fluid-details-face], [data-bb-chat-ui-fluid-details] {
+/* 슬롯 설정은 선택한 세 칸과 확인 버튼만 남기고 가운데에서 한 줄로 줄인다. */
+[data-bb-chat-ui-slot-enabled] { margin-inline:auto; transform:translateY(0); transition:width ${FLUID_COMPOSER_INPUT_MS}ms ${EASE.out},transform ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.out}; }
+[data-bb-chat-ui-slot-open] { width:min(100%,calc(var(--bb-chat-ui-slot-compact-width,100%) + var(--bb-slot-fast-peek-width,0px))); transform:translateY(calc(-1 * var(--bb-chat-ui-fluid-control-size))); }
+[data-bb-chat-ui-slot-open] :is([data-bb-chat-ui-fluid-auxiliary],[data-bb-chat-ui-fluid-attachments],[data-bb-chat-ui-fluid-editor],[data-bb-chat-ui-fluid-options],[data-bb-chat-ui-fluid-extra-actions]) { display:none !important; }
+[data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-row][data-multiline] { grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto; grid-template-areas:". actions"; row-gap:0; }
+[data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-actions] { justify-self:end; }
+[data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-height][data-multiline="true"] { border-radius:var(--bb-chat-ui-fluid-input-radius); }
+[data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face], [data-bb-chat-ui-fluid-details] {
   position:absolute; inset:0; pointer-events:none; border-radius:inherit;
   background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25);
   box-shadow:0 8px 24px -12px color-mix(in oklab,var(--foreground) 22%,transparent),inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent);
 }
-[data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-details-toggle] { position:absolute; right:0; bottom:8px; width:var(--bb-chat-ui-fluid-control-size); height:var(--bb-chat-ui-fluid-control-size); min-width:var(--bb-chat-ui-fluid-control-size); min-height:var(--bb-chat-ui-fluid-control-size); padding:0; border-radius:999px; }
+[data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-details-toggle] { position:relative; flex:none; background:${LIGHT_GLASS_FACE}; width:32px; height:32px; min-width:32px; min-height:32px; padding:0; border-radius:999px; }
+.dark [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-details-toggle] { background:${DARK_GLASS_FACE}; }
 [data-bb-chat-ui-fluid-details] { position:relative; inset:auto; pointer-events:auto; border-radius:18px; padding:8px; margin-bottom:8px; }
 [data-bb-chat-ui-fluid-details][hidden] { display:none !important; }
 [data-bb-chat-ui-fluid-composer] [hidden] { display:none !important; }
@@ -35,38 +47,30 @@ html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-de
 [data-bb-chat-ui-fluid-surface] { transform:translateX(0); opacity:1; transition:transform ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
 [data-bb-chat-ui-fluid-height][data-voice-mode="true"] > [data-bb-chat-ui-fluid-surface] { opacity:1; inset:-120px auto calc(var(--bb-chat-ui-voice-backdrop-bottom,-24px) - var(--bb-safe-area-bottom,env(safe-area-inset-bottom,0px))) var(--bb-chat-ui-voice-backdrop-left,0px); width:var(--bb-chat-ui-voice-backdrop-width,100%); border-radius:0; transform:none; box-shadow:none; mask-image:linear-gradient(to bottom,transparent 0,black 120px); -webkit-mask-image:linear-gradient(to bottom,transparent 0,black 120px); }
 [data-bb-chat-ui-fluid-height][data-voice-mode="true"] { overflow:visible; }
-[data-bb-chat-ui-fluid-composer][data-bb-chat-ui-fluid-view="options"] { border-radius:26px; }
-[data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] > [data-bb-chat-ui-fluid-surface] { transform:translateX(var(--bb-chat-ui-fluid-options-offset)); }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --bb-chat-ui-fluid-input-radius:26px; --bb-chat-ui-fluid-control-size:36px; --bb-chat-ui-fluid-device-max:35dvh; }
-.dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face], .dark [data-bb-chat-ui-fluid-details-face], .dark [data-bb-chat-ui-fluid-details] { background:${DARK_GLASS_FACE}; box-shadow:0 8px 24px -12px color-mix(in oklab,var(--background) 60%,transparent),inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
+.dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face], .dark [data-bb-chat-ui-fluid-details] { background:${DARK_GLASS_FACE}; box-shadow:0 8px 24px -12px color-mix(in oklab,var(--background) 60%,transparent),inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
 [data-bb-chat-ui-fluid-height] { position:relative; display:flex; flex-direction:column; justify-content:flex-end; overflow:clip; border-radius:var(--bb-chat-ui-fluid-input-radius); }
-[data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] { border-radius:26px; }
 [data-bb-chat-ui-fluid-toggle] { position:absolute; left:8px; bottom:8px; z-index:1; display:flex; border-radius:999px; }
 [data-bb-chat-ui-fluid-toggle-face] { inset:4px; opacity:0; transition:opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
 [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-toggle] > button { position:relative; background:transparent; }
-[data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] [data-bb-chat-ui-fluid-toggle] { left:0; bottom:0; }
-[data-bb-chat-ui-fluid-composer][data-bb-chat-ui-fluid-view="options"] [data-bb-chat-ui-fluid-toggle] > button[aria-expanded="true"] { width:var(--bb-chat-ui-fluid-toggle-size); height:var(--bb-chat-ui-fluid-toggle-size); min-width:var(--bb-chat-ui-fluid-toggle-size); min-height:var(--bb-chat-ui-fluid-toggle-size); }
-[data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] [data-bb-chat-ui-fluid-toggle-face] { opacity:1; }
 [data-bb-chat-ui-fluid-toggle-glyph] { position:relative; display:block; flex:none; width:24px; height:24px; pointer-events:none; }
-[data-bb-chat-ui-fluid-toggle-glyph]::before, [data-bb-chat-ui-fluid-toggle-glyph]::after { content:""; position:absolute; left:50%; top:50%; width:1.5px; height:12px; border-radius:999px; background:currentColor; transform:translate(-50%,-50%) rotate(0deg); transition:height ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, transform ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
+[data-bb-chat-ui-fluid-toggle-glyph]::before, [data-bb-chat-ui-fluid-toggle-glyph]::after { content:""; position:absolute; left:50%; top:50%; width:1.5px; height:12px; border-radius:999px; background:currentColor; transform:translate(-50%,-50%) rotate(0deg); transition:transform ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
 [data-bb-chat-ui-fluid-toggle-glyph]::after { transform:translate(-50%,-50%) rotate(90deg); }
-[aria-expanded="true"] > [data-bb-chat-ui-fluid-toggle-glyph]::before { height:20px; transform:translate(-50%,-50%) rotate(45deg); }
-[aria-expanded="true"] > [data-bb-chat-ui-fluid-toggle-glyph]::after { height:20px; transform:translate(-50%,-50%) rotate(135deg); }
+[aria-expanded="true"] > [data-bb-chat-ui-fluid-toggle-glyph]::before { transform:translate(-50%,-50%) rotate(45deg); }
+[aria-expanded="true"] > [data-bb-chat-ui-fluid-toggle-glyph]::after { transform:translate(-50%,-50%) rotate(135deg); }
 [data-bb-chat-ui-fluid-content] { position:relative; min-width:0; flex:none; width:100%; display:flex; flex-direction:column; max-height:var(--bb-chat-ui-fluid-max-height); }
-[data-bb-chat-ui-fluid-input], [data-bb-chat-ui-fluid-panel-layer] { min-width:0; transition:opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, transform ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
-[data-bb-chat-ui-fluid-input] { position:relative; display:flex; flex-direction:column; min-height:0; opacity:1; transform:translateY(0); }
-[data-bb-chat-ui-fluid-panel-layer] { position:absolute; bottom:0; left:var(--bb-chat-ui-fluid-options-offset); width:calc(100% - var(--bb-chat-ui-fluid-options-offset)); min-height:0; opacity:0; transform:translateY(8px); pointer-events:none; }
-[data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] > [data-bb-chat-ui-fluid-content] > [data-bb-chat-ui-fluid-input] { position:absolute; bottom:0; left:0; width:100%; opacity:0; transform:translateY(-8px); pointer-events:none; }
-[data-bb-chat-ui-fluid-height][data-bb-chat-ui-fluid-view="options"] > [data-bb-chat-ui-fluid-content] > [data-bb-chat-ui-fluid-panel-layer] { position:relative; display:flex; opacity:1; transition-property:transform; pointer-events:auto; }
-[data-bb-chat-ui-fluid-panel-layer][data-entered="true"] { opacity:1; transform:translateY(0); }
+[data-bb-chat-ui-fluid-input] { position:relative; display:flex; flex-direction:column; min-width:0; min-height:0; }
+[data-bb-chat-ui-fluid-panel-layer] { position:absolute; bottom:calc(100% + 8px); left:0; z-index:20; width:100%; min-width:0; }
 [data-bb-chat-ui-fluid-native-controls][hidden] { display:none !important; }
-[data-bb-chat-ui-fluid-panel] { display:flex; flex-direction:column; width:100%; min-width:0; min-height:calc(var(--bb-chat-ui-fluid-control-size) + 16px); padding:4px; }
-[data-bb-chat-ui-fluid-panel-list] { display:flex; flex-direction:column; gap:4px; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding:4px; }
-[data-bb-chat-ui-fluid-panel-list] [role="menuitem"] { display:flex; flex-shrink:0; align-items:center; justify-content:flex-start; gap:8px; width:100%; min-width:0; min-height:32px; height:auto; padding:6px 8px; border-radius:10px; text-align:left; white-space:normal; overflow-wrap:anywhere; font-size:12px; line-height:16px; }
+[data-bb-chat-ui-fluid-panel] { display:flex; flex-direction:column; width:100%; min-width:0; }
+[data-bb-chat-ui-fluid-panel-list] { display:flex; flex-wrap:wrap; gap:8px; min-height:0; max-height:var(--bb-chat-ui-fluid-max-height); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding:8px; }
+[data-bb-chat-ui-fluid-panel-list] [role="menuitem"] { position:relative; display:inline-flex; flex:none; align-items:center; justify-content:flex-start; gap:8px; width:auto; min-width:0; max-width:100%; min-height:32px; height:auto; padding:6px 12px; border-radius:999px; text-align:left; white-space:normal; overflow-wrap:anywhere; font-size:12px; line-height:16px; background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25); box-shadow:inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
+.dark [data-bb-chat-ui-fluid-panel-list] [role="menuitem"] { background:${DARK_GLASS_FACE}; box-shadow:inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
+[data-bb-chat-ui-fluid-panel-list] [role="menuitem"]:is(:hover,:focus-visible):not(:disabled):not([data-disabled]) { background-color:color-mix(in oklab,var(--foreground) 8%,transparent); }
 [data-bb-chat-ui-fluid-panel-list] [role="menuitem"] > [data-icon-root], [data-bb-chat-ui-fluid-panel-list] [role="menuitem"] > svg { flex:none; width:16px; height:16px; }
 [data-bb-chat-ui-fluid-panel-list] [role="menuitem"] > span { min-width:0; }
 [data-bb-chat-ui-fluid-panel-list] > p { margin:8px; color:var(--muted-foreground); font-size:12px; line-height:18px; }
-html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-panel-list] [role="menuitem"] { min-height:36px; padding:8px; font-size:13px; }
+html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-panel-list] [role="menuitem"] { min-height:36px; padding:8px 12px; font-size:13px; }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }
 [data-bb-chat-ui-fluid-row] { display:grid; flex:1 1 auto; grid-template-columns:auto minmax(0,1fr) auto; grid-template-rows:minmax(0,1fr); grid-template-areas:"options editor actions"; align-items:end; gap:4px; padding:8px; min-height:48px; box-sizing:border-box; }
 [data-bb-chat-ui-fluid-row][data-multiline="true"] { grid-template-areas:"editor editor editor" "options . actions"; grid-template-rows:minmax(0,1fr) auto; row-gap:8px; }
@@ -74,7 +78,25 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb
 [data-bb-chat-ui-fluid-row][data-voice-mode="true"] > [data-bb-chat-ui-fluid-options] { display:none; }
 [data-bb-chat-ui-fluid-row][data-voice-mode="true"] > [data-bb-chat-ui-fluid-actions] { justify-self:center; }
 [data-bb-chat-ui-fluid-options], [data-bb-chat-ui-fluid-actions] { display:flex; align-items:center; min-width:0; gap:4px; }
-[data-bb-chat-ui-fluid-options] { grid-area:options; width:var(--bb-chat-ui-fluid-control-size); height:var(--bb-chat-ui-fluid-control-size); }
+[data-bb-chat-ui-fluid-options] { grid-area:options; padding-left:calc(var(--bb-chat-ui-fluid-control-size) + 4px); height:var(--bb-chat-ui-fluid-control-size); }
+/* 기본 한 줄은 입력 뒤에 모델·Effort를 두고 + 예약 폭은 같은 행의 왼쪽에 유지한다. */
+[data-bb-chat-ui-fluid-composer]:not([data-bb-chat-ui-slot-enabled]) [data-bb-chat-ui-fluid-row][data-multiline="false"]:not([data-voice-mode="true"]) { grid-template-columns:minmax(0,1fr) auto auto; grid-template-areas:"editor options actions"; padding-left:calc(var(--bb-chat-ui-fluid-control-size) + 12px); }
+[data-bb-chat-ui-fluid-composer]:not([data-bb-chat-ui-slot-enabled]) [data-bb-chat-ui-fluid-row][data-multiline="false"]:not([data-voice-mode="true"]) > [data-bb-chat-ui-fluid-options] { padding-left:0; }
+[data-bb-chat-ui-fluid-model-controls] { display:flex; align-items:center; gap:2px; min-width:0; }
+[data-bb-chat-ui-fluid-model-controls] [data-bb-chat-ui-fluid-native-controls] { flex-wrap:nowrap; gap:2px; }
+[data-bb-chat-ui-fluid-model-controls][data-bb-chat-ui-fluid-separate-effort] [data-bb-chat-ui-fluid-native-controls] button[aria-label^="Provider, model and reasoning"] > span > span[data-promptbox-hide-compact],
+[data-bb-chat-ui-fluid-model-controls][data-bb-chat-ui-fluid-separate-effort] [data-bb-chat-ui-fluid-native-controls] button[aria-label^="Provider, model and reasoning"] [data-model-loading-placeholder="trigger-reasoning"] { display:none; }
+[data-bb-chat-ui-fluid-details]:not([hidden]) { display:contents; }
+[data-bb-chat-ui-fluid-effort] { gap:6px; height:32px; padding:0 8px; border-radius:999px; font-size:12px; line-height:16px; font-weight:400; white-space:nowrap; color:var(--muted-foreground); background:transparent; }
+[data-bb-chat-ui-fluid-effort]:hover { background:transparent; color:var(--muted-foreground); }
+[data-bb-chat-ui-fluid-effort] > svg { flex:none; width:20px; height:16px; }
+[data-bb-chat-ui-fluid-effort-label] { display:inline-flex; flex:none; align-items:center; justify-content:center; max-width:70px; overflow:clip; }
+[data-bb-chat-ui-fluid-effort] { transition:gap 300ms cubic-bezier(.175,.885,.32,1.275); }
+[data-bb-chat-ui-fluid-effort-label] { transition:max-width 300ms cubic-bezier(.175,.885,.32,1.275),opacity 300ms ease; }
+[data-bb-chat-ui-fluid-row][data-multiline="false"] [data-bb-chat-ui-fluid-effort]:not([data-bb-chat-ui-fluid-effort-peek]) { gap:0; }
+[data-bb-chat-ui-fluid-row][data-multiline="false"] [data-bb-chat-ui-fluid-effort]:not([data-bb-chat-ui-fluid-effort-peek]) > [data-bb-chat-ui-fluid-effort-label] { max-width:0px; opacity:0; }
+@media (prefers-reduced-motion:reduce) { [data-bb-chat-ui-fluid-effort], [data-bb-chat-ui-fluid-effort-label] { transition:none; } }
+[data-bb-chat-ui-fluid-effort-value] { display:block; flex:none; width:max-content; max-width:70px; overflow:hidden; text-overflow:ellipsis; transform-origin:center; color:color-mix(in oklab,var(--muted-foreground) 72%,transparent); }
 [data-bb-chat-ui-fluid-actions] { grid-area:actions; }
 [data-bb-chat-ui-fluid-actions] > [data-promptbox-submit-group] { display:flex; align-items:center; flex:none; }
 [data-bb-chat-ui-fluid-composer] [data-promptbox-send-menu] { margin-left:0; border-radius:999px; overflow:hidden; }
@@ -89,7 +111,7 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb
 [data-bb-chat-ui-fluid-composer] .ProseMirror p.is-editor-empty:first-child { position:relative; }
 [data-bb-chat-ui-fluid-composer] .ProseMirror p.is-editor-empty:first-child::before { content:attr(data-placeholder); position:absolute; inset:0; float:none; height:24px; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
 [data-bb-chat-ui-fluid-composer] :is([data-promptbox-submit-action], button[aria-label="Prompt actions"], button[aria-label="Start voice input"], [data-bb-chat-ui-voice-record]) { width:32px; height:32px; min-width:32px; min-height:32px; padding:0; margin:0; border-radius:999px; }
-[data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] { max-width:160px; min-width:32px; height:32px; margin:0; border-radius:999px; }
+[data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] { max-width:140px; min-width:32px; height:32px; margin:0; border-radius:999px; }
 [data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
 [data-bb-chat-ui-fluid-composer] [data-promptbox-submit-label] { display:none; }
 [data-bb-chat-ui-fluid-attachments]:empty { display:none; }
@@ -101,6 +123,7 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] [data
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] :is([data-promptbox-submit-action], button[aria-label="Prompt actions"], button[aria-label="Start voice input"], [data-bb-chat-ui-voice-record]) { width:36px; height:36px; min-width:36px; min-height:36px; }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] { width:32px; max-width:32px; padding-inline:6px; gap:0; }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] > :not(:first-child) { display:none; }
+html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-native-controls] button[aria-label^="Provider, model and reasoning"] > span.contents > :not(:first-child) { display:none; }
 [data-bb-chat-ui-voice-options] { display:flex; align-items:center; gap:4px; }
 [data-bb-chat-ui-voice-options][inert] { opacity:.4; }
 [data-bb-chat-ui-voice-actions] {
@@ -182,6 +205,8 @@ html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-visual] > [data-bb-
   [data-bb-chat-ui-fluid-height] { corner-shape:round; }
   [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"] { border-radius:50.6px; corner-shape:squircle; }
   html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"] { border-radius:54.9px; }
+  [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"],
+  html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-height][data-multiline="true"][data-bb-chat-ui-fluid-view="input"] { border-radius:var(--bb-chat-ui-fluid-input-radius); corner-shape:round; }
   [data-bb-chat-ui-fluid-height] > [data-bb-chat-ui-fluid-surface],
   [data-bb-chat-ui-fluid-height] > [data-bb-chat-ui-voice-glow] { corner-shape:inherit; }
 }

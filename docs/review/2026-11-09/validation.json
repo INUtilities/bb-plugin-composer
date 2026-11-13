@@ -1,0 +1,213 @@
+{
+  "codeCommit": "172175557a5957369bb6322e3de8181a22d33231",
+  "tests": {
+    "nodePassed": 28,
+    "composerPassed": 273,
+    "composerSkipped": 3
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "visual": "passed",
+  "visualResults": [
+    {
+      "device": "desktop",
+      "geometry": {
+        "editor": {
+          "x": 223,
+          "y": 519.78125,
+          "width": 429.71875,
+          "height": 24,
+          "right": 652.71875,
+          "bottom": 543.78125
+        },
+        "model": {
+          "x": 660.71875,
+          "y": 515.78125,
+          "width": 95.171875,
+          "height": 32,
+          "right": 755.890625,
+          "bottom": 547.78125
+        },
+        "effort": {
+          "x": 757.890625,
+          "y": 515.78125,
+          "width": 87.109375,
+          "height": 32,
+          "right": 845,
+          "bottom": 547.78125
+        },
+        "send": {
+          "x": 885,
+          "y": 515.78125,
+          "width": 32,
+          "height": 32,
+          "right": 917,
+          "bottom": 547.78125
+        },
+        "plus": {
+          "x": 183,
+          "y": 515.78125,
+          "width": 32,
+          "height": 32,
+          "right": 215,
+          "bottom": 547.78125
+        },
+        "height": {
+          "x": 175,
+          "y": 507.78125,
+          "width": 750,
+          "height": 48,
+          "right": 925,
+          "bottom": 555.78125
+        }
+      },
+      "multiline": {
+        "editor": {
+          "x": 195,
+          "y": 459.78125,
+          "width": 710,
+          "height": 48,
+          "top": 459.78125,
+          "right": 905,
+          "bottom": 507.78125,
+          "left": 195
+        },
+        "model": {
+          "x": 219,
+          "y": 515.78125,
+          "width": 95.171875,
+          "height": 32,
+          "top": 515.78125,
+          "right": 314.171875,
+          "bottom": 547.78125,
+          "left": 219
+        },
+        "areas": "\"editor editor editor\" \"options . actions\""
+      },
+      "boundary": [
+        {
+          "count": 35,
+          "state": "true"
+        },
+        {
+          "count": 40,
+          "state": "true"
+        },
+        {
+          "count": 45,
+          "state": "true"
+        },
+        {
+          "count": 50,
+          "state": "true"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "device": "phone",
+      "geometry": {
+        "editor": {
+          "x": 77,
+          "y": 538.578125,
+          "width": 70.890625,
+          "height": 24,
+          "right": 147.890625,
+          "bottom": 562.578125
+        },
+        "model": {
+          "x": 155.890625,
+          "y": 534.578125,
+          "width": 32,
+          "height": 32,
+          "right": 187.890625,
+          "bottom": 566.578125
+        },
+        "effort": {
+          "x": 189.890625,
+          "y": 534.578125,
+          "width": 87.109375,
+          "height": 32,
+          "right": 277,
+          "bottom": 566.578125
+        },
+        "send": {
+          "x": 321,
+          "y": 532.578125,
+          "width": 36,
+          "height": 36,
+          "right": 357,
+          "bottom": 568.578125
+        },
+        "plus": {
+          "x": 33,
+          "y": 532.578125,
+          "width": 36,
+          "height": 36,
+          "right": 69,
+          "bottom": 568.578125
+        },
+        "height": {
+          "x": 25,
+          "y": 524.578125,
+          "width": 340,
+          "height": 52,
+          "right": 365,
+          "bottom": 576.578125
+        }
+      },
+      "multiline": {
+        "editor": {
+          "x": 45,
+          "y": 476.578125,
+          "width": 300,
+          "height": 48,
+          "top": 476.578125,
+          "right": 345,
+          "bottom": 524.578125,
+          "left": 45
+        },
+        "model": {
+          "x": 73,
+          "y": 534.578125,
+          "width": 32,
+          "height": 32,
+          "top": 534.578125,
+          "right": 105,
+          "bottom": 566.578125,
+          "left": 73
+        },
+        "areas": "\"editor editor editor\" \"options . actions\""
+      },
+      "boundary": [
+        {
+          "count": 3,
+          "state": "false"
+        },
+        {
+          "count": 4,
+          "state": "false"
+        },
+        {
+          "count": 5,
+          "state": "true"
+        },
+        {
+          "count": 6,
+          "state": "true"
+        },
+        {
+          "count": 7,
+          "state": "true"
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "fixtures": "Product source imports; host DOM/SDK data/icons/external actions are fixtures.",
+  "unverified": [
+    "physical phone",
+    "real microphone/IME/upload/external send",
+    "live BB frontend screenshot"
+  ]
+}

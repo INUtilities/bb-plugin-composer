@@ -1,0 +1,2 @@
+# 공식 SVG와 LICENSE의 원본 해시를 모든 checkout에서 유지한다.
+composer/assets/effort-candidates/* text eol=lf

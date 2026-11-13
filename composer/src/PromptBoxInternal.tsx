@@ -1,3 +1,5 @@
+import { FluidModelControls } from '../FluidModelControls';
+import { FluidComposerPicker } from '../FluidComposerPicker';
 import { FluidVoiceControl } from "../FluidVoiceControl";
 import { FluidVoiceWaveform } from "../FluidVoiceWaveform";
 import { IDLE_HOLD_VOICE, holdVoiceIsActive } from "../../lib/hold-voice";
@@ -6,6 +8,7 @@ import { FluidComposerBody } from "../FluidComposerBody";
 import { FluidComposerToggle } from "../FluidComposerToggle";
 import { FluidOptionsPanel } from "../FluidOptionsPanel";
 import { FluidComposerDetails } from "../FluidComposerDetails";
+import { FluidComposerToolbar } from "../FluidComposerToolbar";
 import {
   experimental_ComposerRoot as ComposerRoot,
   experimental_FailedVoiceRecordings as FailedVoiceRecordings,
@@ -1015,6 +1018,7 @@ function isIPadHardwareEnterCandidate(event: KeyboardEvent): boolean {
   );
 }
 
+// 같은 입력 엔진에 기존 메뉴와 선택 가능한 Fluid 모델 슬롯을 연결한다.
 export function PromptBoxInternal({
   id,
   fluid = false,
@@ -1049,8 +1053,11 @@ export function PromptBoxInternal({
   const composerDraft = composer.draft;
   const value = composerDraft.text;
   const mentionRanges = composerDraft.mentions;
+  const draftEditVersion = useRef(0);
+  // 직접 편집한 초안과 호스트가 초기화한 초안의 높이 전환을 구분한다.
   const onChange = useCallback(
     (text: string, mentions: readonly ComposerMention[]) => {
+      draftEditVersion.current += 1;
       composer.replace({ text, mentions });
     },
     [composer],
@@ -1398,7 +1405,8 @@ export function PromptBoxInternal({
   const decorationSourcesRef = useRef(decorationSources);
   decorationSourcesRef.current = decorationSources;
   const focusScopeKey = history?.resetKey;
-  useLayoutEffect(() => { setFluidOptionsOpen(false); fluidPluginSelection.current = null; }, [composerScopeKey, composerKey, composerInputLocked, showVoiceActionGroup]);
+  // 입력 대상·잠금·음성 단계가 바뀌면 이전 옵션과 선택 복원을 정리한다.
+  useLayoutEffect(() => { setFluidOptionsOpen(false); fluidPluginSelection.current = null; }, [composerScopeKey, composerKey, composerInputLocked, showVoiceActionGroup, fluidVoiceActive]);
   const onChangeRef = useRef(onChange);
 
   useEffect(() => {
@@ -2111,9 +2119,10 @@ export function PromptBoxInternal({
     [],
   );
 
+  // 상단 옵션이 열려 있어도 입력을 유지하고 호스트 잠금과 음성 상태만 반영한다.
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    const editable = !composerInputLocked && !voiceInteractionActive && !fluidOptionsOpen;
+    const editable = !composerInputLocked && !voiceInteractionActive;
     if (editor.isEditable !== editable) editor.setEditable(editable);
     editor.view.dom.tabIndex = editable ? 0 : -1;
     if (editable) {
@@ -2121,14 +2130,14 @@ export function PromptBoxInternal({
     } else {
       editor.view.dom.setAttribute("aria-readonly", "true");
     }
-  }, [composerInputLocked, editor, voiceInteractionActive, fluidOptionsOpen]);
+  }, [composerInputLocked, editor, voiceInteractionActive]);
 
   useEffect(() => {
     if (fluidOptionsOpen) return;
     const pending = fluidPluginSelection.current;
     fluidPluginSelection.current = null;
     if (!pending || pending.scope !== composerScopeKey || pending.key !== composerKey) return;
-    // The effect above unlocks the editor before the host restores its focus.
+    // 플러그인이 다른 화면으로 옮긴 포커스는 유지하고 입력 복구만 호스트에 맡긴다.
     const active = document.activeElement;
     const moved = active && active !== document.body && active !== pending.selection.selectedElement && active.isConnected && !formRef.current?.contains(active);
     if (!moved) pending.selection.restoreComposerFocus();
@@ -3029,10 +3038,12 @@ export function PromptBoxInternal({
       ? submitDisabledReason
       : submitTitle;
 
+  // 전송할 때 상단 옵션을 닫고 실제 전송과 초안 처리를 호스트에 맡긴다.
   const dispatchSubmit = useCallback(() => {
     if (editorRef.current) cancelPromptThreadLinkPaste(editorRef.current);
+    if (fluid) setFluidOptionsOpen(false);
     onSubmit?.();
-  }, [onSubmit]);
+  }, [onSubmit, fluid]);
 
   const submitPrompt = useCallback(() => {
     const shouldBlurAfterSubmit = blurAfterPointerSubmitRef.current;
@@ -3138,14 +3149,15 @@ export function PromptBoxInternal({
     [attachFilesWithHistory],
   );
 
+  // 옵션 표시 여부와 무관하게 기존 전송 가능 조건으로 form 전송을 처리한다.
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!fluidOptionsOpen) submitPrompt();
+    submitPrompt();
   };
 
+  // 옵션 필 바깥의 입력창 여백을 누르면 기존 editor 끝으로 포커스를 옮긴다.
   const handlePromptBoxMouseDown = useCallback(
     (event: PromptBoxMouseDownEvent) => {
-      if (fluidOptionsOpen) return;
       if (!isPromptBoxChromeTarget(event.target)) return;
 
       const currentEditor = editorRef.current;
@@ -3155,7 +3167,7 @@ export function PromptBoxInternal({
       focusEditorAtEnd(currentEditor);
       scheduleRevealEditorSelection();
     },
-    [scheduleRevealEditorSelection, fluidOptionsOpen],
+    [scheduleRevealEditorSelection],
   );
 
   const handleEditorKeyDown = useCallback(
@@ -3402,24 +3414,30 @@ export function PromptBoxInternal({
     setFluidOptionsOpen(true);
   };
   if (fluid) return (
-    <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-chat-ui-fluid-view={fluidOptionsOpen ? "options" : "input"} data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
+    <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-chat-ui-fluid-view="input" data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
       onSubmit={handleSubmit} onKeyDown={event => {
         if (fluidOptionsOpen && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeFluidOptions(); }
-        else if (!fluidOptionsOpen) handleComposerMenuKeyDown(event.nativeEvent);
+        else handleComposerMenuKeyDown(event.nativeEvent);
       }}
       onMouseDown={handlePromptBoxMouseDown}
       onDragOver={event => { if (onAttachFiles) event.preventDefault(); }}
       onDrop={event => { if (!onAttachFiles) return; event.preventDefault(); if (event.dataTransfer.files.length) { setFluidOptionsOpen(false); attachFilesWithHistory(Array.from(event.dataTransfer.files)); } }}
       style={maxHeight === undefined ? undefined : { ["--bb-chat-ui-fluid-host-max" as string]: `${Math.max(96, maxHeight)}px` }}>
       <input ref={attachmentInputRef} type="file" multiple className="hidden" onChange={handleAttachmentInputChange} />
-      <FluidComposerDetails key={composerScopeKey} controls={executionControls} suspended={fluidVoiceActive}
-        onOpen={() => { dismissComposerMenu(); setFluidOptionsOpen(false); }} />
+      <FluidComposerPicker formRef={formRef} disabled={composerInputLocked || isSubmitting || fluidVoiceActive || showVoiceActionGroup}
+        onOpen={() => { dismissComposerMenu(); setFluidOptionsOpen(false); if (promptActionFocusFrameRef.current !== null) { cancelAnimationFrame(promptActionFocusFrameRef.current); promptActionFocusFrameRef.current = null; } blurPromptEditor(editorRef.current); }}
+        onError={renderer.showError}>
+      {picker => <FluidComposerDetails scopeKey={composerScopeKey} suspended={fluidVoiceActive}
+        onOpen={() => { picker.close(); dismissComposerMenu(); setFluidOptionsOpen(false); }}>
+      {(detailsToggle, details) => <>
+      <FluidComposerToolbar hidden={fluidVoiceActive}>{picker.modeToggle}{detailsToggle}</FluidComposerToolbar>
+      {details}
       <FluidComposerBody
-        options={null}
+        options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
         decoration={fluidVoiceActive ? <FluidVoiceWaveform appearance="glow" indicator={fluidVoiceGesture === 'hold' ? 'orb' : fluidVoiceBars ? 'bars' : undefined} stream={fluidVoiceStream} exiting={fluidVoiceState.phase !== "starting" && fluidVoiceState.phase !== "recording"}/> : null}
-        draftText={fluidVoiceActive ? fluidVoicePreview.text : value} editorReady={editor !== null}
+        draftText={fluidVoiceActive ? fluidVoicePreview.text : value} draftEditVersion={draftEditVersion.current} editorReady={editor !== null}
         toggle={<FluidComposerToggle open={fluidOptionsOpen}
-          disabled={composerInputLocked || isSubmitting || showVoiceActionGroup || fluidVoiceActive}
+          disabled={composerInputLocked || isSubmitting || showVoiceActionGroup || fluidVoiceActive || picker.open}
           onClick={() => { if (fluidOptionsOpen) closeFluidOptions(); else openFluidOptions(); }}/>}
         panelOpen={fluidOptionsOpen}
         panel={<FluidOptionsPanel active={fluidOptionsOpen} actions={promptActions} plugins={contributions}
@@ -3429,7 +3447,7 @@ export function PromptBoxInternal({
           onAttach={onAttachFiles ? () => { setFluidOptionsOpen(false); attachmentInputRef.current?.click(); } : undefined}
           />}
         auxiliary={<>{handoff}{voice && voice.failedRecordings.length > 0 ? <FailedVoiceRecordings className="px-2 pt-2" recordings={voice.failedRecordings} retryDisabled={false} onRetry={voice.retry} onDownload={voice.download} onDiscard={voice.discard} /> : null}</>}
-        editor={<div data-bb-chat-ui-voice-editor="">
+        editor={<div data-bb-chat-ui-voice-editor="" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
           {fluidVoiceBars ? <div data-bb-chat-ui-voice-bars-space="" data-has-preview={!!fluidVoicePreview.text} aria-hidden="true"/> : null}
           {fluidVoiceActive || (fluidVoiceState.error && !hasSubmittableInput) ? <div ref={fluidVoiceScroll} data-promptbox-editor-scroll="" role="status" aria-live="polite">
             <div data-bb-chat-ui-voice-transcript="" hidden={fluidVoiceBars && !fluidVoicePreview.text} data-placeholder={!fluidVoicePreview.text || undefined}><p>{fluidVoicePreview.text ||
@@ -3446,8 +3464,10 @@ export function PromptBoxInternal({
           </div>
         </div>}
         actions={<>
-          <span data-bb-chat-ui-fluid-extra-actions="" hidden={fluidVoiceActive}><contributions.Actions />{compactBeforeSend}</span>
-          <div data-promptbox-submit-group="" className="flex shrink-0 flex-row items-center">
+          <span data-bb-chat-ui-fluid-extra-actions="" hidden={fluidVoiceActive} inert={picker.open || undefined} aria-hidden={picker.open || undefined}><contributions.Actions />{compactBeforeSend}</span>
+          {picker.enabled ? picker.trigger : null}
+          <div data-bb-chat-ui-slot-submit="">
+          <div data-promptbox-submit-group="" className="flex shrink-0 flex-row items-center" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
             <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream} onGestureChange={setFluidVoiceGesture}
               disabled={!voice?.isSupported || isSubmitting || composerInputLocked || showVoiceActionGroup}
               sendDisabled={submitDisabled || isSubmitting || isAttaching || composerInputLocked}
@@ -3467,6 +3487,8 @@ export function PromptBoxInternal({
               </ComposerSendMenu>}
             />
           </div>
+          {picker.confirm}
+          </div>
         </>}
         attachments={<><AttachmentPreview attachments={attachments} pendingUploads={pendingUploads} attachmentProjectId={attachmentProjectId}
           expandedImageIndex={expandedImageIndex} onExpandedImageIndexChange={setExpandedImageIndex} onRemoveAttachment={onUpdateAttachments ? removeAttachment : undefined} />
@@ -3474,6 +3496,10 @@ export function PromptBoxInternal({
         voice={voice && showVoiceActionGroup ? <VoiceRecordingBar isCompact state={renderedVoiceActionState} delivery={voice.delivery} stream={voice.stream}
           microphoneWarning={voice.microphoneWarning} submitIcon={submitIcon ?? "CornerDownLeft"} onConfirm={voice.stop} onSend={voice.send} onCancel={cancelVoiceInput} /> : undefined}
       />
+      {picker.overlay}
+      </>}
+      </FluidComposerDetails>}
+      </FluidComposerPicker>
       <ComposerRoot rootRef={formRef} editor={composerEditor} menuRef={typeaheadMenuRef} menuOpen={composerMenuOpen} />
             <ComposerPopupHost
               open={composerMenuOpen}

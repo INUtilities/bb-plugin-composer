@@ -2,13 +2,14 @@
 export function bindComposerScrollBoundary(element: HTMLElement, onScroll?: () => void): () => void {
   const win = element.ownerDocument.defaultView;
   if (!win) return () => {};
+  // 실제 이동이 있는 축에서만 내부 스크롤 여유를 읽는다.
   const canScroll = (event: Event, dx: number, dy: number) => {
     for (let node = event.target instanceof win.Element ? event.target : null; node; node = node.parentElement) {
       const css = win.getComputedStyle(node);
       const available = (overflow: string, delta: number, position: number, size: number, total: number) =>
         /auto|scroll|overlay/.test(overflow) && (delta < 0 ? position > 0 : delta > 0 && position + size < total - 1);
-      if (available(css.overflowY || css.overflow, dy, node.scrollTop, node.clientHeight, node.scrollHeight)
-        || available(css.overflowX || css.overflow, dx, node.scrollLeft, node.clientWidth, node.scrollWidth)) return true;
+      if ((dy !== 0 && available(css.overflowY || css.overflow, dy, node.scrollTop, node.clientHeight, node.scrollHeight))
+        || (dx !== 0 && available(css.overflowX || css.overflow, dx, node.scrollLeft, node.clientWidth, node.scrollWidth))) return true;
       if (node === element) break;
     }
     return false;

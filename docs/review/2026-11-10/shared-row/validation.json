@@ -1,0 +1,133 @@
+{
+  "canonical": "4f42740005daf477c73e063fd3beefb88a31179d",
+  "composer": "66e8fb41b6818db96bed3e4d310350323a16296d",
+  "chatUi": "00cd16d4c2893c9d694916d31fa6577115b473ac",
+  "screens": [
+    {
+      "device": "desktop",
+      "initial": {
+        "pill": {
+          "x": 311.46875,
+          "y": 475.78125,
+          "width": 93.4375,
+          "height": 32,
+          "top": 475.78125,
+          "right": 404.90625,
+          "bottom": 507.78125,
+          "left": 311.46875
+        },
+        "goal": {
+          "x": 175,
+          "y": 475.78125,
+          "width": 46.640625,
+          "height": 32,
+          "top": 475.78125,
+          "right": 221.640625,
+          "bottom": 507.78125,
+          "left": 175
+        },
+        "plus": {
+          "x": 183,
+          "y": 515.78125,
+          "width": 32,
+          "height": 32,
+          "top": 515.78125,
+          "right": 215,
+          "bottom": 547.78125,
+          "left": 183
+        },
+        "glyph": "12px",
+        "footer": "none"
+      },
+      "metadata": {
+        "footer": {
+          "x": 679.484375,
+          "y": 422.984375,
+          "width": 245.515625,
+          "height": 44.796875,
+          "top": 422.984375,
+          "right": 925,
+          "bottom": 467.78125,
+          "left": 679.484375
+        },
+        "composer": {
+          "x": 175,
+          "y": 507.78125,
+          "width": 750,
+          "height": 48,
+          "top": 507.78125,
+          "right": 925,
+          "bottom": 555.78125,
+          "left": 175
+        },
+        "position": "absolute"
+      },
+      "frames": 70,
+      "earlyOptionFrames": 0,
+      "errors": []
+    },
+    {
+      "device": "phone",
+      "initial": {
+        "pill": {
+          "x": 161.46875,
+          "y": 492.578125,
+          "width": 93.4375,
+          "height": 32,
+          "top": 492.578125,
+          "right": 254.90625,
+          "bottom": 524.578125,
+          "left": 161.46875
+        },
+        "goal": {
+          "x": 25,
+          "y": 492.578125,
+          "width": 46.640625,
+          "height": 32,
+          "top": 492.578125,
+          "right": 71.640625,
+          "bottom": 524.578125,
+          "left": 25
+        },
+        "plus": {
+          "x": 33,
+          "y": 532.578125,
+          "width": 36,
+          "height": 36,
+          "top": 532.578125,
+          "right": 69,
+          "bottom": 568.578125,
+          "left": 33
+        },
+        "glyph": "12px",
+        "footer": "none"
+      },
+      "metadata": {
+        "footer": {
+          "x": 119.484375,
+          "y": 439.78125,
+          "width": 245.515625,
+          "height": 44.796875,
+          "top": 439.78125,
+          "right": 365,
+          "bottom": 484.578125,
+          "left": 119.484375
+        },
+        "composer": {
+          "x": 25,
+          "y": 524.578125,
+          "width": 340,
+          "height": 52,
+          "top": 524.578125,
+          "right": 365,
+          "bottom": 576.578125,
+          "left": 25
+        },
+        "position": "absolute"
+      },
+      "frames": 70,
+      "earlyOptionFrames": 0,
+      "errors": []
+    }
+  ]
+}

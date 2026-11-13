@@ -1,0 +1,294 @@
+[
+  {
+    "device": "desktop",
+    "before": {
+      "width": 750,
+      "height": 136,
+      "formRight": 925,
+      "stageRight": 938,
+      "open": false,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델"
+        },
+        {
+          "name": "Effort",
+          "text": "설정 없음",
+          "client": 57,
+          "scroll": 57
+        }
+      ]
+    },
+    "middle": {
+      "width": 317.40625,
+      "height": 52.328125,
+      "formRight": 925,
+      "stageRight": 938,
+      "open": true,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델",
+          "text": "GPT-6.1 sol",
+          "client": 71,
+          "scroll": 71
+        },
+        {
+          "name": "Effort",
+          "text": "Medium",
+          "client": 51,
+          "scroll": 51
+        }
+      ]
+    },
+    "open": {
+      "width": 295,
+      "height": 48,
+      "formRight": 925,
+      "stageRight": 938,
+      "open": true,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델",
+          "text": "GPT-6.1 sol",
+          "client": 71,
+          "scroll": 71
+        },
+        {
+          "name": "Effort",
+          "text": "Medium",
+          "client": 51,
+          "scroll": 51
+        }
+      ]
+    },
+    "retarget": {
+      "width": 307,
+      "height": 48,
+      "formRight": 925,
+      "stageRight": 938,
+      "open": true,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델",
+          "text": "GPT-6.1 terra",
+          "client": 83,
+          "scroll": 83
+        },
+        {
+          "name": "Effort",
+          "text": "Medium",
+          "client": 51,
+          "scroll": 51
+        }
+      ]
+    },
+    "closed": {
+      "width": 750,
+      "height": 136,
+      "formRight": 925,
+      "stageRight": 938,
+      "open": false,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델",
+          "text": "GPT-6.1 terra",
+          "client": 83,
+          "scroll": 83
+        },
+        {
+          "name": "Effort",
+          "text": "Medium",
+          "client": 51,
+          "scroll": 51
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "device": "phone",
+    "before": {
+      "width": 340,
+      "height": 140,
+      "formRight": 365,
+      "stageRight": 378,
+      "open": false,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델"
+        },
+        {
+          "name": "Effort",
+          "text": "설정 없음",
+          "client": 61,
+          "scroll": 61
+        }
+      ]
+    },
+    "middle": {
+      "width": 314.03125,
+      "height": 58.421875,
+      "formRight": 365,
+      "stageRight": 378,
+      "open": true,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델",
+          "text": "GPT-6.1 sol",
+          "client": 76,
+          "scroll": 76
+        },
+        {
+          "name": "Effort",
+          "text": "Medium",
+          "client": 55,
+          "scroll": 55
+        }
+      ]
+    },
+    "open": {
+      "width": 312,
+      "height": 52,
+      "formRight": 365,
+      "stageRight": 378,
+      "open": true,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델",
+          "text": "GPT-6.1 sol",
+          "client": 76,
+          "scroll": 76
+        },
+        {
+          "name": "Effort",
+          "text": "Medium",
+          "client": 55,
+          "scroll": 55
+        }
+      ]
+    },
+    "retarget": {
+      "width": 325,
+      "height": 52,
+      "formRight": 365,
+      "stageRight": 378,
+      "open": true,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델",
+          "text": "GPT-6.1 terra",
+          "client": 89,
+          "scroll": 89
+        },
+        {
+          "name": "Effort",
+          "text": "Medium",
+          "client": 55,
+          "scroll": 55
+        }
+      ]
+    },
+    "closed": {
+      "width": 340,
+      "height": 140,
+      "formRight": 365,
+      "stageRight": 378,
+      "open": false,
+      "draft": "<p>첫 줄<br>둘째 줄<br>셋째 줄</p>",
+      "multiline": "true",
+      "transition": "0.32s",
+      "selected": [
+        {
+          "name": "Provider",
+          "text": ""
+        },
+        {
+          "name": "모델",
+          "text": "GPT-6.1 terra",
+          "client": 89,
+          "scroll": 89
+        },
+        {
+          "name": "Effort",
+          "text": "Medium",
+          "client": 55,
+          "scroll": 55
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "device": "phone-narrow",
+    "layout": {
+      "width": 230,
+      "height": 52,
+      "stageWidth": 256,
+      "confirmRight": 247,
+      "screenWidth": 280
+    }
+  }
+]

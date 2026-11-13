@@ -1,0 +1,261 @@
+/* BB 밖에서 열 때만 쓰는 테마 토큰. 설치된 BB 앱 index CSS의 라이트·다크 값을 옮겼다. */
+:root, .light {
+  --canvas: oklch(100% 0 0); --ink: oklch(32.11% 0 0);
+  --background: var(--canvas); --foreground: var(--ink); --card: var(--canvas); --popover: var(--canvas);
+  --primary: oklch(27% 0 0); --primary-foreground: oklch(100% 0 0);
+  --muted-foreground: oklch(44% 0 0); --subtle-foreground: oklch(50% 0 0);
+  --border: color-mix(in oklch, var(--ink) 14%, var(--canvas)); --ring: var(--primary);
+  --state-hover: color-mix(in oklab, var(--ink) 5.9%, transparent); --state-active: color-mix(in oklab, var(--ink) 11.8%, transparent);
+  /* kit motion easing */
+  --ease-out: cubic-bezier(.22,1,.36,1); --ease-droplet: cubic-bezier(.36,0,.18,1); --ease-exit: cubic-bezier(.4,0,.2,1);
+}
+.dark {
+  --canvas: oklch(19.5% 0 0); --ink: oklch(81% 0 0);
+  --primary: oklch(82% 0 0); --primary-foreground: oklch(21.78% 0 0);
+  --muted-foreground: oklch(78% 0 0); --subtle-foreground: oklch(68% 0 0);
+  --border: color-mix(in oklch, var(--ink) 19.4%, var(--canvas));
+  --state-hover: color-mix(in oklab, var(--ink) 13.8%, transparent); --state-active: color-mix(in oklab, var(--ink) 22.5%, transparent);
+}
+
+/* ── 페이지 ── */
+html, body { margin: 0; background: color-mix(in oklab, var(--foreground) 3%, var(--background)); color: var(--foreground);
+  font: 13px/1.55 "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", "Noto Sans KR", sans-serif; }
+*, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; }
+button { background-color: transparent; color: inherit; font: inherit; }
+main { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
+.intro h1 { font-size: 16px; line-height: 22px; font-weight: 600; margin: 0 0 6px; }
+.intro p { margin: 0; color: var(--muted-foreground); font-size: 12px; line-height: 18px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 4px; }
+.control { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.control > span { color: var(--muted-foreground); }
+.segmented { display: flex; gap: 2px; padding: 2px; border-radius: 999px; background: var(--state-hover); }
+.segmented button { min-height: 28px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: var(--muted-foreground); font: inherit; cursor: pointer; }
+.segmented [aria-pressed="true"] { background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 14%, transparent); }
+.selection { margin: 10px 0 0; font-size: 12px; color: var(--muted-foreground); }
+.selection strong { color: var(--foreground); font-weight: 600; }
+.case { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 16px; }
+.case > header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.case-number { font-size: 11px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.case h2 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
+.metric { margin-left: auto; font-size: 11px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.idea { margin: 6px 0 0; font-size: 12px; line-height: 18px; }
+.how { margin: 10px 0 0; padding-left: 18px; font-size: 12px; line-height: 18px; color: var(--muted-foreground); }
+.trade { margin: 6px 0 0; font-size: 11px; line-height: 17px; color: var(--muted-foreground); }
+footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; line-height: 18px; color: var(--muted-foreground); }
+code { font: 11px/1 "JetBrains Mono", ui-monospace, monospace; }
+:is(.segmented button, .stage button):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* 휴대폰 화면 한 장을 흉내 낸다. 컴포저는 바닥에 붙고 위로 자란다. */
+.stage { position: relative; display: flex; flex-direction: column; justify-content: flex-end; width: min(var(--stage-width), 100%); min-height: 148px;
+  margin: 14px 0 0; padding: 12px; border: 1px solid var(--border); border-radius: 20px; background: var(--background); overflow: hidden; }
+.transcript { position: absolute; left: 20px; right: 20px; bottom: 18px; margin: 0; font-size: 13px; line-height: 20px; color: var(--foreground); pointer-events: none; }
+.case[data-case="5"] .stage { min-height: 360px; }
+.case[data-case="6"] .stage { min-height: 252px; padding-bottom: 84px; }
+/* 이 시안만 아래 칸이 보이게 바닥 여백을 넓혔다. 대화는 다른 시안처럼 컴포저 뒤·위에 둔다. */
+.case[data-case="6"] .transcript { bottom: 90px; }
+.stage [data-proto-root] { width: 100%; }
+.stage [data-bb-chat-ui-fluid-composer] { --bb-chat-ui-fluid-host-max: 320px; }
+html[data-bb-chat-ui-root-device="phone"] .stage [data-bb-chat-ui-fluid-composer] { --bb-chat-ui-fluid-host-max: 295px; }
+.stage button { font-family: inherit; }
+.stage .ProseMirror { outline: none; }
+.stage .ProseMirror p.is-editor-empty:first-child::before { color: var(--muted-foreground); }
+.stage [data-promptbox-submit-action] { display: inline-flex; align-items: center; justify-content: center; border: 0; background: var(--primary); color: var(--primary-foreground); cursor: pointer; }
+.stage [data-bb-chat-ui-fluid-details-toggle] { color: var(--foreground); }
+.stage [data-bb-chat-ui-fluid-details-toggle][aria-expanded="true"] { background: var(--state-active); }
+
+/* ── 시안 공통 ── */
+[data-proto] { --proto-row: 48px; --proto-font: 12px; --proto-line: 16px; }
+html[data-bb-chat-ui-root-device="phone"] [data-proto] { --proto-row: 52px; --proto-font: 13px; }
+[data-proto-mark] { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 16px; height: 16px; }
+[data-proto-send-group] { position: relative; }
+[data-proto] [data-bb-chat-ui-fluid-row] > :is([data-bb-chat-ui-fluid-options], [data-bb-chat-ui-fluid-editor], [data-bb-chat-ui-fluid-actions]),
+[data-proto] [data-bb-chat-ui-fluid-toggle] { transition: opacity 200ms var(--ease-out); }
+[data-proto] [data-proto-icon-button] { width: var(--bb-chat-ui-fluid-control-size); height: var(--bb-chat-ui-fluid-control-size); min-width: var(--bb-chat-ui-fluid-control-size); padding: 0; border-radius: 999px; color: var(--foreground); }
+[data-proto] [data-proto-icon-button] svg { width: 16px; height: 16px; }
+
+/* 설정 줄이 열리면 같은 줄의 입력 요소를 내려 놓는다. 여러 줄이면 글은 남긴다. */
+form:is([data-proto="1"], [data-proto="3"], [data-proto="4"])[data-proto-mode] :is([data-bb-chat-ui-fluid-options], [data-bb-chat-ui-fluid-actions], [data-bb-chat-ui-fluid-toggle]),
+form:is([data-proto="1"], [data-proto="3"])[data-proto-mode] [data-bb-chat-ui-fluid-row]:not([data-multiline="true"]) > [data-bb-chat-ui-fluid-editor],
+form[data-proto="4"][data-proto-mode]:not([data-proto-open]) [data-bb-chat-ui-fluid-row]:not([data-multiline="true"]) > [data-bb-chat-ui-fluid-editor] { opacity: 0; pointer-events: none; }
+
+/* ── 설정 줄 (01·03·04) ── */
+[data-proto-layer] { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: var(--proto-row); display: flex; align-items: center; gap: 4px; padding: 0 8px;
+  opacity: 0; visibility: hidden; transform: translateY(4px);
+  transition: opacity 160ms var(--ease-exit), transform 200ms var(--ease-exit), visibility 0s linear 200ms; }
+[data-proto-layer] { container-type: inline-size; }
+/* 좁은 화면의 설정 줄은 모델 칩을 기호만 남겨 눈금에 폭을 준다. */
+@container (max-width: 330px) {
+  [data-proto-layer][data-view="effort"] [data-proto-chip] { width: var(--bb-chat-ui-fluid-control-size); padding: 0; justify-content: center; }
+  [data-proto-layer][data-view="effort"] [data-proto-chip-text] { display: none; }
+}
+[data-proto-layer][data-open] { opacity: 1; visibility: visible; transform: none;
+  transition: opacity 240ms var(--ease-out) 60ms, transform 320ms var(--ease-out) 60ms, visibility 0s; }
+[data-proto-chip] { flex: none; display: inline-flex; align-items: center; gap: 6px; max-width: 42%; height: var(--bb-chat-ui-fluid-control-size); padding: 0 12px 0 10px;
+  border: 0; border-radius: 999px; background: var(--state-hover); color: var(--foreground); font-size: var(--proto-font); line-height: var(--proto-line); white-space: nowrap; cursor: pointer; }
+[data-proto-chip]:hover { background: var(--state-active); }
+[data-proto-chip] > svg { flex: none; }
+[data-proto-chip-text] { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+[data-proto-slot] { position: relative; flex: 1 1 auto; min-width: 0; height: 100%; }
+[data-proto-pane] { position: absolute; inset: 0; display: flex; align-items: center; transition: opacity 200ms var(--ease-out), transform 260ms var(--ease-out); }
+[data-proto-layer][data-view="effort"] [data-proto-pane="model"] { opacity: 0; pointer-events: none; transform: translateX(-12px); }
+[data-proto-layer][data-view="model"] [data-proto-pane="effort"] { opacity: 0; pointer-events: none; transform: translateX(12px); }
+[data-proto-ruler] { flex: 1 1 auto; min-width: 0; padding: 0; }
+[data-proto-done] { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--bb-chat-ui-fluid-control-size); height: var(--bb-chat-ui-fluid-control-size);
+  border: 0; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); cursor: pointer; }
+
+/* 가로 모델 목록 */
+[data-proto-strip] { display: flex; align-items: center; gap: 2px; width: 100%; height: 100%; padding: 0 12px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
+  animation: proto-strip-in 260ms var(--ease-out); }
+[data-proto-strip]::-webkit-scrollbar { display: none; }
+[data-proto-strip] > button { flex: none; display: inline-flex; align-items: center; gap: 6px; height: var(--bb-chat-ui-fluid-control-size); padding: 0 10px; border: 0; border-radius: 999px;
+  background: transparent; color: var(--muted-foreground); font-size: var(--proto-font); line-height: var(--proto-line); white-space: nowrap; cursor: pointer; }
+[data-proto-strip] > button:hover { background: var(--state-hover); color: var(--foreground); }
+[data-proto-strip] > button[aria-checked="true"] { background: var(--state-active); color: var(--foreground); }
+[data-proto-strip-divider] { flex: none; width: 1px; height: 16px; margin: 0 6px; background: var(--border); }
+@keyframes proto-strip-in { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+
+/* ── 02 캡슐 ── */
+[data-proto] [data-proto-seed] { width: calc(var(--bb-chat-ui-fluid-control-size) + 20px); height: var(--bb-chat-ui-fluid-control-size); padding: 0 10px; gap: 4px; justify-content: flex-start; border-radius: 999px; color: var(--foreground); }
+form[data-proto="2"][data-proto-mode] :is([data-bb-chat-ui-fluid-options], [data-bb-chat-ui-fluid-toggle]) { opacity: 0; pointer-events: none; transition: none; }
+form[data-proto="2"][data-proto-mode] [data-bb-chat-ui-fluid-row]:not([data-multiline="true"]) > [data-bb-chat-ui-fluid-editor] { opacity: 0; pointer-events: none; }
+/* 트랙은 + 자리부터 전송 앞까지이고, 캡슐은 내용만큼만 늘어난다. */
+[data-proto-capsule-track] { --seed: calc(var(--bb-chat-ui-fluid-control-size) + 20px); --seed-left: calc(var(--bb-chat-ui-fluid-control-size) + 4px);
+  position: absolute; z-index: 3; bottom: 8px; height: var(--bb-chat-ui-fluid-control-size); left: 8px; right: calc(8px + var(--bb-chat-ui-fluid-control-size) + 4px);
+  container-type: inline-size; pointer-events: none; visibility: hidden; transition: visibility 0s linear 260ms; }
+[data-proto-capsule-track][data-open] { visibility: visible; transition: visibility 0s; }
+[data-proto-capsule] { position: relative; display: inline-flex; align-items: center; max-width: 100%; height: 100%; padding-right: 12px; vertical-align: top; }
+[data-proto-capsule][data-open] { pointer-events: auto; }
+[data-proto-capsule-face] { position: absolute; inset: 0; border-radius: 999px; background: var(--state-hover);
+  clip-path: inset(0 calc(100% - var(--seed-left) - var(--seed)) 0 var(--seed-left) round 999px); opacity: 0;
+  transition: clip-path 240ms var(--ease-exit), opacity 100ms linear 160ms; }
+[data-proto-capsule][data-open] > [data-proto-capsule-face] { clip-path: inset(0 0 0 0 round 999px); opacity: 1; transition: clip-path 460ms var(--ease-droplet), opacity 0s; }
+[data-proto-capsule] > :not([data-proto-capsule-face]) { position: relative; opacity: 0; transform: translateX(-8px);
+  transition: opacity 120ms var(--ease-exit), transform 160ms var(--ease-exit); }
+[data-proto-capsule][data-open] > :not([data-proto-capsule-face]) { opacity: 1; transform: none;
+  transition: opacity 220ms var(--ease-out) calc(90ms + var(--i) * 30ms), transform 320ms var(--ease-out) calc(90ms + var(--i) * 30ms); }
+/* 모델 기호는 씨앗 버튼 자리에서 출발해 캡슐의 왼쪽 끝으로 미끄러진다. */
+[data-proto-capsule] > [data-proto-capsule-close] { opacity: 1; transform: translateX(var(--seed-left)); transition: transform 240ms var(--ease-exit); }
+[data-proto-capsule][data-open] > [data-proto-capsule-close] { transform: none; transition: transform 460ms var(--ease-droplet); }
+[data-proto-capsule-close] { flex: none; display: inline-flex; align-items: center; width: 34px; height: 100%; padding: 0 0 0 10px; border: 0; border-radius: 999px; background: transparent; color: var(--foreground); cursor: pointer; }
+:is([data-proto-prev], [data-proto-next]) { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 100%; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--muted-foreground); cursor: pointer; }
+:is([data-proto-prev], [data-proto-next]):hover { color: var(--foreground); }
+[data-proto-capsule-name] { display: block; flex: 0 1 auto; min-width: 0; font-size: var(--proto-font); line-height: var(--proto-line); }
+[data-proto-capsule-name] > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-proto-capsule-sep] { flex: none; width: 1px; height: 16px; margin: 0 8px 0 6px; background: var(--border); }
+[data-proto-bars] { flex: none; display: flex; align-items: stretch; height: 100%; touch-action: none; }
+[data-proto-bars] > button { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 100%; padding: 0; border: 0; border-radius: 6px;
+  background: transparent; color: var(--foreground); opacity: .25; cursor: pointer; transition: opacity 160ms var(--ease-out); }
+[data-proto-bars] > button[data-on] { opacity: 1; }
+[data-proto-bars] > button > svg[data-effort-icon] { width: 14px; height: 14px; }
+[data-proto-capsule-label] { display: none; flex: none; margin-left: 8px; font-size: var(--proto-font); line-height: var(--proto-line); color: var(--muted-foreground); white-space: nowrap; }
+/* 트랙 폭에 따라 이전 버튼과 단계 이름을 더하거나 뺀다. */
+@container (max-width: 299px) { [data-proto-prev] { display: none; } }
+@container (min-width: 250px) { [data-proto-capsule-label] { display: block; } }
+
+/* ── 03 전송 버튼 ── */
+[data-proto-ring] { position: absolute; left: 50%; top: 50%; width: calc(var(--bb-chat-ui-fluid-control-size) + 10px); height: calc(var(--bb-chat-ui-fluid-control-size) + 10px);
+  transform: translate(-50%, -50%); overflow: visible; pointer-events: none; }
+[data-proto-ring] path { fill: none; stroke: var(--foreground); stroke-width: 2; stroke-linecap: round; opacity: .16; transition: opacity 200ms var(--ease-out); }
+[data-proto-ring] path[data-on] { opacity: .72; }
+form[data-proto="3"] [data-promptbox-submit-action] { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+[data-proto-editor-scroll] { position: relative; }
+[data-proto-placeholder] { position: absolute; top: 0; left: 4px; right: 4px; height: 24px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; color: var(--muted-foreground); pointer-events: none; }
+[data-proto-placeholder] > button { flex: none; max-width: 62%; overflow: hidden; text-overflow: ellipsis; padding: 0; border: 0; background: transparent; color: var(--foreground); font: inherit; pointer-events: auto; cursor: pointer;
+  text-decoration: underline dotted color-mix(in oklab, var(--foreground) 45%, transparent); text-underline-offset: 4px; }
+[data-proto-placeholder] > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── 04 둘째 줄 ── */
+form[data-proto="4"][data-proto-open] [data-bb-chat-ui-fluid-row] { grid-template-areas: "editor editor editor" "options . actions"; grid-template-rows: minmax(0, 1fr) auto; row-gap: 8px; }
+form[data-proto="4"][data-proto-open] [data-bb-chat-ui-fluid-row] > [data-bb-chat-ui-fluid-editor] { align-self: stretch; min-height: 0; display: flex; flex-direction: column; padding: 8px 8px 0; }
+[data-proto-labels] { position: absolute; z-index: 2; bottom: 8px; height: var(--bb-chat-ui-fluid-control-size);
+  left: calc(8px + var(--bb-chat-ui-fluid-control-size) + 4px); right: calc(16px + var(--bb-chat-ui-fluid-control-size) * 2);
+  display: flex; align-items: center; gap: 2px; overflow: hidden;
+  opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity 160ms var(--ease-exit), transform 200ms var(--ease-exit), visibility 0s linear 200ms; }
+[data-proto-labels][data-shown] { opacity: 1; visibility: visible; transform: none; transition: opacity 240ms var(--ease-out) 80ms, transform 320ms var(--ease-out) 80ms, visibility 0s; }
+[data-proto-labels] > button { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 6px; height: 100%; padding: 0 10px 0 8px; border: 0; border-radius: 999px;
+  background: transparent; color: var(--foreground); font-size: var(--proto-font); line-height: var(--proto-line); white-space: nowrap; cursor: pointer; }
+[data-proto-labels] > button + button { color: var(--muted-foreground); }
+[data-proto-labels] > button:hover { background: var(--state-hover); color: var(--foreground); }
+[data-proto-labels] > button > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+[data-proto-labels] > button > svg { flex: none; }
+
+/* ── 05 목록 ── */
+[data-proto] [data-proto-model-trigger] { max-width: 124px; height: var(--bb-chat-ui-fluid-control-size); padding: 0 12px 0 8px; gap: 6px; border-radius: 999px; color: var(--foreground);
+  font-size: var(--proto-font); line-height: var(--proto-line); font-weight: 400; }
+[data-proto] [data-proto-model-trigger] > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+[data-proto] [data-proto-model-trigger][aria-expanded="true"] { background: var(--state-active); }
+form[data-proto="5"] [data-bb-chat-ui-fluid-auxiliary] { max-height: calc(var(--bb-chat-ui-fluid-max-height) - var(--proto-row)); scrollbar-width: thin; }
+[data-proto-list] { padding: 8px 8px 0; animation: proto-list-in 260ms var(--ease-out) both; }
+@keyframes proto-list-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+[data-proto-list-group] + [data-proto-list-group] { margin-top: 6px; }
+[data-proto-list-caption] { display: flex; align-items: center; gap: 6px; margin: 0; padding: 4px 10px; font-size: 11px; line-height: 16px; color: var(--muted-foreground); }
+[data-proto-list-item] > button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 28px; padding: 6px 10px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--foreground); font-size: 12px; line-height: 16px; text-align: left; cursor: pointer; }
+html[data-bb-chat-ui-root-device="phone"] [data-proto-list-item] > button { min-height: 36px; padding: 8px 10px; border-radius: 14px; font-size: 14px; line-height: 20px; }
+[data-proto-list-item] > button:hover { background: var(--state-hover); }
+[data-proto-list-item][data-chosen] > button { font-weight: 600; }
+[data-proto-list-range] { font-size: 11px; line-height: 16px; color: var(--muted-foreground); font-weight: 400; }
+[data-proto-list-ruler] { padding: 0 2px 2px; animation: proto-list-in 260ms var(--ease-out) both; }
+
+/* ── 06 슬롯 ── */
+/* 열림 정도를 CSS 변수로 전환해 칸이 입력줄에서 위아래로 펼쳐진다(transform·opacity만). */
+@property --proto-slot-open { syntax: "<number>"; inherits: true; initial-value: 0; }
+form[data-proto="6"] { isolation: isolate; --proto-slot-row: 40px; --proto-slot-font: 13px; --proto-slot-icon: 40px; }
+html[data-bb-chat-ui-root-device="phone"] form[data-proto="6"] { --proto-slot-row: 44px; --proto-slot-font: 14px; --proto-slot-icon: 44px; }
+form[data-proto="6"][data-proto-mode] :is([data-bb-chat-ui-fluid-options], [data-bb-chat-ui-fluid-editor], [data-bb-chat-ui-fluid-toggle]) { opacity: 0; pointer-events: none; }
+/* 설정 버튼은 ✓가 되어 전송 버튼 자리로 옮겨 간다. */
+form[data-proto="6"] [data-proto-gear] { position: relative; z-index: 1; width: var(--bb-chat-ui-fluid-control-size); height: var(--bb-chat-ui-fluid-control-size);
+  min-width: var(--bb-chat-ui-fluid-control-size); padding: 0; border-radius: 999px; color: var(--foreground);
+  transition: transform 320ms var(--ease-out), background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
+form[data-proto="6"][data-proto-mode] [data-proto-gear] { z-index: 4; transform: translateX(calc(var(--bb-chat-ui-fluid-control-size) + 4px)); background: var(--primary); color: var(--primary-foreground); }
+[data-proto-gear-glyph] { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; transition: opacity 200ms var(--ease-out), transform 320ms var(--ease-out); }
+[data-proto-gear-glyph="check"] { opacity: 0; transform: rotate(-90deg) scale(.6); }
+form[data-proto="6"][data-proto-mode] [data-proto-gear-glyph="settings"] { opacity: 0; transform: rotate(90deg) scale(.6); }
+form[data-proto="6"][data-proto-mode] [data-proto-gear-glyph="check"] { opacity: 1; transform: none; }
+form[data-proto="6"] [data-proto-send-group] { transition: opacity 160ms var(--ease-out), transform 320ms var(--ease-out); }
+form[data-proto="6"][data-proto-mode] [data-proto-send-group] { opacity: 0; transform: scale(.6); pointer-events: none; }
+/* 가운데 칸의 중심 = 컴포저 아래 줄(전송·✓ 줄)의 중심. 다섯 칸 높이가 위아래로 같은 만큼 나간다. */
+:is([data-proto-slot-layer], [data-proto-slot-backdrop]) { position: absolute; bottom: calc(var(--proto-row) / 2 - var(--proto-slot-row) * 2.5); height: calc(var(--proto-slot-row) * 5); }
+/* 위아래 칸 뒤에 배경색 그라데이션과 frost 블러를 깔고, 가장자리로 갈수록 사라진다. */
+[data-proto-slot-backdrop] { z-index: -1; left: -12px; right: -12px; pointer-events: none;
+  background: linear-gradient(to bottom, transparent 0%, color-mix(in oklab, var(--background) 96%, transparent) 20%, color-mix(in oklab, var(--background) 96%, transparent) 80%, transparent 100%);
+  backdrop-filter: blur(14px) saturate(1.25); -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  mask-image: linear-gradient(to bottom, transparent, black 18%, black 82%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 18%, black 82%, transparent);
+  opacity: 0; transform: scaleY(.3); transition: opacity 200ms var(--ease-exit), transform 240ms var(--ease-exit); }
+[data-proto-slot-backdrop][data-open] { opacity: 1; transform: none; transition: opacity 240ms var(--ease-out), transform 360ms var(--ease-out); }
+[data-proto-slot-layer] { z-index: 2; left: 8px; right: calc(16px + var(--bb-chat-ui-fluid-control-size)); pointer-events: none; visibility: hidden;
+  --proto-slot-open: 0; transition: --proto-slot-open 240ms var(--ease-exit), visibility 0s linear 240ms; }
+[data-proto-slot-layer][data-open] { visibility: visible; pointer-events: auto; --proto-slot-open: 1; transition: --proto-slot-open 360ms var(--ease-out), visibility 0s; }
+[data-proto-slot-reels] { display: grid; grid-template-columns: var(--proto-slot-icon) minmax(0, 1.25fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); height: 100%; }
+[data-proto-wheel] { position: relative; min-width: 0; height: 100%; border-radius: 14px; outline: none; }
+[data-proto-wheel]:focus-visible { box-shadow: inset 0 0 0 2px var(--ring); }
+[data-proto-wheel-scroll] { height: 100%; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; scroll-snap-type: y mandatory;
+  padding-block: calc(var(--proto-slot-row) * 2); perspective: 420px; touch-action: pan-y; cursor: grab; }
+[data-proto-wheel-scroll]::-webkit-scrollbar { display: none; }
+[data-proto-wheel-scroll][data-dragging] { scroll-snap-type: none; cursor: grabbing; }
+/* --d는 가운데에서 몇 칸 떨어졌는지, --o·--s는 그 자리의 농도와 크기다. 닫힐 때는 모든 칸이 가운데로 모인다. */
+[data-proto-wheel-item] { display: flex; align-items: center; justify-content: center; gap: 5px; height: var(--proto-slot-row); padding: 0 6px;
+  scroll-snap-align: center; font-size: var(--proto-slot-font); line-height: 20px; white-space: nowrap; color: var(--foreground);
+  user-select: none; -webkit-user-select: none; cursor: pointer; transform-origin: center;
+  opacity: calc(var(--o, 1) * var(--proto-slot-open));
+  transform: translateY(calc(var(--d, 0) * var(--proto-slot-row) * (var(--proto-slot-open) - 1))) rotateX(calc(var(--d, 0) * -20deg)) scale(var(--s, 1)); }
+[data-proto-wheel-item][aria-selected="true"] { font-weight: 600; }
+[data-proto-wheel-item] > :is(svg, [data-proto-mark]) { flex: none; }
+[data-proto-wheel-item] > span:last-child:not([data-proto-mark]) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+[data-proto-wheel="provider"] [data-proto-mark] { width: 20px; height: 20px; }
+[data-proto-wheel="provider"] [data-proto-mark] > svg { width: 18px; height: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  form[data-proto="6"] :is([data-proto-gear], [data-proto-gear-glyph], [data-proto-send-group]), [data-proto-slot-layer], [data-proto-slot-backdrop] { transition: none !important; }
+}
+
+/* 여러 줄과 같은 스쿼클을 키운 모양에도 쓴다. */
+@supports (corner-shape: squircle) {
+  form:is([data-proto="4"], [data-proto="5"])[data-proto-open] [data-bb-chat-ui-fluid-height] { border-radius: 50.6px; corner-shape: squircle; }
+  html[data-bb-chat-ui-root-device="phone"] form:is([data-proto="4"], [data-proto="5"])[data-proto-open] [data-bb-chat-ui-fluid-height] { border-radius: 54.9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-proto-layer], [data-proto-pane], [data-proto-labels], [data-proto-capsule], [data-proto-capsule] > *, [data-proto-strip], [data-proto-list], [data-proto-list-ruler], [data-proto-ring] path,
+  [data-proto] [data-bb-chat-ui-fluid-row] > *, [data-proto] [data-bb-chat-ui-fluid-toggle] { transition: none !important; animation: none !important; }
+}

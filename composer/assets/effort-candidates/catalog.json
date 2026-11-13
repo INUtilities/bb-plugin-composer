@@ -1,0 +1,353 @@
+{
+  "source": {
+    "repository": "https://github.com/lucide-icons/lucide",
+    "commit": "53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c",
+    "licenseFile": "LICENSE",
+    "licenseUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/LICENSE"
+  },
+  "render": {
+    "size": 16,
+    "viewBox": "0 0 24 24",
+    "strokeWidth": 2,
+    "linecap": "round",
+    "linejoin": "round"
+  },
+  "groups": {
+    "none": [
+      {
+        "id": "none-01",
+        "slug": "minus",
+        "name": "마이너스",
+        "meaning": "추가 노력 없음",
+        "caution": "축소·제거로 보일 수 있음",
+        "file": "minus.svg",
+        "sha256": "a0c743ab6dbf545d8a6e19ef3874f48ede686ce68d25e231bd81f540d97b1f19",
+        "officialUrl": "https://lucide.dev/icons/minus",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/minus.svg"
+      },
+      {
+        "id": "none-02",
+        "slug": "circle-slash",
+        "name": "사선 원",
+        "meaning": "사용하지 않음",
+        "caution": "사용 금지로 보일 수 있음",
+        "file": "circle-slash.svg",
+        "sha256": "86bba60e60134a9fe08300401ff9886f07d48bb275860016bbaadd8da9de16b0",
+        "officialUrl": "https://lucide.dev/icons/circle-slash",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/circle-slash.svg"
+      },
+      {
+        "id": "none-03",
+        "slug": "circle",
+        "name": "빈 원",
+        "meaning": "비어 있는 기본 상태",
+        "caution": "미선택 표시로 보일 수 있음",
+        "file": "circle.svg",
+        "sha256": "3a991bd47beaf9874fba6fdf87bbba442970a89b5e6aa391558bc8b0a00a0513",
+        "officialUrl": "https://lucide.dev/icons/circle",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/circle.svg"
+      },
+      {
+        "id": "none-04",
+        "slug": "circle-minus",
+        "name": "원 안의 마이너스",
+        "meaning": "없음 표시",
+        "caution": "삭제·제한으로 보일 수 있음",
+        "file": "circle-minus.svg",
+        "sha256": "d1a47f5249d6aaedc89bb6caf0a4f172084171a369e5656b88ad8f32d8d8386e",
+        "officialUrl": "https://lucide.dev/icons/circle-minus",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/circle-minus.svg"
+      },
+      {
+        "id": "none-05",
+        "slug": "circle-dashed",
+        "name": "점선 원",
+        "meaning": "비어 있는 상태",
+        "caution": "로딩·대기로 보일 수 있음",
+        "file": "circle-dashed.svg",
+        "sha256": "9b964be491a821be8ffd714baf3b94ca2d70af789bddcfc1bda6bde250d89187",
+        "officialUrl": "https://lucide.dev/icons/circle-dashed",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/circle-dashed.svg"
+      },
+      {
+        "id": "none-06",
+        "slug": "slash",
+        "name": "사선",
+        "meaning": "비해당·없음",
+        "caution": "명령어나 구분선으로 보일 수 있음",
+        "file": "slash.svg",
+        "sha256": "2e8b636164f057c3113b04d36a5bb958f78aff454c4a644642da790ae2addbc8",
+        "officialUrl": "https://lucide.dev/icons/slash",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/slash.svg"
+      },
+      {
+        "id": "none-07",
+        "slug": "circle-off",
+        "name": "끊긴 원",
+        "meaning": "비활성 상태",
+        "caution": "연결 문제로 보일 수 있음",
+        "file": "circle-off.svg",
+        "sha256": "0d79af6d7b882eeb2d84c4fad7c965a4d20a043f7d2eeb42b16cd74ef0381c54",
+        "officialUrl": "https://lucide.dev/icons/circle-off",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/circle-off.svg"
+      },
+      {
+        "id": "none-08",
+        "slug": "ban",
+        "name": "금지 표시",
+        "meaning": "명확한 꺼짐",
+        "caution": "권한 없음으로 보일 수 있음",
+        "file": "ban.svg",
+        "sha256": "2eba67f86d70bbd5d22e4211d44d7dda86c3397410f714765a12c3cd3ca0ebe3",
+        "officialUrl": "https://lucide.dev/icons/ban",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/ban.svg"
+      },
+      {
+        "id": "none-09",
+        "slug": "power-off",
+        "name": "전원 끄기",
+        "meaning": "추론 기능 끄기",
+        "caution": "모델 전체 종료로 보일 수 있음",
+        "file": "power-off.svg",
+        "sha256": "c94776ca666caa783897f457a12c007bcd5504b0831d1b11d52a0117527da7c8",
+        "officialUrl": "https://lucide.dev/icons/power-off",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/power-off.svg"
+      },
+      {
+        "id": "none-10",
+        "slug": "unplug",
+        "name": "분리된 플러그",
+        "meaning": "추가 연산 없음",
+        "caution": "네트워크 단절로 보일 수 있음",
+        "file": "unplug.svg",
+        "sha256": "469819bc5dbdb54f9c1ccc06415f45c73b995b567016f07fb560af1eeeb0cf2e",
+        "officialUrl": "https://lucide.dev/icons/unplug",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/unplug.svg"
+      }
+    ],
+    "max": [
+      {
+        "id": "max-01",
+        "slug": "star",
+        "name": "별",
+        "meaning": "특별한 상위 단계",
+        "caution": "즐겨찾기로 보일 수 있음",
+        "file": "star.svg",
+        "sha256": "c59da86b889569387db28e69ad00a89f96af22863ad9eea9aa12c4876a14338c",
+        "officialUrl": "https://lucide.dev/icons/star",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/star.svg"
+      },
+      {
+        "id": "max-02",
+        "slug": "diamond",
+        "name": "마름모",
+        "meaning": "상위 등급",
+        "caution": "유료 등급으로 보일 수 있음",
+        "file": "diamond.svg",
+        "sha256": "2a2f4ccad87409bed020191ebfb30ff806dca49a1b687d0be96f4d7343da8d7c",
+        "officialUrl": "https://lucide.dev/icons/diamond",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/diamond.svg"
+      },
+      {
+        "id": "max-03",
+        "slug": "sparkle",
+        "name": "한 개의 빛",
+        "meaning": "강화된 처리",
+        "caution": "자동 보정으로 보일 수 있음",
+        "file": "sparkle.svg",
+        "sha256": "b5906ce99aaa1f3894dc4d30201a267508b57646f7010d5d6ecdb019764fe0b7",
+        "officialUrl": "https://lucide.dev/icons/sparkle",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/sparkle.svg"
+      },
+      {
+        "id": "max-04",
+        "slug": "crown",
+        "name": "왕관",
+        "meaning": "최상급 표시",
+        "caution": "구독·유료 기능으로 보일 수 있음",
+        "file": "crown.svg",
+        "sha256": "544c1b6181749ae4b4c98861a5a6ed1242940239cda97cc13c74e84a03fd68c0",
+        "officialUrl": "https://lucide.dev/icons/crown",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/crown.svg"
+      },
+      {
+        "id": "max-05",
+        "slug": "chevrons-up",
+        "name": "겹친 위 화살표",
+        "meaning": "높은 단계",
+        "caution": "접기·스크롤로 보일 수 있음",
+        "file": "chevrons-up.svg",
+        "sha256": "dcc30f99a1e3177505dee39749fec4722cf567d420d6829780990ef744ea533c",
+        "officialUrl": "https://lucide.dev/icons/chevrons-up",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/chevrons-up.svg"
+      },
+      {
+        "id": "max-06",
+        "slug": "badge",
+        "name": "배지 윤곽",
+        "meaning": "특별한 등급",
+        "caution": "인증 배지로 보일 수 있음",
+        "file": "badge.svg",
+        "sha256": "b1a904606688d5c8e4b8fb00ed70a65bfbeb97c532bda3eb773e1e8734b816fb",
+        "officialUrl": "https://lucide.dev/icons/badge",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/badge.svg"
+      },
+      {
+        "id": "max-07",
+        "slug": "gem",
+        "name": "보석",
+        "meaning": "고급 단계",
+        "caution": "유료 기능처럼 보이며 작은 크기에서 복잡함",
+        "file": "gem.svg",
+        "sha256": "377618223555b2847b553a81f6974c76b7ce14d1207bcc0e98baa27a6a36d40e",
+        "officialUrl": "https://lucide.dev/icons/gem",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/gem.svg"
+      },
+      {
+        "id": "max-08",
+        "slug": "trophy",
+        "name": "트로피",
+        "meaning": "높은 수준",
+        "caution": "성과·순위로 보일 수 있음",
+        "file": "trophy.svg",
+        "sha256": "c641553befdb899b2eb01075c0962c73b4b0e0d1835d9d407f5d5d4d70f77d03",
+        "officialUrl": "https://lucide.dev/icons/trophy",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/trophy.svg"
+      },
+      {
+        "id": "max-09",
+        "slug": "award",
+        "name": "메달",
+        "meaning": "우수 등급",
+        "caution": "보상·수상으로 보일 수 있음",
+        "file": "award.svg",
+        "sha256": "4d9818ae68bb0776cbec9e65d26a33c7854eff600f33fcd6268e67b9d1caa06d",
+        "officialUrl": "https://lucide.dev/icons/award",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/award.svg"
+      },
+      {
+        "id": "max-10",
+        "slug": "badge-check",
+        "name": "체크 배지",
+        "meaning": "검증된 높은 수준",
+        "caution": "완료·인증으로 보일 수 있음",
+        "file": "badge-check.svg",
+        "sha256": "a83b36e35ed35be896c5e5d39d0a63ba4368735ac22f09a26a31726259467775",
+        "officialUrl": "https://lucide.dev/icons/badge-check",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/badge-check.svg"
+      }
+    ],
+    "ultra": [
+      {
+        "id": "ultra-01",
+        "slug": "sun",
+        "name": "광선",
+        "meaning": "바깥으로 퍼지는 출력",
+        "caution": "밝기·테마로 보일 수 있음",
+        "file": "sun.svg",
+        "sha256": "a3955c8b0425fcc5c9ba12d2bdd77fe53b2cd5dd05e7742a56f342e996fb2ef8",
+        "officialUrl": "https://lucide.dev/icons/sun",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/sun.svg"
+      },
+      {
+        "id": "ultra-02",
+        "slug": "asterisk",
+        "name": "방사형 별표",
+        "meaning": "여러 방향의 강조",
+        "caution": "필수 항목·각주로 보일 수 있음",
+        "file": "asterisk.svg",
+        "sha256": "10d8ef9416577f24d2fa0e3c65156671f0da18825344734456a664b20d649250",
+        "officialUrl": "https://lucide.dev/icons/asterisk",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/asterisk.svg"
+      },
+      {
+        "id": "ultra-03",
+        "slug": "sparkles",
+        "name": "여러 개의 빛",
+        "meaning": "강화된 AI 처리",
+        "caution": "일반 AI 생성 버튼으로 보일 수 있음",
+        "file": "sparkles.svg",
+        "sha256": "f5499f33f09d7158151e9bd2ec0faf79ff8fb57292f84fdd7286d96d0f0424d8",
+        "officialUrl": "https://lucide.dev/icons/sparkles",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/sparkles.svg"
+      },
+      {
+        "id": "ultra-04",
+        "slug": "orbit",
+        "name": "궤도",
+        "meaning": "확장된 처리 범위",
+        "caution": "동기화로 보일 수 있음",
+        "file": "orbit.svg",
+        "sha256": "e2b8b7d7f82044181860cbc2dab9b7e8d3c4778fbbce9a62f5c4038175f4faf4",
+        "officialUrl": "https://lucide.dev/icons/orbit",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/orbit.svg"
+      },
+      {
+        "id": "ultra-05",
+        "slug": "atom",
+        "name": "원자",
+        "meaning": "복합 처리",
+        "caution": "과학 도구처럼 보이며 작은 크기에서 복잡함",
+        "file": "atom.svg",
+        "sha256": "9ac2f48402368cb4e4db5c59371698a86f35598c8b8076411bfdfdd63550ffd8",
+        "officialUrl": "https://lucide.dev/icons/atom",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/atom.svg"
+      },
+      {
+        "id": "ultra-06",
+        "slug": "brain-circuit",
+        "name": "회로 뇌",
+        "meaning": "깊은 추론",
+        "caution": "모델 종류처럼 보이며 작은 크기에서 복잡함",
+        "file": "brain-circuit.svg",
+        "sha256": "134231b12f68aca2943d6a7a6aa891dd2e26d89b5658a2c78c7094fbe29797e9",
+        "officialUrl": "https://lucide.dev/icons/brain-circuit",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/brain-circuit.svg"
+      },
+      {
+        "id": "ultra-07",
+        "slug": "cpu",
+        "name": "칩",
+        "meaning": "높은 연산량",
+        "caution": "하드웨어 설정으로 보일 수 있음",
+        "file": "cpu.svg",
+        "sha256": "ec83bb69ec029d367d749afc445b39c8e95891ebf99b0400652677c2b149b99c",
+        "officialUrl": "https://lucide.dev/icons/cpu",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/cpu.svg"
+      },
+      {
+        "id": "ultra-08",
+        "slug": "zap",
+        "name": "번개",
+        "meaning": "강한 출력",
+        "caution": "Fast mode로 보일 수 있음",
+        "file": "zap.svg",
+        "sha256": "4c395891eab4d1e5627c5d414a16db037317cb2f12453de0f3a1130964c6d444",
+        "officialUrl": "https://lucide.dev/icons/zap",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/zap.svg"
+      },
+      {
+        "id": "ultra-09",
+        "slug": "flame",
+        "name": "불꽃",
+        "meaning": "강한 단계",
+        "caution": "인기·열·위험으로 보일 수 있음",
+        "file": "flame.svg",
+        "sha256": "cede1462a46a7a3b3daf9d101f0b59484b1d882a4c42a75670810a6d4f8d42fb",
+        "officialUrl": "https://lucide.dev/icons/flame",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/flame.svg"
+      },
+      {
+        "id": "ultra-10",
+        "slug": "sun-medium",
+        "name": "짧은 광선",
+        "meaning": "조밀한 방사형 강조",
+        "caution": "밝기로 보이며 sun과의 구분이 약함",
+        "file": "sun-medium.svg",
+        "sha256": "6e4ba404e99515a2856269cf281abb2f03f635307d0627147dadd34e72d669a3",
+        "officialUrl": "https://lucide.dev/icons/sun-medium",
+        "sourceUrl": "https://github.com/lucide-icons/lucide/blob/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c/icons/sun-medium.svg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,155 @@
+[
+  {
+    "device": "desktop",
+    "initial": {
+      "label": "Effort: Medium",
+      "peek": false,
+      "button": {
+        "x": 845,
+        "y": 515.78125,
+        "width": 36,
+        "height": 32,
+        "top": 515.78125,
+        "right": 881,
+        "bottom": 547.78125,
+        "left": 845
+      },
+      "labelWidth": 0,
+      "multi": "false"
+    },
+    "expanded": {
+      "label": "Effort: High",
+      "peek": true,
+      "button": {
+        "x": 813.171875,
+        "y": 515.78125,
+        "width": 67.828125,
+        "height": 32,
+        "top": 515.78125,
+        "right": 881,
+        "bottom": 547.78125,
+        "left": 813.171875
+      },
+      "labelWidth": 25.828125,
+      "multi": "false"
+    },
+    "folded": {
+      "label": "Effort: High",
+      "peek": false,
+      "button": {
+        "x": 845,
+        "y": 515.78125,
+        "width": 36,
+        "height": 32,
+        "top": 515.78125,
+        "right": 881,
+        "bottom": 547.78125,
+        "left": 845
+      },
+      "labelWidth": 0,
+      "multi": "false"
+    },
+    "multiline": {
+      "label": "Effort: Extra high",
+      "peek": false,
+      "button": {
+        "x": 316.171875,
+        "y": 451.78125,
+        "width": 96.6875,
+        "height": 32,
+        "top": 451.78125,
+        "right": 412.859375,
+        "bottom": 483.78125,
+        "left": 316.171875
+      },
+      "labelWidth": 54.6875,
+      "multi": "true"
+    },
+    "boundary": null,
+    "errors": []
+  },
+  {
+    "device": "phone",
+    "initial": {
+      "label": "Effort: Medium",
+      "peek": false,
+      "button": {
+        "x": 281,
+        "y": 534.578125,
+        "width": 36,
+        "height": 32,
+        "top": 534.578125,
+        "right": 317,
+        "bottom": 566.578125,
+        "left": 281
+      },
+      "labelWidth": 0,
+      "multi": "false"
+    },
+    "expanded": {
+      "label": "Effort: High",
+      "peek": true,
+      "button": {
+        "x": 249.171875,
+        "y": 534.578125,
+        "width": 67.828125,
+        "height": 32,
+        "top": 534.578125,
+        "right": 317,
+        "bottom": 566.578125,
+        "left": 249.171875
+      },
+      "labelWidth": 25.828125,
+      "multi": "false"
+    },
+    "folded": {
+      "label": "Effort: High",
+      "peek": false,
+      "button": {
+        "x": 281,
+        "y": 534.578125,
+        "width": 36,
+        "height": 32,
+        "top": 534.578125,
+        "right": 317,
+        "bottom": 566.578125,
+        "left": 281
+      },
+      "labelWidth": 0,
+      "multi": "false"
+    },
+    "multiline": {
+      "label": "Effort: Extra high",
+      "peek": false,
+      "button": {
+        "x": 107,
+        "y": 534.578125,
+        "width": 96.6875,
+        "height": 32,
+        "top": 534.578125,
+        "right": 203.6875,
+        "bottom": 566.578125,
+        "left": 107
+      },
+      "labelWidth": 54.6875,
+      "multi": "true"
+    },
+    "boundary": {
+      "label": "Effort: Low",
+      "peek": false,
+      "button": {
+        "x": 281,
+        "y": 462.578125,
+        "width": 36,
+        "height": 32,
+        "top": 462.578125,
+        "right": 317,
+        "bottom": 494.578125,
+        "left": 281
+      },
+      "labelWidth": 0,
+      "multi": "false"
+    },
+    "errors": []
+  }
+]

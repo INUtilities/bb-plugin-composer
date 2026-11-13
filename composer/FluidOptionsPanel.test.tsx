@@ -7,6 +7,24 @@ import { FluidOptionsPanel, type FluidOptionsPanelProps } from './FluidOptionsPa
 import { DropdownMenuItem } from './components/ui/dropdown-menu';
 
 afterEach(()=>{cleanup();vi.restoreAllMocks();});
+
+// 기존 필의 퇴장이 끝난 뒤 옵션이 투명한 상태에서 시작하고 해제 때 원래 필을 복원한다.
+it('fades existing pills before options appear and restores their interaction on close',()=>{
+ const previous=Element.prototype.animate,entries:{target:Element;frames:Keyframe[];options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
+ Element.prototype.animate=function(frames,options){
+  const entry={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};entries.push(entry);
+  return {...entry,effect:{getKeyframes:()=>entry.frames,setKeyframes:(frames:Keyframe[])=>{entry.frames=frames;}}} as unknown as Animation;
+ };
+ try{
+  const v=renderSlot({component:()=> <div data-promptbox-shell=""><div data-bb-chat-ui-info-bar=""><button>Goal</button><button>Diff</button></div><div data-bb-chat-ui-slot-toolbar=""><button>06 슬롯</button></div><FluidOptionsPanel plugins={{plusMenuItems:[],MenuEntry:()=>null}} onAttach={()=>{}} onClose={()=>{}} onAction={()=>{}} onPluginSelected={()=>{}}/></div>},{},{});
+  const shell=v.container.querySelector('[data-promptbox-shell]')!,bar=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-info-bar]')!;
+  expect(shell.hasAttribute('data-bb-chat-ui-fluid-options-open')).toBe(true);expect(bar.inert).toBe(true);
+  const fades=entries.filter(entry=>entry.options.duration===200),entrance=entries.find(entry=>entry.options.duration===460)!;
+  expect(fades.map(entry=>entry.options.delay)).toEqual([0,45,90]);
+  expect(entrance.options.delay).toBe(290);expect(entrance.frames[0].opacity).toBe(0);
+  v.unmount();expect(shell.hasAttribute('data-bb-chat-ui-fluid-options-open')).toBe(false);expect(bar.inert).toBeFalsy();expect(entries.every(entry=>entry.cancel.mock.calls.length===1)).toBe(true);
+ }finally{Element.prototype.animate=previous;}
+});
 const plugin=(disabled:ExperimentalComposerPlusMenuContribution['item']['disabled']=false):ExperimentalComposerPlusMenuContribution=>({key:'p/item',pluginId:'p',customizationId:'c',generation:1,item:{id:'item',label:'Plugin option',icon:'Zap',description:'플러그인 옵션 설명',disabled,run:vi.fn()}});
 function mount(overrides:Partial<Omit<FluidOptionsPanelProps,'plugins'>>={},items:ExperimentalComposerPlusMenuContribution[]=[],afterSelected=()=>{}){
  const restore=vi.fn();
@@ -38,6 +56,15 @@ it('focuses the first choice, navigates enabled buttons, and handles Escape loca
  fireEvent.keyDown(attach,{key:'End'});expect(document.activeElement).toBe(plan);
  fireEvent.keyDown(panel,{key:'Escape'});expect(props.onClose).toHaveBeenCalledTimes(1);
 });
+// 가로 필 목록에서도 비활성 항목을 건너뛰고 양방향으로 이동하는지 확인한다.
+it('navigates the wrapping pill menu with left and right arrows',()=>{
+ mount({onAttach:vi.fn(),actions:[{kind:'plan',text:'/plan '}]},[plugin(true)]);
+ expect(screen.getByRole('menu',{name:'추가 옵션'}).getAttribute('aria-orientation')).toBe('horizontal');
+ const attach=screen.getByRole('menuitem',{name:'Attach files'}),plan=screen.getByRole('menuitem',{name:'Plan'});
+ fireEvent.keyDown(attach,{key:'ArrowRight'});expect(document.activeElement).toBe(plan);
+ fireEvent.keyDown(plan,{key:'ArrowRight'});expect(document.activeElement).toBe(attach);
+ fireEvent.keyDown(attach,{key:'ArrowLeft'});expect(document.activeElement).toBe(plan);
+});
 it('keeps host items inline as real buttons without a Radix root, portal or drawer',()=>{
  const{NativeEntry}=mount({},[plugin()]);
  expect(NativeEntry).toHaveBeenCalled();expect(screen.getByRole('menuitem',{name:'Plugin option'}).tagName).toBe('BUTTON');
@@ -67,41 +94,40 @@ it('does not take focus when retained only for the outgoing morph',()=>{
  const outside=document.createElement('input');document.body.append(outside);outside.focus();
  try{mount({active:false},[plugin()]);expect(document.activeElement).toBe(outside);}finally{outside.remove();}
 });
-it('fades the complete menu once regardless of item count and cancels when closed',()=>{
- const media={matches:false,addEventListener:vi.fn(),removeEventListener:vi.fn()};
- const old=window.matchMedia;window.matchMedia=()=>media as unknown as MediaQueryList;
- const motions:{target:Element;frames:Keyframe[];options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
- const oldAnimate=Element.prototype.animate;
- Element.prototype.animate=function(frames,options){const record={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};motions.push(record);return record as unknown as Animation;};
- try{
-  const items=Array.from({length:12},(_,i)=>({...plugin(),key:`p/${i}`}));const {v}=mount({},items);
-  expect(motions).toHaveLength(1);expect(motions[0].target.getAttribute('role')).toBe('menu');
-  expect(motions[0].options.delay??0).toBe(0);expect(motions[0].options.duration).toBe(300);
-  expect(motions[0].frames).toEqual([{opacity:0},{opacity:1}]);
-  v.unmount();for(const m of motions)expect(m.cancel).toHaveBeenCalled();expect(media.removeEventListener).toHaveBeenCalled();
- }finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
-});
-it('cancels entering choices immediately when reduced motion is enabled',()=>{
- let change:(()=>void)|undefined;const media={matches:false,addEventListener:(_event:string,fn:()=>void)=>{change=fn;},removeEventListener:vi.fn()};
- const old=window.matchMedia;window.matchMedia=()=>media as unknown as MediaQueryList;
- const cancel=vi.fn(),oldAnimate=Element.prototype.animate;Element.prototype.animate=()=>({cancel}) as unknown as Animation;
- try{const {v}=mount({onAttach:vi.fn()});expect(change).toBeTypeOf('function');media.matches=true;change!();expect(cancel).toHaveBeenCalled();v.unmount();}finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
-});
-it('keeps menu text stationary while its opacity fades in',()=>{
- const oldAnimate=Element.prototype.animate,motions:{frames:Keyframe[];options:KeyframeAnimationOptions}[]=[];
- Element.prototype.animate=function(frames,options){motions.push({frames:frames as Keyframe[],options:options as KeyframeAnimationOptions});return {cancel:vi.fn()} as unknown as Animation;};
- try{
-  mount({onAttach:vi.fn()});expect(motions).toHaveLength(1);
-  const {frames,options}=motions[0];
-  expect(frames.every(frame=>frame.transform===undefined)).toBe(true);
-  expect(frames.at(-1)!.opacity).toBe(1);expect(options.duration).toBe(300);
+// 기존 상단 pill과 같은 구간별 모션을 필 전체에 순서대로 적용한다.
+it('matches the existing upper-pill droplet on each whole option with 45ms spacing',()=>{
+ const oldAnimate=Element.prototype.animate,entries:{target:Element;frames:Keyframe[];options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
+ Element.prototype.animate=function(frames,options){const entry={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};entries.push(entry);return {...entry,effect:{getKeyframes:()=>entry.frames,setKeyframes:(frames:Keyframe[])=>{entry.frames=frames;}}} as unknown as Animation;};
+ try{const {v}=mount({onAttach:vi.fn(),actions:[{kind:'plan',text:'/plan '}]},[plugin(true)]);const items=screen.getAllByRole('menuitem');
+  expect(entries.map(entry=>entry.target)).toEqual(items);
+  expect(entries.map(entry=>entry.options.delay)).toEqual([0,45,90]);
+  expect(entries[0].frames.map(frame=>frame.transform)).toEqual(['translateY(8px) scale(.82,.72)','translateY(-4px) scale(.94,1.16)','translateY(0) scale(1.1,.94)','translateY(-1px) scale(.985,1.015)','none']);
+  expect(entries[0].frames.map(frame=>frame.offset)).toEqual([0,.35,.65,.82,1]);
+  expect(entries[0].frames.slice(0,-1).every(frame=>frame.easing==='cubic-bezier(.36,0,.18,1)')).toBe(true);
+  expect(entries.every(entry=>entry.options.duration===460&&entry.options.fill==='backwards'&&entry.frames[0].opacity===0&&entry.frames.slice(1).every(frame=>frame.opacity===1))).toBe(true);
+  v.unmount();expect(entries.every(entry=>entry.cancel.mock.calls.length===1)).toBe(true);
  }finally{Element.prototype.animate=oldAnimate;}
 });
-it('preserves a disabled choice opacity during its entrance',()=>{
+// 동작 줄이기를 켜면 필 전체의 진행 중인 등장도 즉시 끝낸다.
+it('cancels whole-pill droplets immediately when reduced motion is enabled',()=>{
+ let change:(()=>void)|undefined;const media={matches:false,addEventListener:(_event:string,fn:()=>void)=>{change=fn;},removeEventListener:vi.fn()};
+ const old=window.matchMedia,oldAnimate=Element.prototype.animate,cancel=vi.fn();window.matchMedia=()=>media as unknown as MediaQueryList;Element.prototype.animate=()=>({cancel}) as unknown as Animation;
+ try{const {v}=mount({onAttach:vi.fn()});media.matches=true;change!();expect(cancel).toHaveBeenCalledOnce();v.unmount();expect(cancel).toHaveBeenCalledOnce();expect(media.removeEventListener).toHaveBeenCalled();}finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
+});
+// 처음부터 동작 줄이기이면 필을 지연 없이 표시한다.
+it('does not start whole-pill droplets when reduced motion is already enabled',()=>{
+ const old=window.matchMedia,oldAnimate=Element.prototype.animate,animate=vi.fn();window.matchMedia=()=>({matches:true,addEventListener:vi.fn(),removeEventListener:vi.fn()}) as unknown as MediaQueryList;Element.prototype.animate=animate;
+ try{mount({onAttach:vi.fn()});expect(animate).not.toHaveBeenCalled();}finally{window.matchMedia=old;Element.prototype.animate=oldAnimate;}
+});
+// 직접 조작은 순서를 기다리지 않고 필 전체의 모션을 끝낸다.
+it.each(['pointer','keyboard','wheel'])('finishes whole-pill droplets on %s input',kind=>{
+ const oldAnimate=Element.prototype.animate,cancel=vi.fn();Element.prototype.animate=()=>({cancel}) as unknown as Animation;
+ try{mount({onAttach:vi.fn()});const panel=screen.getByRole('region',{name:'컴포저 옵션'});if(kind==='pointer')fireEvent.pointerDown(screen.getByRole('menuitem'));else if(kind==='keyboard')fireEvent.keyDown(panel,{key:'ArrowRight'});else fireEvent.wheel(panel,{deltaY:40});expect(cancel).toHaveBeenCalledOnce();}finally{Element.prototype.animate=oldAnimate;}
+});
+// 기존 상단 pill처럼 opacity를 건드리지 않고 비활성 흐림을 유지한다.
+it('preserves disabled opacity during the whole-pill droplet',()=>{
  const style=document.createElement('style');style.textContent='button:disabled { opacity:.4; }';document.head.append(style);
- const oldAnimate=Element.prototype.animate,frames:Keyframe[][]=[];
- Element.prototype.animate=function(value){frames.push(value as Keyframe[]);return {cancel:vi.fn()} as unknown as Animation;};
- try{mount({},[plugin(true)]);expect(frames).toHaveLength(1);expect(Number(frames[0].at(-1)!.opacity)).toBe(1);expect(getComputedStyle(screen.getByRole('menuitem')).opacity).toBe('0.4');}finally{style.remove();Element.prototype.animate=oldAnimate;}
+ try{mount({},[plugin(true)]);expect(getComputedStyle(screen.getByRole('menuitem')).opacity).toBe('0.4');}finally{style.remove();}
 });
 it('keeps menu wheel scrolling native inside a list but blocks short lists, edges and card padding',()=>{
  mount({onAttach:vi.fn()});
