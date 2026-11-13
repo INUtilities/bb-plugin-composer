@@ -215,3 +215,16 @@ it('returns to a usable microphone if stopping fails instead of leaving a broken
  vi.spyOn(Recorder.instances[0],'stop').mockImplementationOnce(()=>{throw Error('recorder unavailable');});select(button);
  await screen.findByRole('alert');expect(screen.getByRole('button',{name:'음성모드 시작'})).toBeTruthy();expect(screen.queryByRole('group',{name:'음성 입력 동작'})).toBeNull();expect(tracks[0].stop).toHaveBeenCalledOnce();expect(p.transcribe).not.toHaveBeenCalled();
 });
+
+// 전사가 즉시 끝나 마이크가 전송 버튼으로 바뀌어도 같은 손뗌의 호환 click은 전송하지 않는다.
+for(const nextPress of [false,true])it(`guards a retargeted hold-release click and ${nextPress?'allows the next intentional pointer press':'allows a later keyboard activation'}`,async()=>{
+ const clock=vi.spyOn(performance,'now').mockReturnValue(1000),send=vi.fn(),p=props();
+ const v=render(<form><FluidVoiceControl {...p} appearance="composer" fallback={<button type="button" onClick={send}>초안 전송</button>}/></form>);
+ const mic=screen.getByRole('button',{name:'음성모드 시작'});down(mic);await waitFor(()=>expect(Recorder.instances).toHaveLength(1));
+ clock.mockReturnValue(1800);up(mic);await waitFor(()=>expect(p.deliver).toHaveBeenCalledWith('변환된 초안','insert'));
+ v.rerender(<form><FluidVoiceControl {...p} appearance="composer" showFallback fallback={<button type="button" onClick={send}>초안 전송</button>}/></form>);
+ const button=screen.getByRole('button',{name:'초안 전송'});
+ if(!nextPress){fireEvent.click(button,{detail:1});expect(send).not.toHaveBeenCalled();fireEvent.keyDown(button,{key:'Enter'});fireEvent.click(button,{detail:0});}
+ else{down(button);fireEvent.click(button,{detail:1});}
+ expect(send).toHaveBeenCalledTimes(1);
+});

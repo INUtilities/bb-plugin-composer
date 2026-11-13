@@ -6,7 +6,7 @@ const BAR = '[data-bb-chat-ui-info-bar]';
 const WIDTH = '--bb-chat-ui-fluid-toolbar-width';
 
 // 기존 정보 행에 임시 필을 연결하고 정보 행이 없을 때만 원래 자리를 쓴다.
-export function FluidComposerToolbar({hidden=false,children}:{hidden?:boolean;children:ReactNode}) {
+export function FluidComposerToolbar({hidden=false,inactive=false,children}:{hidden?:boolean;inactive?:boolean;children:ReactNode}) {
   const anchor=useRef<HTMLSpanElement>(null), toolbar=useRef<HTMLDivElement>(null);
   const binding=useRef<{shell:Element;stop():void}|null>(null);
   const [target,setTarget]=useState<HTMLElement|null>(null);
@@ -26,6 +26,12 @@ export function FluidComposerToolbar({hidden=false,children}:{hidden?:boolean;ch
     observer.observe(shell,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
     binding.current={shell,stop:()=>observer.disconnect()};
   });
+  // 시각적으로 숨긴 정보 행도 키보드 대상에서 제외하며 빌리기 전 상태를 복구한다.
+  useLayoutEffect(()=>{
+    if(!target || !inactive) return;
+    const previous=target.getAttribute('inert');target.setAttribute('inert','');
+    return ()=>{if(previous===null)target.removeAttribute('inert');else target.setAttribute('inert',previous);};
+  },[target,inactive]);
   // 해제와 StrictMode 재연결에서 로컬 관찰을 정리한다.
   useLayoutEffect(()=>()=>{binding.current?.stop();binding.current=null;},[]);
   // 기존 행의 가용 폭을 예약하고 같은 460ms·45ms 물방울 효과를 연결한다.
@@ -44,6 +50,6 @@ export function FluidComposerToolbar({hidden=false,children}:{hidden?:boolean;ch
       if(target){if(previous)target.style.setProperty(WIDTH,previous);else target.style.removeProperty(WIDTH);target.dispatchEvent(new Event('bb-chat-ui:composer-data',{bubbles:true}));}
     };
   },[target,hidden]);
-  const content=<div ref={toolbar} data-bb-chat-ui-slot-toolbar="" data-shared-row={!!target || undefined} hidden={hidden}>{children}</div>;
+  const content=<div ref={toolbar} data-bb-chat-ui-slot-toolbar="" data-shared-row={!!target || undefined} hidden={hidden} inert={inactive || undefined}>{children}</div>;
   return <><span ref={anchor} hidden/>{target ? createPortal(content,target):content}</>;
 }

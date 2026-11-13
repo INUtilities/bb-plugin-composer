@@ -33,3 +33,11 @@ test('documents own independent styles and duplicate release cannot remove anoth
   peer();assert.equal(styles(da).length,0);assert.equal(styles(db).length,1);assert.equal(db.documentElement.getAttribute(mark),'');
  }finally{first();peer();other();a.window.close();b.window.close();}
 });
+
+// 마지막 owner의 즉시 정리는 유지하되 문서 전체를 무효화하는 전역 property 등록은 하지 않는다.
+test('mounting a scoped composer sheet does not register document-wide custom properties',()=>{
+ const dom=new JSDOM('<!doctype html>'),d=dom.window.document;
+ const stop=injectFluidComposer(d);
+ try{assert.doesNotMatch(styles(d)[0].textContent ?? '', /@property\s/);}
+ finally{stop();dom.window.close();}
+});

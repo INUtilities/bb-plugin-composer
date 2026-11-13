@@ -44,6 +44,7 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
   const focusChoices = useRef(false);
   const press = useRef<{ pointerId: number; at: number; button: HTMLButtonElement } | null>(null);
   const ignorePointerClick = useRef(false);
+  const clearReleaseClick = useRef<() => void>(() => {});
   const session = useRef<HoldVoiceSession | null>(null), preview = useRef<(() => void) | null>(null);
   const stopPreview = useCallback(() => { preview.current?.(); preview.current = null; }, []);
   const releasePress = useCallback(() => {
@@ -98,7 +99,7 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
     };
     window.addEventListener('blur', loseFocus); document.addEventListener('visibilitychange', visibility); window.addEventListener('keydown', escape, true);
     return () => {
-      mounted = false; releasePress(); stopPreview();
+      mounted = false; clearReleaseClick.current(); releasePress(); stopPreview();
       window.removeEventListener('blur', loseFocus); document.removeEventListener('visibilitychange', visibility); window.removeEventListener('keydown', escape, true);
       recording.dispose(); current.current.onStreamChange?.(null); if (session.current === recording) session.current = null;
     };
@@ -135,7 +136,25 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
           setGesture('toggle'); current.current.onGestureChange?.('toggle'); return;
         }
         if (session.current?.snapshot.phase === 'starting') cancel();
-        else if (session.current?.snapshot.phase === 'recording') finish('insert');
+        else if (session.current?.snapshot.phase === 'recording') {
+          // 빠른 전사로 버튼이 교체돼도 같은 손뗌의 호환 click이 전송으로 넘어가지 않게 한다.
+          clearReleaseClick.current();
+          const doc = held.button.ownerDocument, form = held.button.closest('form');
+          const clear = () => {
+            doc.removeEventListener('click', click, true); doc.removeEventListener('pointerdown', clear, true); doc.removeEventListener('keydown', clear, true);
+            clearReleaseClick.current = () => {};
+          };
+          const click = (event: MouseEvent) => {
+            const native = event as MouseEvent & { pointerType?: string; sourceCapabilities?: { firesTouchEvents?: boolean } };
+            if ((!form || form.contains(event.target as Node)) && (event.detail > 0 || native.pointerType || native.sourceCapabilities?.firesTouchEvents)) {
+              event.preventDefault(); event.stopImmediatePropagation(); ignorePointerClick.current = false;
+            }
+            clear();
+          };
+          clearReleaseClick.current = clear;
+          doc.addEventListener('click', click, true); doc.addEventListener('pointerdown', clear, true); doc.addEventListener('keydown', clear, true);
+          finish('insert');
+        }
       }}
       onPointerCancel={event => { if (press.current?.pointerId === event.pointerId) cancel(); }}
       onLostPointerCapture={event => { if (press.current?.pointerId === event.pointerId) cancel(); }}

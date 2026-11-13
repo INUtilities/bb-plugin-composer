@@ -4,7 +4,6 @@ import { pillStyle } from './pill.ts';
 import { FLUID_COMPOSER_SLOT_MS, FLUID_COMPOSER_INPUT_MS } from './fluid-composer-height.ts';
 
 export const fluidPickerCss=`
-@property --bb-slot-open { syntax:"<number>"; inherits:true; initial-value:0; }
 [data-bb-chat-ui-slot-toolbar] { display:flex; align-items:center; gap:8px; margin-bottom:8px; min-width:0; }
 [data-bb-chat-ui-slot-toolbar][data-shared-row] { flex:none; margin:0; }
 [data-bb-chat-ui-slot-toolbar][hidden] { display:none !important; }
@@ -37,8 +36,8 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --b
 [data-bb-chat-ui-slot-backdrop][data-full-width] { left:0; right:0; bottom:0; height:120px; border-radius:0; opacity:1; transform:none; transition:height ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.out}; background:color-mix(in oklab,var(--bb-chat-ui-glass-base,var(--background)) 82%,transparent); mask-image:linear-gradient(to bottom,transparent,black 50%); -webkit-mask-image:linear-gradient(to bottom,transparent,black 50%); }
 [data-bb-chat-ui-slot-backdrop][data-open] { opacity:1; transform:none; transition:opacity ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.out},transform ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.out}; }
 [data-bb-chat-ui-slot-backdrop][data-full-width][data-open] { height:240px; transition:height ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.out}; }
-[data-bb-chat-ui-slot-layer] { z-index:3; left:8px; right:calc(16px + var(--bb-chat-ui-fluid-control-size)); pointer-events:none; visibility:hidden; --bb-slot-open:0; transition:--bb-slot-open ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.exit},visibility 0s linear ${FLUID_COMPOSER_SLOT_MS}ms; }
-[data-bb-chat-ui-slot-layer][data-open] { --bb-slot-open:1; visibility:visible; pointer-events:auto; transition:--bb-slot-open ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.out},visibility 0s; }
+[data-bb-chat-ui-slot-layer] { z-index:3; left:8px; right:calc(16px + var(--bb-chat-ui-fluid-control-size)); pointer-events:none; visibility:hidden; --bb-slot-open:0; transition:visibility 0s linear ${FLUID_COMPOSER_SLOT_MS}ms; }
+[data-bb-chat-ui-slot-layer][data-open] { --bb-slot-open:1; visibility:visible; pointer-events:auto; transition:visibility 0s; }
 [data-bb-chat-ui-slot-reels] { display:grid; grid-template-columns:var(--bb-slot-icon,40px) minmax(0,var(--bb-chat-ui-slot-model-fr,1.25fr)) minmax(0,var(--bb-chat-ui-slot-effort-fr,1fr)) var(--bb-slot-fast-width,0px); grid-template-rows:minmax(0,1fr); height:100%; transition:grid-template-columns ${FLUID_COMPOSER_INPUT_MS}ms ${EASE.out}; }
 [data-bb-chat-ui-slot-reels][data-fast] { --bb-slot-fast-width:calc(var(--bb-chat-ui-fluid-control-size) + var(--bb-slot-fast-peek-width,0px)); }
 [data-bb-chat-ui-slot-wheel] { position:relative; min-width:0; height:100%; border-radius:14px; outline:none; }
@@ -48,7 +47,17 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --b
 [data-bb-chat-ui-slot-scroll][data-dragging] { scroll-snap-type:none; cursor:grabbing; }
 [data-bb-chat-ui-slot-wheel][aria-disabled="true"] [data-bb-chat-ui-slot-scroll] { overflow:hidden; pointer-events:none; }
 [data-bb-chat-ui-slot-item] { height:var(--bb-slot-row); padding:0 6px; scroll-snap-align:center; font-size:var(--bb-slot-font); line-height:20px; white-space:nowrap; color:var(--foreground); user-select:none; -webkit-user-select:none; cursor:pointer; }
-[data-bb-chat-ui-slot-item-face] { display:flex; align-items:center; justify-content:center; gap:5px; height:100%; transform-origin:center; opacity:calc(var(--bb-slot-opacity,1)*var(--bb-slot-open)); transform:translateY(calc(var(--bb-slot-distance,0)*var(--bb-slot-row)*(var(--bb-slot-open) - 1))) rotateX(calc(var(--bb-slot-distance,0)* -20deg)) scale(var(--bb-slot-scale,1)); }
+[data-bb-chat-ui-slot-item-face] { display:flex; align-items:center; justify-content:center; gap:5px; height:100%; transform-origin:center; animation:bb-chat-ui-slot-exit ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.exit}; opacity:calc(var(--bb-slot-opacity,1)*var(--bb-slot-open)); transform:translateY(calc(var(--bb-slot-distance,0)*var(--bb-slot-row)*(var(--bb-slot-open) - 1))) rotateX(calc(var(--bb-slot-distance,0)* -20deg)) scale(var(--bb-slot-scale,1)); }
+/* 열기·닫기만 직접 보간하고 열린 휠의 실제 스크롤 위치는 즉시 따른다. */
+@keyframes bb-chat-ui-slot-enter {
+ from { opacity:0; transform:translateY(calc(var(--bb-slot-distance,0)*var(--bb-slot-row)* -1)) rotateX(calc(var(--bb-slot-distance,0)* -20deg)) scale(var(--bb-slot-scale,1)); }
+ to { opacity:var(--bb-slot-opacity,1); transform:translateY(0) rotateX(calc(var(--bb-slot-distance,0)* -20deg)) scale(var(--bb-slot-scale,1)); }
+}
+@keyframes bb-chat-ui-slot-exit {
+ from { opacity:var(--bb-slot-opacity,1); transform:translateY(0) rotateX(calc(var(--bb-slot-distance,0)* -20deg)) scale(var(--bb-slot-scale,1)); }
+ to { opacity:0; transform:translateY(calc(var(--bb-slot-distance,0)*var(--bb-slot-row)* -1)) rotateX(calc(var(--bb-slot-distance,0)* -20deg)) scale(var(--bb-slot-scale,1)); }
+}
+[data-bb-chat-ui-slot-layer][data-open] [data-bb-chat-ui-slot-item-face] { animation:bb-chat-ui-slot-enter ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.out}; }
 [data-bb-chat-ui-slot-item][aria-selected="true"] { font-weight:600; }
 [data-bb-chat-ui-slot-item-face] > :is(svg,img) { flex:none; }
 [data-bb-chat-ui-slot-item-face] > span:last-child { min-width:0; overflow:hidden; text-overflow:ellipsis; }
@@ -56,7 +65,8 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --b
 [data-bb-chat-ui-slot-model] > [data-bb-chat-ui-slot-wheel] { width:100%; }
 [data-bb-chat-ui-slot-fast] { position:relative; align-self:center; display:flex; align-items:center; justify-content:flex-start; gap:0; width:100%; height:var(--bb-chat-ui-fluid-control-size); border:0; padding:0 calc((var(--bb-chat-ui-fluid-control-size) - 14px)/2); box-sizing:border-box; border-radius:8px; color:var(--muted-foreground); background:transparent; cursor:pointer; opacity:var(--bb-slot-open); transform:translateY(calc((1 - var(--bb-slot-open))*8px)); }
 [data-bb-chat-ui-slot-fast][aria-pressed="true"] { color:var(--brand,var(--ring)); }
-[data-bb-chat-ui-slot-fast] { transition:gap ${FLUID_COMPOSER_INPUT_MS}ms ${EASE.out}; }
+[data-bb-chat-ui-slot-fast] { transition:gap ${FLUID_COMPOSER_INPUT_MS}ms ${EASE.out},opacity ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.exit},transform ${FLUID_COMPOSER_SLOT_MS}ms ${EASE.exit}; }
+[data-bb-chat-ui-slot-layer][data-open] [data-bb-chat-ui-slot-fast] { transition-timing-function:${EASE.out}; }
 [data-bb-chat-ui-slot-fast] > svg { flex:none; }
 [data-bb-chat-ui-slot-fast-label] { display:inline-flex; flex:none; max-width:0; overflow:clip; font-size:calc(var(--bb-slot-font) - 1px); line-height:16px; white-space:nowrap; color:color-mix(in oklab,var(--muted-foreground) 72%,transparent); pointer-events:none; opacity:0; transform:scale(.92); transform-origin:left center; transition:max-width ${FLUID_COMPOSER_INPUT_MS}ms ${EASE.out},opacity ${FLUID_COMPOSER_INPUT_MS}ms ease,transform ${FLUID_COMPOSER_INPUT_MS}ms ease; }
 [data-bb-chat-ui-slot-fast][data-peek] { gap:6px; }
@@ -68,5 +78,5 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-composer] { --b
 :is([data-bb-chat-ui-slot-fast],[data-bb-chat-ui-slot-confirm]):focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
 [data-bb-chat-ui-slot-status] { grid-column:2 / span 2; align-self:center; max-height:120px; overflow:auto; padding:8px; font-size:12px; line-height:18px; color:var(--muted-foreground); }
 [data-bb-chat-ui-slot-status] > button { display:block; margin-top:8px; border:0; border-radius:8px; padding:4px 8px; background:var(--state-hover); color:var(--foreground); font:inherit; cursor:pointer; }
-@media (prefers-reduced-motion:reduce) { [data-bb-chat-ui-slot-layer],[data-bb-chat-ui-slot-reels],[data-bb-chat-ui-slot-backdrop],[data-bb-chat-ui-slot-fast],[data-bb-chat-ui-slot-fast-label],[data-bb-chat-ui-slot-fast-tooltip],[data-promptbox-shell][data-bb-chat-ui-slot-picker-open]::before { transition:none !important; } }
+@media (prefers-reduced-motion:reduce) { [data-bb-chat-ui-slot-layer],[data-bb-chat-ui-slot-reels],[data-bb-chat-ui-slot-backdrop],[data-bb-chat-ui-slot-fast],[data-bb-chat-ui-slot-fast-label],[data-bb-chat-ui-slot-fast-tooltip],[data-promptbox-shell][data-bb-chat-ui-slot-picker-open]::before { transition:none !important; } [data-bb-chat-ui-slot-item-face] { animation:none !important; } }
 `;

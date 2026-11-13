@@ -3430,7 +3430,7 @@ export function PromptBoxInternal({
       {picker => <FluidComposerDetails scopeKey={composerScopeKey} suspended={fluidVoiceActive}
         onOpen={() => { picker.close(); dismissComposerMenu(); setFluidOptionsOpen(false); }}>
       {(detailsToggle, details) => <>
-      <FluidComposerToolbar hidden={fluidVoiceActive}>{picker.modeToggle}{detailsToggle}</FluidComposerToolbar>
+      <FluidComposerToolbar hidden={fluidVoiceActive} inactive={picker.open || fluidOptionsOpen}>{picker.modeToggle}{detailsToggle}</FluidComposerToolbar>
       {details}
       <FluidComposerBody
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
@@ -3465,7 +3465,7 @@ export function PromptBoxInternal({
         </div>}
         actions={<>
           <span data-bb-chat-ui-fluid-extra-actions="" hidden={fluidVoiceActive} inert={picker.open || undefined} aria-hidden={picker.open || undefined}><contributions.Actions />{compactBeforeSend}</span>
-          {picker.enabled ? picker.trigger : null}
+          {picker.enabled && !voiceInteractionActive ? picker.trigger : null}
           <div data-bb-chat-ui-slot-submit="">
           <div data-promptbox-submit-group="" className="flex shrink-0 flex-row items-center" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
             <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream} onGestureChange={setFluidVoiceGesture}

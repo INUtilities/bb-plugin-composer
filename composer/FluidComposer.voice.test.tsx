@@ -60,6 +60,7 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
   if(held){expect(v.container.querySelector('[data-bb-chat-ui-voice-orbit]')).toBeTruthy();expect(mic.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();}
   else expect(v.container.querySelectorAll('[data-bb-chat-ui-voice-bar]').length).toBeGreaterThan(7);
   expect(shell.hasAttribute('data-bb-chat-ui-fluid-details-open')).toBe(false);
+  expect(screen.queryByRole('button',{name:'모델과 Effort 설정'})).toBeNull();
   expect(screen.queryByRole('button',{name:'정보와 설정'})).toBeNull();
   expect((screen.getByRole('button',{name:'Prompt actions'}) as HTMLButtonElement).disabled).toBe(true);
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-editor]')!.hasAttribute('hidden')).toBe(false);
