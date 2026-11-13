@@ -9,19 +9,19 @@ beforeEach(() => vi.stubGlobal('matchMedia', (media: string) => ({media, matches
 afterEach(() => {cleanup(); vi.unstubAllGlobals();});
 
 // BB를 대신하는 합성 초안과 전송 콜백으로 독립 슬롯을 연다.
-function mount() {
+function mount(text = '보관할 초안') {
  const run = vi.fn();
  const scope = {kind: 'thread', threadId: 'thr_standalone_fixture'} as const;
  const renderer: ExperimentalComposerRendererApi = {
   key:'standalone-fluid-test', inputLocked:false, focusComposerShortcut:null, decorationSources:[],
-  view:{scope, layout:'expanded', draft:{text:'보관할 초안', isEmpty:false, attachmentCount:0}, run:{isRunning:false,isSubmitting:false}},
+  view:{scope, layout:'expanded', draft:{text, isEmpty:!text, attachmentCount:0}, run:{isRunning:false,isSubmitting:false}},
   input:{surface:'thread', autoFocus:false, mentionTriggers:[], commandTriggers:[], resolveMentionLink:()=>null, mentionMenuPlacement:'top',
    promptActions:[{kind:'goal',text:'/goal '}],
    submission:{enter:{kind:'send',requiresInput:true,shortcut:{ariaKeyshortcuts:'Enter',label:'Enter'},run},modifier:null,showModifierInMenu:false}},
   threadLinks:{parse:()=>null,cached:()=>null,resolve:async()=>{}}, clipboard:{readMessage:()=>null,readMessageImage:async()=>new File([],'unused')},
   dispatchAppCommandKey:()=>false, showError:vi.fn(), attachmentSrc:()=>'',
  };
- return {run, mounted:renderSlot({component:Composer},{},{composer:{scope,text:'보관할 초안'},composerRenderer:renderer})};
+ return {run, mounted:renderSlot({component:Composer},{},{composer:{scope,text},composerRenderer:renderer})};
 }
 
 it('installs Fluid only while the standalone composer is mounted and restores prior root state', async () => {
@@ -56,4 +56,40 @@ it('keeps the mounted editor and draft through standalone options and only calls
   fireEvent.keyDown(editor,{key:'Enter'});
   await waitFor(()=>expect(run).toHaveBeenCalledTimes(1));
  } finally {mounted.unmount();}
+});
+
+// 최초 자식 layout effect가 CSS 없는 높이를 저장하면 첫 paint 뒤 접히는 결함을 막는다.
+it.each([false,true])('styles the real renderer before its first height measurement (phone=%s)', async phone => {
+ vi.stubGlobal('matchMedia',(media:string)=>({media,matches:phone && ['(hover: none)','(pointer: coarse)','(any-pointer: coarse)'].includes(media),onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}}));
+ const reads:{styled:boolean;device:string|null}[]=[];
+ const original=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'offsetHeight')!.get!;
+ const height=vi.spyOn(HTMLElement.prototype,'offsetHeight','get').mockImplementation(function(this:HTMLElement){
+  if(!this.hasAttribute('data-bb-chat-ui-fluid-content'))return original.call(this) as number;
+  const styled=!!document.getElementById('bb-chat-ui-fluid-composer');
+  const device=this.closest('form')?.getAttribute('data-bb-composer-device')??null;
+  reads.push({styled,device});
+  return styled?(device==='phone'?52:48):148;
+ });
+ const {mounted}=mount('');
+ try{
+  await waitFor(()=>expect(mounted.container.querySelector('.ProseMirror')).toBeTruthy());
+  expect(reads.length).toBeGreaterThan(0);
+  expect(reads.every(read=>read.styled)).toBe(true);
+  expect(reads[0].device).toBe(phone?'phone':'desktop');
+  expect(mounted.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!.style.height).toBe(phone?'52px':'48px');
+ }finally{mounted.unmount();height.mockRestore();}
+});
+
+it('shares styles with peers and installs them again after renderer deselection', async()=>{
+ const a=mount(''),b=mount('');
+ try{
+  await waitFor(()=>expect(b.mounted.container.querySelector('.ProseMirror')).toBeTruthy());
+  const style=document.getElementById('bb-chat-ui-fluid-composer');
+  expect(document.querySelectorAll('#bb-chat-ui-fluid-composer')).toHaveLength(1);
+  a.mounted.unmount();expect(document.getElementById('bb-chat-ui-fluid-composer')).toBe(style);
+  b.mounted.unmount();expect(document.getElementById('bb-chat-ui-fluid-composer')).toBeNull();
+  const c=mount('');
+  try{await waitFor(()=>expect(c.mounted.container.querySelector('.ProseMirror')).toBeTruthy());expect(document.querySelectorAll('#bb-chat-ui-fluid-composer')).toHaveLength(1);}finally{c.mounted.unmount();}
+  expect(document.getElementById('bb-chat-ui-fluid-composer')).toBeNull();
+ }finally{a.mounted.unmount();b.mounted.unmount();}
 });

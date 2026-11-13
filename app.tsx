@@ -1,14 +1,14 @@
 export { thirdPartyComposerNotices } from "./composer/notices";
 export { thirdPartyChatUiNotice } from "./lib/chat-ui-notice";
 import { definePluginApp } from "@get-bb/plugin-sdk/app";
-import { useLayoutEffect } from "react";
+import { useInsertionEffect } from "react";
 import { FluidComposer } from "./composer/FluidComposer";
 import { DeviceChromeBridge } from "./lib/device-chrome";
 import { injectFluidComposer } from "./lib/fluid-composer";
 
-// 선택된 독립 컴포저에만 Fluid 입력기와 모서리 스타일을 연결한다.
+// 자식이 첫 높이를 재기 전에 스타일을 준비하고 선택된 컴포저 수명에만 연결한다.
 export function Composer() {
-  useLayoutEffect(() => injectFluidComposer(document), []);
+  useInsertionEffect(() => injectFluidComposer(document), []);
   return <><DeviceChromeBridge /><FluidComposer /></>;
 }
 
