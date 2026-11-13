@@ -5,6 +5,7 @@ import { renderSlot } from '@get-bb/plugin-sdk/testing/app';
 import { useComposer, type ExperimentalComposerPlusMenuContribution, type ExperimentalComposerMenuEntryProps } from '@get-bb/plugin-sdk/app';
 import { FluidOptionsPanel, type FluidOptionsPanelProps } from './FluidOptionsPanel';
 import { DropdownMenuItem } from './components/ui/dropdown-menu';
+import { injectFluidComposer } from '../lib/fluid-composer';
 
 afterEach(()=>{cleanup();vi.restoreAllMocks();});
 
@@ -57,7 +58,7 @@ it('focuses the first choice, navigates enabled buttons, and handles Escape loca
  fireEvent.keyDown(panel,{key:'Escape'});expect(props.onClose).toHaveBeenCalledTimes(1);
 });
 // 가로 필 목록에서도 비활성 항목을 건너뛰고 양방향으로 이동하는지 확인한다.
-it('navigates the wrapping pill menu with left and right arrows',()=>{
+it('navigates the scrolling pill menu with left and right arrows',()=>{
  mount({onAttach:vi.fn(),actions:[{kind:'plan',text:'/plan '}]},[plugin(true)]);
  expect(screen.getByRole('menu',{name:'추가 옵션'}).getAttribute('aria-orientation')).toBe('horizontal');
  const attach=screen.getByRole('menuitem',{name:'Attach files'}),plan=screen.getByRole('menuitem',{name:'Plan'});
@@ -166,4 +167,21 @@ it('does not trap scroll in an inactive menu and releases native listeners on un
  expect(wheel().defaultPrevented).toBe(false);v.unmount();
  const active=mount({onAttach:vi.fn()});panel=screen.getByRole('region',{name:'컴포저 옵션'});active.v.unmount();
  document.body.append(panel);try{expect(wheel().defaultPrevented).toBe(false);}finally{panel.remove();}
+});
+
+// 실제 가로 overflow 규칙에서 스와이프·wheel은 목록 안에서만 이동한다.
+it('allows horizontal wheel and swipe inside the pill row and contains both edges',()=>{
+ const stop=injectFluidComposer(document),{v}=mount({onAttach:vi.fn()});
+ try{
+  const panel=screen.getByRole('region',{name:'컴포저 옵션'}),list=screen.getByRole('menu'),item=screen.getByRole('menuitem'),parent=vi.fn();
+  panel.parentElement!.addEventListener('wheel',parent);panel.parentElement!.addEventListener('touchmove',parent);
+  Object.defineProperties(list,{clientWidth:{value:100},scrollWidth:{value:600}});
+  const wheel=(dx:number,dy=0)=>{const event=new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaX:dx,deltaY:dy});item.dispatchEvent(event);return event;};
+  const touch=(type:string,x:number)=>{const event=new TouchEvent(type,{bubbles:true,cancelable:true,touches:[{clientX:x,clientY:100} as Touch]});item.dispatchEvent(event);return event;};
+  list.scrollLeft=100;expect(wheel(80).defaultPrevented).toBe(false);expect(wheel(-80).defaultPrevented).toBe(false);
+  touch('touchstart',200);expect(touch('touchmove',150).defaultPrevented).toBe(false);
+  list.scrollLeft=500;expect(wheel(80).defaultPrevented).toBe(true);expect(touch('touchmove',100).defaultPrevented).toBe(true);
+  list.scrollLeft=0;expect(wheel(-80).defaultPrevented).toBe(true);expect(touch('touchmove',150).defaultPrevented).toBe(true);
+  expect(wheel(0,80).defaultPrevented).toBe(true);expect(parent).not.toHaveBeenCalled();
+ }finally{v.unmount();stop();}
 });

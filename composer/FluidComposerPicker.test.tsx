@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { useRef } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { renderSlot } from '@get-bb/plugin-sdk/testing/app';
 import { FluidComposerPicker } from './FluidComposerPicker';
+import { fluidPickerCss } from '../lib/fluid-picker';
 
 beforeEach(() => {
   sessionStorage.clear();
@@ -54,7 +55,7 @@ function fixtures() {
 }
 
 // 제품과 같은 슬롯을 같은 입력 노드 옆에 연결한다.
-function mount(load?: (args:any) => Promise<any>, thread=false) {
+function mount(load?: (args:any) => Promise<any>, thread=false, settings:Record<string,boolean>={experimentalSlotPicker:true}) {
   const {providers,opus,gpt} = fixtures();
   const models = vi.fn(load ?? (async({providerId})=>({models:[providerId==='codex'?gpt:opus],selectedOnlyModels:[]})));
   const error=vi.fn();
@@ -72,11 +73,55 @@ function mount(load?: (args:any) => Promise<any>, thread=false) {
       </>}
     </FluidComposerPicker></form></div></div>;
   }
-  const view=renderSlot({component:Harness},{},{providers:{status:'ready',providers:providers as any},
+  const view=renderSlot({component:Harness},{},{settings,providers:{status:'ready',providers:providers as any},
     composer:{scope:thread ? {kind:'thread',threadId:'thread'}:{kind:'new-thread',projectId:'project'},selection:{providerId:'claude',model:'Opus',reasoningLevel:'medium'},text:'보관할 초안'},
-    sdk:{providers:{models},threads:{get:vi.fn(async()=>({environmentId:'env-owned'})) as any}}});
+    sdk:{system:{executionOptions:models},threads:{get:vi.fn(async()=>({environmentId:'env-owned'})) as any}}});
   return {view,models,error};
 }
+
+// 모델별 상세 목록을 읽고 Hermes의 처음·중간·마지막 단계를 생략 없이 확정한다.
+it('discovers and selects every advertised Hermes effort while preserving the draft', async()=>{
+  const levels=['default','none','minimal','low','medium','high','xhigh','max','ultra'];
+  const labels=['Default','None','Minimal','Low','Medium','High','Extra high','Max','Ultra'];
+  const {view,models}=mount(async({selectedModel})=>({models:[{
+    ...fixtures().opus,
+    supportedReasoningEfforts:(selectedModel==='Opus'?levels:['low','medium','high']).map(reasoningEffort=>({reasoningEffort,description:reasoningEffort})),
+  }],selectedOnlyModels:[]}));
+  const input=screen.getByRole('textbox',{name:'초안 검수'});
+  for(let index=0;index<levels.length;index++){
+    fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
+    await screen.findByRole('option',{name:'Ultra'});
+    const wheel=screen.getByRole('listbox',{name:'Effort'});
+    expect(within(wheel).getAllByRole('option').map(item=>item.textContent)).toEqual(labels);
+    fireEvent.keyDown(wheel,{key:'Home'});
+    for(let step=0;step<index;step++) fireEvent.keyDown(wheel,{key:'ArrowDown'});
+    expect(within(wheel).getByRole('option',{name:labels[index]}).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(screen.getByRole('button',{name:'설정 완료'}));
+    await waitFor(()=>expect(view.inspection.composer.selection?.reasoningLevel).toBe(levels[index]));
+    await waitFor(()=>expect(screen.getByRole('button',{name:'모델과 Effort 설정'}).getAttribute('aria-expanded')).toBe('false'));
+    expect(screen.getByRole('textbox',{name:'초안 검수'})).toBe(input);
+    expect(view.inspection.composer.text).toBe('보관할 초안');
+  }
+  expect(models).toHaveBeenCalledTimes(1);
+  expect(models).toHaveBeenCalledWith(expect.objectContaining({selectedModel:'Opus'}));
+});
+
+// 아직 모르는 모델의 Effort를 빈 목록으로 고정하지 않고 선택 시 한 번 발견한다.
+it('discovers unknown model efforts on demand and caches the completed catalog',async()=>{
+  const {view,models}=mount(async({selectedModel})=>({models:[fixtures().opus,{
+    ...fixtures().gpt,reasoningDiscovery:selectedModel==='GPT'?'known':'unknown',
+    supportedReasoningEfforts:selectedModel==='GPT'?[{reasoningEffort:'ultra',description:'Ultra'}]:[],
+  }],selectedOnlyModels:[]}));
+  fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
+  fireEvent.click(await screen.findByRole('option',{name:'GPT'}));
+  await screen.findByRole('option',{name:'Ultra'});
+  expect(models).toHaveBeenLastCalledWith(expect.objectContaining({selectedModel:'GPT'}));
+  fireEvent.click(screen.getByRole('option',{name:'Opus'}));
+  fireEvent.click(screen.getByRole('option',{name:'GPT'}));
+  expect(screen.getByRole('option',{name:'Ultra'}).getAttribute('aria-selected')).toBe('true');
+  expect(models).toHaveBeenCalledTimes(2);
+  expect(view.inspection.composer.selections).toHaveLength(0);
+});
 
 // 06과 기존 방식을 전환해도 초안과 입력 노드를 유지하고 목록은 미리 읽지 않는다.
 it('toggles the actual mode without replacing the input, clearing the draft or eagerly fetching models',()=>{
@@ -132,24 +177,29 @@ it('retains the closed shell state for chat motion and restores it on unmount',a
   expect(shell.hasAttribute('data-bb-chat-ui-slot-picker-open')).toBe(false);
 });
 
-// 블러 한 장은 닫혀도 하단에 남고 입력기 해제 때 제거된다.
-it('portals one full-width backdrop into the chat footer and cleans it up',async()=>{
+it('does not grow the promptbox shell when the slot picker opens',()=>{
+ expect(fluidPickerCss).not.toContain('[data-promptbox-shell][data-bb-chat-ui-slot-picker-open]::before');
+ expect(fluidPickerCss).not.toContain('[data-promptbox-shell][data-bb-chat-ui-slot-picker-open="true"]::before');
+ // 슬롯은 같은 컴포저의 확인 버튼 높이를 기준으로 유지한다.
+ expect(fluidPickerCss).toContain('bottom:calc(8px + var(--bb-chat-ui-fluid-control-size)/2 - var(--bb-slot-row,40px)*2.5);');
+});
+
+// 슬롯을 여닫아도 입력 노드를 유지하고 하단에 별도 배경을 만들지 않는다.
+it('keeps the same draft without a footer backdrop when opening and closing slots',async()=>{
   const {view}=mount();
   const footer=view.container.querySelector('[data-scroll-footer]')!;
-  const backdrop=footer.querySelector('[data-bb-chat-ui-slot-backdrop]')!;
-  expect(backdrop.parentElement).toBe(footer);
-  expect(backdrop.hasAttribute('data-open')).toBe(false);
-  expect(backdrop.hasAttribute('data-full-width')).toBe(true);
-  expect(view.container.querySelector('form')!.contains(backdrop)).toBe(false);
+  const children=Array.from(footer.children);
+  const editor=screen.getByRole('textbox',{name:'초안 검수'});
+  expect(footer.querySelector('[data-bb-chat-ui-slot-backdrop]')).toBeNull();
   fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
   await screen.findByRole('option',{name:'Opus'});
-  expect(backdrop.hasAttribute('data-open')).toBe(true);
-  expect(footer.querySelectorAll('[data-bb-chat-ui-slot-backdrop]')).toHaveLength(1);
+  expect(footer.querySelector('[data-bb-chat-ui-slot-backdrop]')).toBeNull();
+  expect(Array.from(footer.children)).toEqual(children);
+  expect(screen.getByRole('textbox',{name:'초안 검수'})).toBe(editor);
   fireEvent.keyDown(screen.getByRole('listbox',{name:'Effort'}),{key:'Escape'});
-  expect(backdrop.hasAttribute('data-open')).toBe(false);
-  expect(backdrop.parentElement).toBe(footer);
-  view.unmount();
-  expect(footer.contains(backdrop)).toBe(false);
+  expect(footer.querySelector('[data-bb-chat-ui-slot-backdrop]')).toBeNull();
+  expect(screen.getByRole('textbox',{name:'초안 검수'})).toBe(editor);
+  expect((editor as HTMLInputElement).value).toBe('보관할 초안');
 });
 
 // 공급자를 굴리는 동안 초안을 건드리지 않고 확인 때만 실제 호스트 선택을 적용한다.
@@ -296,4 +346,17 @@ it('cancels discovery when switching to the original mode and remembers the mode
   const next=mount();
   expect(screen.getByRole('button',{name:'06 슬롯'}).getAttribute('aria-pressed')).toBe('false');
   expect(next.models).not.toHaveBeenCalled();
+});
+
+// 이전 실행에 슬롯 켜짐이 남아 있어도 플러그인의 실험 설정 없이는 기본 모델 UI를 쓴다.
+it.each([{}, {experimentalSlotPicker:false}])('defaults to the normal controls without an enabled experiment setting: %j',async(settings)=>{
+  sessionStorage.setItem('bb-chat-ui:fluid-slot-picker','on');
+  const {view,models}=mount(undefined,false,settings);
+  await act(async()=>{});
+  expect(screen.queryByRole('button',{name:'06 슬롯'})).toBeNull();
+  expect(screen.queryByRole('button',{name:'모델과 Effort 설정'})).toBeNull();
+  expect(screen.getByRole('button',{name:'기존 모델 선택'})).toBeTruthy();
+  expect((screen.getByRole('textbox',{name:'초안 검수'}) as HTMLInputElement).value).toBe('보관할 초안');
+  expect(models).not.toHaveBeenCalled();
+  expect(view.inspection.composer.selections).toHaveLength(0);
 });

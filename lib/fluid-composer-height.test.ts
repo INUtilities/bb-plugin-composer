@@ -6,7 +6,7 @@ import { EASE } from './motion.ts';
 
 // 자연 높이와 실제 표시 높이를 분리해 진행 중인 전환도 재현한다.
 function fixture(withEditor = false) {
-  const dom = new JSDOM('<div id="viewport"><div id="content"><div id="moving"><div class="ProseMirror"></div></div></div></div>', { pretendToBeVisual: true });
+  const dom = new JSDOM('<form data-bb-chat-ui-fluid-composer><div id="viewport"><div id="content"><div id="moving"><div class="ProseMirror"></div></div></div></div></form>', { pretendToBeVisual: true });
   const win = dom.window;
   const viewport = win.document.getElementById('viewport')!;
   const content = win.document.getElementById('content')!;
@@ -135,21 +135,50 @@ test('expanded input briefly follows subsequent line heights while layout and op
   } finally { f.stop(); f.dom.window.close(); }
 });
 
-// 여러 줄 입력에서 슬롯을 여닫을 때 입력 전환보다 설정 전환의 속도를 적용한다.
-test('slot opening and closing use a faster morph for a multiline draft', async () => {
+// 여러 줄 입력에서 슬롯을 여닫아도 진입 전 컴포저 높이를 유지한다.
+test('slot opening and closing preserve the multiline composer height', async () => {
   const f = fixture();
   try {
     await new Promise(resolve => f.dom.window.requestAnimationFrame(resolve));
     f.viewport.setAttribute('data-multiline', 'true'); f.resize(140);
     f.dom.window.document.body.setAttribute('data-bb-chat-ui-slot-open', '');
     f.resize(52);
-    assert.match(f.viewport.style.transition, /height 260ms/);
-    assert.equal(f.viewport.style.height, '52px');
+    assert.equal(f.viewport.style.height, '140px');
     f.dom.window.document.body.removeAttribute('data-bb-chat-ui-slot-open');
     f.resize(140);
-    assert.match(f.viewport.style.transition, /height 260ms/);
     assert.equal(f.viewport.style.height, '140px');
   } finally { f.stop(); f.dom.window.close(); }
+});
+
+test('slot closing ignores temporary wrapping until its width transition finishes', () => {
+  const f=fixture();
+  try {
+    const form=f.viewport.closest('form')!;
+    let changingWidth=true;
+    Object.assign(form,{getAnimations:()=>changingWidth?[{transitionProperty:'width',playState:'running'}]:[]});
+    f.resize(140);
+    form.setAttribute('data-bb-chat-ui-slot-open',''); f.resize(52);
+    form.removeAttribute('data-bb-chat-ui-slot-open'); f.resize(164);
+    assert.equal(f.viewport.style.height,'140px');
+    f.resize(152); assert.equal(f.viewport.style.height,'140px');
+    f.resize(128); assert.equal(f.viewport.style.height,'140px');changingWidth=false;
+    const end=new f.dom.window.Event('transitionend');Object.assign(end,{propertyName:'width'});form.dispatchEvent(end);
+    assert.equal(f.viewport.style.height,'128px');
+    f.resize(164); assert.equal(f.viewport.style.height,'164px');
+  } finally {f.stop();f.dom.window.close();}
+});
+
+test('typing during slot closing immediately releases the preserved height', () => {
+  const f=fixture();
+  try {
+    const form=f.viewport.closest('form')!;
+    Object.assign(form,{getAnimations:()=>[{transitionProperty:'width',playState:'running'}]});
+    f.resize(140);form.setAttribute('data-bb-chat-ui-slot-open','');f.resize(52);
+    form.removeAttribute('data-bb-chat-ui-slot-open');f.resize(164);
+    assert.equal(f.viewport.style.height,'140px');
+    f.content.dispatchEvent(new f.dom.window.InputEvent('beforeinput',{bubbles:true,inputType:'insertText'}));
+    f.resize(188);assert.equal(f.viewport.style.height,'188px');
+  } finally {f.stop();f.dom.window.close();}
 });
 
 // 상한에 가까운 큰 펼침과 읽을 수 없는 상한에서는 반동을 빼고 목표 높이를 유지한다.

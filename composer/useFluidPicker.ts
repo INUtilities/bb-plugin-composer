@@ -82,10 +82,11 @@ export function useFluidPicker(disabled:boolean, onError:(message:string)=>void)
     setStored({key,open:true,draft:{...preferred,providerId},models:[],loading:true,applying:false,error:''});
     try {
       let catalog=cache.current.get(providerId);
-      if(!catalog) {
+      const cachedModel=catalog?.models.find(item=>item.model===preferred.model || item.id===preferred.model);
+      if(!catalog || cachedModel?.reasoningDiscovery==='unknown') {
         const target=await routing(controller.signal);
         if(controller.signal.aborted || current.current!==key) return;
-        catalog=await sdk.providers.models({...target,providerId,signal:controller.signal});
+        catalog=await sdk.system.executionOptions({...target,providerId,selectedModel:preferred.model,signal:controller.signal});
       }
       if(controller.signal.aborted || current.current!==key || latest.current.disabled) return;
       cache.current.set(providerId,catalog);
@@ -117,6 +118,11 @@ export function useFluidPicker(disabled:boolean, onError:(message:string)=>void)
   const pickModel=(index:number)=>{
     if(!stateRef.current.open || latest.current.disabled || applying.current===key || !stateRef.current.models[index]) return;
     const chosen=stateRef.current.models[index]!;
+    // ACP가 아직 발견하지 않은 모델의 Effort는 선택한 모델 ID로 한 번 조회한다.
+    if(chosen.reasoningDiscovery==='unknown') {
+      void load(stateRef.current.draft.providerId!,{...stateRef.current.draft,model:chosen.model});
+      return;
+    }
     setStored(previous=>({...previous,draft:reconcile(chosen,previous.draft,fluidServiceTiers(chosen,provider))}));
   };
   // 지원하는 노력 단계만 확인 전 선택에 저장한다.

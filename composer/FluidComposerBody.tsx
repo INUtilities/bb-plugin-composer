@@ -53,21 +53,11 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const actionAnimation = useRef<Animation | null>(null);
   const actionPosition = useRef<{ x: number; y: number } | null>(null);
   const previousVoiceMode = useRef(voiceMode);
-  const voicePane = useRef<HTMLElement | null>(null);
   const layoutProbe = useRef((_beforeInput?: { x: number; y: number }) => {});
   // 입력 전 위치를 사용해 원격의 첫 프레임 보정과 현재 높이 곡선을 함께 유지한다.
   layoutProbe.current = beforeInput => {
     traceComposerInput(viewport.current, 'layoutProbe.enter', {composing:composing.current});
-    if (voiceMode) {
-      const element = viewport.current, pane = voicePane.current;
-      if (!element || !pane) return;
-      const outer = pane.getBoundingClientRect(), inner = element.getBoundingClientRect();
-      if (outer.width <= 0) return;
-      for (const [key, value] of [['--bb-chat-ui-voice-backdrop-width', pane.clientWidth || outer.width], ['--bb-chat-ui-voice-backdrop-left', outer.left + pane.clientLeft - inner.left], ['--bb-chat-ui-voice-backdrop-bottom', Math.min(-24, inner.bottom - outer.bottom)]] as const) {
-        const next = `${value}px`; if (element.style.getPropertyValue(key) !== next) element.style.setProperty(key, next);
-      }
-      return;
-    }
+    if (voiceMode) return;
     if (viewport.current?.closest('[data-bb-chat-ui-slot-open]')) return;
     const input = editorColumn.current?.querySelector<HTMLElement>('[data-bb-chat-ui-voice-transcript], .ProseMirror');
     if (!input || !row.current || !optionColumn.current || !actionColumn.current || !editorColumn.current || !content.current) return;
@@ -153,17 +143,13 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const win = viewport.current?.ownerDocument.defaultView;
     if (!win?.ResizeObserver || !row.current) return;
     const element = viewport.current!;
-    const pane = voiceMode ? element.closest<HTMLElement>('[data-thread-window], [data-pane-content]') ?? element : null;
-    voicePane.current = pane;
     const observer = new win.ResizeObserver(() => {traceComposerInput(element,'ResizeObserver.layout');scheduleLayout();});
     element.addEventListener('bb-chat-ui:fluid-effort-layout', scheduleLayout);
     for (const element of [row.current, optionColumn.current, actionColumn.current]) if (element) observer.observe(element);
-    if (pane) { observer.observe(pane); if (pane !== element) observer.observe(element); }
     scheduleLayout();
     return () => {
-      observer.disconnect(); voicePane.current = null;
+      observer.disconnect();
       element.removeEventListener('bb-chat-ui:fluid-effort-layout', scheduleLayout);
-      element.style.removeProperty('--bb-chat-ui-voice-backdrop-width'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-left'); element.style.removeProperty('--bb-chat-ui-voice-backdrop-bottom');
     };
   }, [!!voice, voiceMode, scheduleLayout]);
   useLayoutEffect(() => {
@@ -233,7 +219,6 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   return <>
     {panelOpen || panelPresent ? <div ref={panelLayer} data-bb-chat-ui-fluid-panel-layer="" inert={!panelOpen || undefined} aria-hidden={!panelOpen || undefined}>{panel}</div> : null}
     <div ref={viewport} data-bb-chat-ui-fluid-height="" data-multiline={multiline} data-bb-chat-ui-fluid-view="input" data-voice-mode={voiceMode || undefined}>
-    {voiceMode ? <div data-bb-chat-ui-voice-backdrop="" aria-hidden="true"/> : null}
     <div data-bb-chat-ui-fluid-surface="" aria-hidden="true"/>
     {decoration}
     <div ref={content} data-bb-chat-ui-fluid-content="">

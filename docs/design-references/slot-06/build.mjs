@@ -1,0 +1,12 @@
+import { build } from 'vite';
+import { readFileSync,writeFileSync,mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+const dir=path.dirname(fileURLToPath(import.meta.url)),root=path.resolve(dir,'../../..');
+const out=process.argv[2];if(!out)throw Error('실행 자산을 저장할 출력 디렉터리가 필요합니다.');mkdirSync(out,{recursive:true});
+const result=await build({root:dir,configFile:false,logLevel:'error',resolve:{alias:[{find:'@get-bb/plugin-sdk/app',replacement:path.join(dir,'sdk-demo.tsx')}]},define:{'process.env.NODE_ENV':'"production"'},build:{write:false,minify:true,lib:{entry:path.join(dir,'demo.tsx'),name:'ComposerSlotDemo',formats:['iife']}}});
+const code=(Array.isArray(result)?result:[result]).flatMap(item=>item.output).filter(item=>item.type==='chunk').map(item=>item.code).join('\n');
+writeFileSync(path.join(out,'app.js'),code);
+writeFileSync(path.join(out,'index.html'),readFileSync(path.join(dir,'index.html')));
+writeFileSync(path.join(out,'LICENSES.txt'),readFileSync(path.join(root,'node_modules/react/LICENSE'),'utf8')+'\n'+readFileSync(path.join(root,'node_modules/react-dom/LICENSE'),'utf8'));
+console.log(out);

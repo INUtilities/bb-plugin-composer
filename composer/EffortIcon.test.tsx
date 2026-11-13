@@ -5,6 +5,20 @@ import { EffortIcon } from './EffortIcon';
 
 afterEach(cleanup);
 
+// Hermes의 아홉 단계는 이름뿐 아니라 실제 도형도 서로 달라야 한다.
+it('distinguishes all nine Hermes effort glyphs without growing the icon slot', () => {
+  const levels = ['default', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'];
+  const shapes = levels.map((level, index) => {
+    const view = render(<EffortIcon level={level} index={index} count={levels.length}/>);
+    const svg = view.container.querySelector('svg')!;
+    expect(svg.getAttribute('viewBox')).toBe('0 0 20 16');
+    const shape = svg.innerHTML;
+    view.unmount();
+    return shape;
+  });
+  expect(new Set(shapes).size).toBe(levels.length);
+});
+
 // 기본 세 단계는 같은 폭의 세 막대에서 켜진 수만 바꾼다.
 it.each([['low', 1], ['medium', 2], ['high', 3]] as const)('renders three bars for %s with %i active', (level, active) => {
   const { container } = render(<EffortIcon level={level} index={0} count={4}/>);

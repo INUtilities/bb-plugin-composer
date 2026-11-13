@@ -136,34 +136,29 @@ it('releases vertical-only following on further input without cancelling unrelat
   expect(cancel).toHaveBeenCalledTimes(2);
  }finally{bounds.mockRestore();}
 });
-it('sizes the voice backdrop to its pane and updates it without widening the composer',()=>{
- let paneWidth=800,paneHeight=800,composerLeft=316;
- const observers:{callback:ResizeObserverCallback;targets:Element[];disconnect:ReturnType<typeof vi.fn>}[]=[];
- vi.stubGlobal('ResizeObserver',class{state:{callback:ResizeObserverCallback;targets:Element[];disconnect:ReturnType<typeof vi.fn>};constructor(callback:ResizeObserverCallback){this.state={callback,targets:[],disconnect:vi.fn()};observers.push(this.state);}observe(target:Element){this.state.targets.push(target);}disconnect(){this.state.disconnect();}});
- const bounds=vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){const pane=this.hasAttribute('data-pane-content');return{x:pane?200:composerLeft,y:100,left:pane?200:composerLeft,top:100,width:pane?paneWidth:568,height:pane?paneHeight:136,right:(pane?200:composerLeft)+(pane?paneWidth:568),bottom:pane?100+paneHeight:236,toJSON:()=>({})};});
- const draw=(voiceMode:boolean)=><div data-pane-content=""><form data-bb-chat-ui-fluid-composer=""><FluidComposerBody voiceMode={voiceMode} editor={<textarea/>} options={null} actions={<button>음성</button>} attachments={null}/></form></div>;
- const v=render(draw(true));
- try{
-  act(()=>vi.advanceTimersByTime(20));const viewport=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-height]')!,pane=v.container.querySelector('[data-pane-content]')!;
-  expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-width')).toBe('800px');expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-left')).toBe('-116px');
-  expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-bottom')).toBe('-664px');
-  const observer=observers.find(observer=>observer.targets.includes(pane))!;expect(observer).toBeTruthy();
-  paneWidth=500;paneHeight=400;composerLeft=220;act(()=>{observer.callback([],{}as ResizeObserver);vi.advanceTimersByTime(20);});
-  expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-width')).toBe('500px');expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-left')).toBe('-20px');expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-bottom')).toBe('-264px');
-  v.rerender(draw(false));expect(observer.disconnect).toHaveBeenCalled();expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-width')).toBe('');expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-left')).toBe('');expect(viewport.style.getPropertyValue('--bb-chat-ui-voice-backdrop-bottom')).toBe('');
- }finally{v.unmount();bounds.mockRestore();}
-});
-it('keeps the composer frost local while a transparent blur covers the voice backdrop',()=>{
- const v=render(<FluidComposerBody voiceMode editor={<textarea/>} options={null} actions={<button>음성</button>} attachments={null}/>);
- const viewport=v.container.querySelector('[data-bb-chat-ui-fluid-height]')!;
- const surface=viewport.querySelector('[data-bb-chat-ui-fluid-surface]')!;
- const backdrop=viewport.querySelector('[data-bb-chat-ui-voice-backdrop]')!;
- expect(backdrop).toBeTruthy();
+it('preserves the input surface and draft through voice mode without an outer backdrop',()=>{
+ const observe=vi.fn();
+ vi.stubGlobal('ResizeObserver',class{observe=observe;disconnect(){}});
+ const draw=(voiceMode:boolean)=><div data-pane-content=""><FluidComposerBody voiceMode={voiceMode} editor={<textarea defaultValue="보관할 초안"/>} options={null} actions={<button>음성</button>} attachments={null}/></div>;
+ const v=render(draw(false));
+ const editor=v.container.querySelector('textarea')!;
+ const surface=v.container.querySelector('[data-bb-chat-ui-fluid-surface]')!;
  expect(surface).toBeTruthy();
- expect(backdrop).not.toBe(surface);
- expect(fluidComposerCss).toContain('[data-bb-chat-ui-voice-backdrop] { position:absolute;');
- expect(fluidComposerCss).toContain('background:transparent; backdrop-filter:blur(14px) saturate(1.25);');
- expect(fluidComposerCss).not.toContain('[data-voice-mode="true"] > [data-bb-chat-ui-fluid-surface]');
+ for(const active of [true,false]) {
+  v.rerender(draw(active));act(()=>vi.advanceTimersByTime(20));
+  expect(v.container.querySelector('[data-bb-chat-ui-voice-backdrop]')).toBeNull();
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-surface]')).toBe(surface);
+  expect(v.container.querySelector('textarea')).toBe(editor);
+  expect(editor.value).toBe('보관할 초안');
+ }
+ expect(observe).not.toHaveBeenCalledWith(v.container.querySelector('[data-pane-content]'));
+});
+it('keeps the composer surface visible while the slot picker is open',()=>{
+ expect(fluidComposerCss).not.toContain('[data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-surface] { opacity:0; }');
+});
+it('keeps fixed slots anchored to the stationary composer',()=>{
+ expect(fluidComposerCss).toContain('[data-bb-chat-ui-slot-enabled] { margin-inline:auto; transform:translateY(0);');
+ expect(fluidComposerCss).not.toContain('transform:translateY(calc(-2 * var(--bb-slot-row)))');
 });
 it('moves the real action column into voice mode and cancels its motion for reduced motion and unmount',()=>{
  const oldAnimate=HTMLElement.prototype.animate;

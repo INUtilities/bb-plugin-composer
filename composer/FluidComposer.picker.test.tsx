@@ -23,10 +23,10 @@ function mount() {
     threadLinks:{parse:()=>null,cached:()=>null,resolve:async()=>{}},clipboard:{readMessage:()=>null,readMessageImage:async()=>new File([],'unused')},
     dispatchAppCommandKey:()=>false,showError:vi.fn(),attachmentSrc:()=>''};
   const models=vi.fn(async()=>({models:[{id:'Opus',model:'Opus',displayName:'Opus',isDefault:true,defaultReasoningEffort:'medium',supportedReasoningEfforts:[{reasoningEffort:'medium'},{reasoningEffort:'high'}]}],selectedOnlyModels:[]}));
-  const view=renderSlot({component:()=> <PromptBoxInternal {...renderer.input} fluid/>},{},{composerRenderer:renderer,
+  const view=renderSlot({component:()=> <PromptBoxInternal {...renderer.input} fluid/>},{},{settings:{experimentalSlotPicker:true},composerRenderer:renderer,
     composer:{scope:renderer.view.scope,text:'원래 초안',selection:{providerId:'claude',model:'Opus',reasoningLevel:'medium'}},
     providers:{status:'ready',providers:[{id:'claude',displayName:'Claude',logoUrl:null}] as any},
-    sdk:{providers:{models},threads:{get:vi.fn(async()=>({environmentId:'environment'})) as any}}});
+    sdk:{system:{executionOptions:models},threads:{get:vi.fn(async()=>({environmentId:'environment'})) as any}}});
   return {view,run,models};
 }
 
@@ -66,4 +66,31 @@ it('blocks accidental sending while slots are open and preserves the draft after
   expect(view.inspection.composer.selections).toHaveLength(0);
   fireEvent.submit(view.container.querySelector('form')!);
   expect(run).toHaveBeenCalledOnce();
+});
+
+it('keeps both action faces mounted across the slot transition and disables the hidden confirmation',async()=>{
+  const {view,run}=mount();
+  await waitFor(()=>expect(view.container.querySelector('.ProseMirror')).toBeTruthy());
+  const confirm=view.container.querySelector<HTMLButtonElement>('[data-bb-chat-ui-slot-confirm]');
+  const send=view.container.querySelector('[data-promptbox-submit-group]');
+  expect(confirm).toBeTruthy();
+  expect(confirm!.disabled).toBe(true);
+  expect(confirm!.hasAttribute('inert')).toBe(true);
+  expect(confirm!.getAttribute('aria-hidden')).toBe('true');
+  fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
+  await screen.findByRole('option',{name:'Opus'});
+  expect(screen.getByRole('button',{name:'설정 완료'})).toBe(confirm);
+  expect(confirm!.hasAttribute('data-open')).toBe(true);
+  expect(send!.hasAttribute('inert')).toBe(true);
+  fireEvent.keyDown(screen.getByRole('listbox',{name:'Effort'}),{key:'Escape'});
+  expect(view.container.querySelector('[data-bb-chat-ui-slot-confirm]')).toBe(confirm);
+  expect(view.container.querySelector('[data-promptbox-submit-group]')).toBe(send);
+  expect(confirm!.disabled).toBe(true);
+  expect(confirm!.hasAttribute('inert')).toBe(true);
+  expect(confirm!.getAttribute('aria-hidden')).toBe('true');
+  expect(confirm!.hasAttribute('data-open')).toBe(false);
+  expect(send!.hasAttribute('inert')).toBe(false);
+  fireEvent.click(confirm!);
+  expect(run).not.toHaveBeenCalled();
+  expect(view.inspection.composer.selections).toHaveLength(0);
 });

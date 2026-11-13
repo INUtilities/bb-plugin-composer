@@ -52,6 +52,7 @@ function ImageUploadPreview({ file }: { file: File }) {
 
   return (
     <div
+      data-composer-attachment-media=""
       role="status"
       aria-label={`Uploading ${file.name}`}
       className="relative shrink-0 overflow-hidden rounded-md border border-border bg-surface-recessed"
@@ -191,13 +192,14 @@ export function AttachmentPreview({
           ) : null}
         </span>
       ) : (
-        <div className="mx-3 mb-1 mt-1">
+        <div data-composer-attachment-list="" className="mx-3 mb-1 mt-1">
           {imageAttachments.length > 0 || imageUploads.length > 0 ? (
             <div className="mb-1.5 flex flex-wrap gap-2">
               {imageAttachments.map((attachment, index) => (
                 <div key={`${attachment.path}-${index}`} className="relative">
                   <button
                     type="button"
+                    data-composer-attachment-media=""
                     className="block cursor-zoom-in overflow-hidden rounded-md border border-border bg-surface-recessed"
                     onClick={() => onExpandedImageIndexChange(index)}
                     aria-label={attachment.name}

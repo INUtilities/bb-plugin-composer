@@ -6,7 +6,7 @@ import { useDeviceChrome } from '../lib/use-device';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
 
 type Effort = { reasoningEffort: string; label?: string; description: string };
-const labels: Record<string, string> = { none: 'None', minimal: 'Minimal', low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra high', max: 'Max', ultra: 'Ultra' };
+const labels: Record<string, string> = { default: 'Default', none: 'None', minimal: 'Minimal', low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra high', max: 'Max', ultra: 'Ultra' };
 const EFFORT_LABEL_MS = 300;
 const EFFORT_PEEK_MS = 1500;
 const EFFORT_WIDTH_EASING = 'cubic-bezier(.175,.885,.32,1.275)';

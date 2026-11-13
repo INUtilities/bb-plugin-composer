@@ -1,6 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from 'react';
-import { experimental_ProviderIcon as ProviderIcon } from '@get-bb/plugin-sdk/app';
-import { createPortal } from 'react-dom';
+import { experimental_ProviderIcon as ProviderIcon, useSettings } from '@get-bb/plugin-sdk/app';
 import { Button } from './components/ui/button';
 import { EffortIcon } from './EffortIcon';
 import { FluidPickerWheel } from './FluidPickerWheel';
@@ -14,7 +13,7 @@ import { EASE } from '../lib/motion';
 const MODE_KEY='bb-chat-ui:fluid-slot-picker';
 const listeners=new Set<()=>void>();
 let memoryMode=true;
-const labels:Record<string,string>={none:'None',minimal:'Minimal',low:'Low',medium:'Medium',high:'High',xhigh:'Extra high',max:'Max',ultra:'Ultra'};
+const labels:Record<string,string>={default:'Default',none:'None',minimal:'Minimal',low:'Low',medium:'Medium',high:'High',xhigh:'Extra high',max:'Max',ultra:'Ultra'};
 
 // 같은 앱 실행 안에서 선택한 방식을 읽고 저장소가 막히면 메모리를 쓴다.
 function readMode() {try{return sessionStorage.getItem(MODE_KEY)!=='off';}catch{return memoryMode;}}
@@ -43,18 +42,17 @@ type PickerUi={enabled:boolean;open:boolean;modeToggle:ReactNode;trigger:ReactNo
 export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,children}:{
   formRef:RefObject<HTMLFormElement | null>;disabled?:boolean;onOpen():void;onError(message:string):void;children(ui:PickerUi):ReactNode;
 }) {
-  const enabled=useSyncExternalStore(subscribe,readMode,readMode);
+  const experimental=useSettings().values?.experimentalSlotPicker===true;
+  const mode=useSyncExternalStore(subscribe,readMode,readMode);
+  const enabled=experimental && mode;
   const picker=useFluidPicker(disabled,onError), {state}=picker;
   const {device}=useDeviceChrome();
   const currentKey=useRef(state.key); currentKey.current=state.key;
   const trigger=useRef<HTMLButtonElement>(null), done=useRef<HTMLButtonElement>(null), layer=useRef<HTMLDivElement>(null);
   const shellState=useRef<{element:Element;previous:string | null} | null>(null);
-  const [backdropHost,setBackdropHost]=useState<HTMLElement | null>(null);
   const visible=enabled && state.open && !disabled;
   const rowSize=device==='phone'?44:40;
   const locked=disabled || state.applying, wheelDisabled=locked || !visible;
-  // 채팅 하단에 블러 한 겹을 연결해 컴포저 축소와 창 너비 변경을 그대로 따른다.
-  useEffect(()=>{setBackdropHost(formRef.current?.closest<HTMLElement>('[data-scroll-footer]') ?? null);},[formRef,state.key]);
   // 슬롯 전환과 실제 항목 선택은 손끝에서 구분되도록 약한 진동을 보낸다.
   const pulse=(trusted:boolean)=>{if(trusted && device==='phone') postHaptic(readHapticBridge(window),'impact-light');};
   // 취소할 때만 선택 화면을 닫고 필요한 경로에서 설정 버튼에 포커스를 돌린다.
@@ -67,7 +65,7 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
     if(!form) return;
     const marks=['data-bb-chat-ui-slot-enabled','data-bb-chat-ui-slot-open'];
     const previous=marks.map(mark=>form.getAttribute(mark));
-    const sizes=['--bb-chat-ui-slot-compact-width','--bb-chat-ui-slot-model-fr','--bb-chat-ui-slot-effort-fr','--bb-slot-fast-peek-width'];
+    const sizes=['--bb-chat-ui-slot-compact-width','--bb-chat-ui-slot-model-fr','--bb-chat-ui-slot-effort-width','--bb-slot-fast-peek-width'];
     const previousSizes=sizes.map(size=>form.style.getPropertyValue(size));
     return ()=>{
       marks.forEach((mark,index)=>{if(previous[index]===null) form.removeAttribute(mark);else form.setAttribute(mark,previous[index]!);});
@@ -200,25 +198,24 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
     const compactMinimum=device==='phone'?288:320;
     const width=Math.max(compactMinimum,8+icon+modelWidth+effortWidth+(hasFast?confirm:0)+16+confirm);
     form.style.setProperty('--bb-chat-ui-slot-model-fr',`${modelWidth}fr`);
-    form.style.setProperty('--bb-chat-ui-slot-effort-fr',`${effortWidth}fr`);
+    form.style.setProperty('--bb-chat-ui-slot-effort-width',`${effortWidth}px`);
     form.style.setProperty('--bb-chat-ui-slot-compact-width',`${Math.ceil(width)}px`);
   },[visible,providerIndex,modelIndex,effortIndex,state.models,efforts,hasFast,formRef]);
-  const backdrop=<span data-bb-chat-ui-slot-backdrop="" data-full-width={backdropHost ? '' : undefined} data-open={visible || undefined} aria-hidden="true"/>;
   return children({enabled,open:visible,close:()=>dismiss(),
-    modeToggle:<Button type="button" size="sm" variant="ghost" data-bb-chat-ui-slot-mode="" aria-label="06 슬롯" aria-pressed={enabled} disabled={locked}
-      aria-description={enabled?'누르면 기존 모델·Effort 방식으로 전환':'누르면 06 슬롯 방식으로 전환'} onClick={event=>{pulse(event.nativeEvent.isTrusted);dismiss();writeMode(!enabled);}}>06 슬롯<span aria-hidden="true">{enabled?'켜짐':'꺼짐'}</span></Button>,
+    modeToggle:experimental?<Button type="button" size="sm" variant="ghost" data-bb-chat-ui-slot-mode="" aria-label="06 슬롯" aria-pressed={enabled} disabled={locked}
+      aria-description={enabled?'누르면 기존 모델·Effort 방식으로 전환':'누르면 06 슬롯 방식으로 전환'} onClick={event=>{pulse(event.nativeEvent.isTrusted);dismiss();writeMode(!enabled);}}>06 슬롯<span aria-hidden="true">{enabled?'켜짐':'꺼짐'}</span></Button>:null,
     trigger:<Button ref={trigger} type="button" size="icon" variant="ghost" data-bb-chat-ui-slot-trigger="" aria-label="모델과 Effort 설정" aria-expanded={visible}
       disabled={locked || !picker.canOpen} onClick={event=>{
         pulse(event.nativeEvent.isTrusted);onOpen();(document.activeElement as HTMLElement | null)?.blur?.();picker.start();
         if(event.detail===0) requestAnimationFrame(()=>layer.current?.querySelector<HTMLElement>('[aria-label="모델"]')?.focus({preventScroll:true}));
       }}><SettingsGlyph/>{picker.selection?.serviceTier==='fast'?<span data-bb-chat-ui-slot-fast-badge=""><FastGlyph/></span>:null}</Button>,
-    confirm:visible?<button ref={done} type="button" data-bb-chat-ui-slot-confirm="" data-handoff={picker.handoff || undefined}
-      aria-label={picker.handoff?`${targetName}로 핸드오프`:'설정 완료'} aria-busy={state.applying || undefined} disabled={locked || state.loading || !state.draft.model || !!state.error}
+    confirm:<button ref={done} type="button" data-bb-chat-ui-slot-confirm="" data-open={visible || undefined} data-handoff={picker.handoff || undefined}
+      inert={!visible || undefined} aria-hidden={!visible || undefined}
+      aria-label={picker.handoff?`${targetName}로 핸드오프`:'설정 완료'} aria-busy={state.applying || undefined} disabled={!visible || locked || state.loading || !state.draft.model || !!state.error}
       onClick={()=>{pulse(true);const key=state.key;void picker.confirm().then(applied=>{if(applied && currentKey.current===key)trigger.current?.focus({preventScroll:true});});}}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={picker.handoff?'M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4':'M20 6 9 17l-5-5'}/></svg>
-    </button>:null,
+    </button>,
     overlay:<div data-bb-chat-ui-slot-overlay="">
-      {backdropHost ? createPortal(backdrop,backdropHost) : backdrop}
       <div ref={layer} role="group" aria-label="모델 슬롯" data-bb-chat-ui-slot-layer="" data-open={visible || undefined} inert={!visible || undefined} aria-hidden={!visible || undefined}>
         <div data-bb-chat-ui-slot-reels="" data-fast={hasFast || undefined}>
           <FluidPickerWheel label="Provider" rowSize={rowSize} index={providerIndex} disabled={wheelDisabled} items={picker.providers.map(provider=>({key:provider.id,label:provider.displayName,iconOnly:true,

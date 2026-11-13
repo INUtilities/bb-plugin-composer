@@ -1,4 +1,12 @@
 import type { BbPluginApi } from "@get-bb/plugin-sdk";
 
-// 화면 전용 플러그인이므로 서버 작업을 등록하지 않는다.
-export default function registerComposerServer(_bb: BbPluginApi) {}
+// 슬롯은 기본 입력 UI와 분리된 선택적 디자인 실험이다.
+export default function registerComposerServer(bb: BbPluginApi) {
+  bb.settings.define({
+    experimentalSlotPicker: {
+      type: "boolean",
+      label: "06 슬롯 실험 사용",
+      default: false,
+    },
+  });
+}

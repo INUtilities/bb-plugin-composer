@@ -35,6 +35,8 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
   let moving = getEditor?.() ?? null;
   let position = moving ? readFluidEditorPosition(moving, content) : null;
   let slotOpen = !!viewport.closest('[data-bb-chat-ui-slot-open]');
+  let slotClosing = false;
+  const form = viewport.closest<HTMLElement>('[data-bb-chat-ui-fluid-composer]');
   let inputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode') && !slotOpen;
   let multiline = viewport.getAttribute('data-multiline') === 'true';
   let duration = slotOpen ? FLUID_COMPOSER_SLOT_MS : inputView ? FLUID_COMPOSER_INPUT_MS : FLUID_COMPOSER_MORPH_MS;
@@ -66,6 +68,11 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     const nextInputView = viewport.getAttribute('data-bb-chat-ui-fluid-view') !== 'options' && !viewport.hasAttribute('data-voice-mode') && !nextSlotOpen;
     const nextMultiline = viewport.getAttribute('data-multiline') === 'true';
     const reset = nextInputView && viewport.getAttribute('data-bb-chat-ui-fluid-reset') === 'true';
+    if (slotOpen && !nextSlotOpen) slotClosing = true;
+    // 닫힐 때 폭이 복원되는 중의 임시 줄바꿈도 슬롯 진입 전 높이를 바꾸지 않는다.
+    if (slotClosing && (reset || !form?.getAnimations?.().some(animation =>
+      'transitionProperty' in animation && animation.transitionProperty === 'width' && animation.playState === 'running'))) slotClosing = false;
+    if (nextSlotOpen || slotClosing) next = height;
     if (next === height && !reset) { moving = nextMoving; position = nextPosition; inputView = nextInputView; multiline = nextMultiline; slotOpen = nextSlotOpen; return; }
     const inputChange = inputView && nextInputView;
     const quickInput = inputChange && (next < height || (multiline && nextMultiline));
@@ -98,11 +105,22 @@ export function bindFluidComposerHeight(viewport: HTMLElement, content: HTMLElem
     if (entry) measure(entry.borderBoxSize?.[0]?.blockSize ?? content.offsetHeight);
   });
   observer.observe(content, { box: 'border-box' });
+  const finishSlotWidth = (event: TransitionEvent) => {
+    if (event.target === form && event.propertyName === 'width' && slotClosing) measure(content.offsetHeight);
+  };
+  // 닫히는 중 새 입력이 오면 입력에 따른 높이 반영을 기다리지 않게 한다.
+  const resumeInputHeight = () => { slotClosing = false; slotOpen = !!viewport.closest('[data-bb-chat-ui-slot-open]'); };
+  form?.addEventListener('transitionend', finishSlotWidth);
+  form?.addEventListener('transitioncancel', finishSlotWidth);
+  content.addEventListener('beforeinput', resumeInputHeight, true);
   motion.addEventListener('change', updateMotion);
   return Object.assign(() => {
     disposed = true;
     editorMotion?.cancel(); editorMotion = null;
     observer.disconnect();
+    form?.removeEventListener('transitionend', finishSlotWidth);
+    form?.removeEventListener('transitioncancel', finishSlotWidth);
+    content.removeEventListener('beforeinput', resumeInputHeight, true);
     win.cancelAnimationFrame(frame);
     motion.removeEventListener('change', updateMotion);
     viewport.style.height = previousHeight;

@@ -57,7 +57,7 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
       motion?.addEventListener('change', reduce);
       return () => { for (const animation of fading.current) animation.cancel(); fading.current = []; motion?.removeEventListener('change', reduce); };
     }
-    if (list) list.scrollTop = 0;
+    if (list) { list.scrollTop = 0; list.scrollLeft = 0; }
     (root.current?.querySelector<HTMLElement>(ENABLED_OPTIONS)
       ?? root.current?.closest('[data-bb-chat-ui-fluid-composer]')?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-toggle] button')
       ?? root.current)?.focus({ preventScroll: true });

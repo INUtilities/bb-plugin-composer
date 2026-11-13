@@ -48,6 +48,16 @@ it('opens options above the unchanged input and allows editing and submitting wh
  expect(v.inspection.composer.text).toBe('계속 작성한 초안');
  v.unmount();
 });
+// 필이 많아도 입력창을 밀지 않고 가로 한 줄 안에서 끝까지 이동한다.
+it('keeps options on one horizontal scroll row instead of wrapping above the composer',async()=>{
+ const stop=injectFluidComposer(document),{v}=mount();
+ try{
+  fireEvent.click(screen.getByRole('button',{name:'Prompt actions'}));
+  const list=await screen.findByRole('menu',{name:'추가 옵션'}),css=getComputedStyle(list);
+  expect(css.flexWrap).toBe('nowrap');expect(css.overflowX).toBe('auto');expect(css.overflowY).toBe('hidden');
+  for(const item of screen.getAllByRole('menuitem')){expect(getComputedStyle(item).whiteSpace).toBe('nowrap');expect(getComputedStyle(item).flexShrink).toBe('0');}
+ }finally{v.unmount();stop();}
+});
 // 정보 필을 컴포저 위로 옮기고 기존 정보와 초안을 유지한다.
 it('places the information pill above the input and reuses the existing information region',async()=>{
  const {v,run}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
