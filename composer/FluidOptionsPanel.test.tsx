@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { renderSlot } from '@get-bb/plugin-sdk/testing/app';
 import { useComposer, type ExperimentalComposerPlusMenuContribution, type ExperimentalComposerMenuEntryProps } from '@get-bb/plugin-sdk/app';
 import { FluidOptionsPanel, type FluidOptionsPanelProps } from './FluidOptionsPanel';
@@ -8,6 +8,29 @@ import { DropdownMenuItem } from './components/ui/dropdown-menu';
 import { injectFluidComposer } from '../lib/fluid-composer';
 
 afterEach(()=>{cleanup();vi.restoreAllMocks();});
+
+// 필이 이미 보이는 복귀 모션 동안에도 native pointer와 키보드 입력을 받아야 한다.
+it('releases the information row when its return starts and relocks it on a quick reopen',()=>{
+ vi.useFakeTimers();
+ const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'inert');
+ Object.defineProperty(HTMLElement.prototype,'inert',{configurable:true,get(){return this.hasAttribute('inert');},set(value){this.toggleAttribute('inert',!!value);}});
+ const stop=injectFluidComposer(document);
+ const Harness=({active}:{active:boolean})=><div data-promptbox-shell=""><div data-bb-chat-ui-info-bar=""><button>Goal</button><button>Diff</button></div><FluidOptionsPanel active={active} plugins={{plusMenuItems:[],MenuEntry:()=>null}} onAttach={()=>{}} actions={[{kind:'plan',text:'/plan '}]} onClose={()=>{}} onAction={()=>{}} onPluginSelected={()=>{}}/></div>;
+ const v=renderSlot({component:Harness},{active:true},{});
+ try{
+  const bar=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-info-bar]')!;
+  expect(bar.inert).toBe(true);
+  v.rerender(<Harness active={false}/>);
+  act(()=>vi.advanceTimersByTime(244));expect(bar.inert).toBe(true);
+  act(()=>vi.advanceTimersByTime(1));
+  expect(bar.inert).toBe(false);expect(getComputedStyle(bar).pointerEvents).not.toBe('none');
+  expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel]')).not.toBeNull();
+  v.rerender(<Harness active/>);expect(bar.inert).toBe(true);
+  v.rerender(<Harness active={false}/>);act(()=>vi.advanceTimersByTime(100));v.rerender(<Harness active/>);
+  act(()=>vi.advanceTimersByTime(600));expect(bar.inert).toBe(true);
+  v.unmount();expect(bar.inert).toBe(false);expect(vi.getTimerCount()).toBe(0);
+ }finally{v.unmount();stop();vi.useRealTimers();if(descriptor)Object.defineProperty(HTMLElement.prototype,'inert',descriptor);else delete (HTMLElement.prototype as any).inert;}
+});
 
 // 기존 필의 퇴장이 끝난 뒤 옵션이 투명한 상태에서 시작하고 해제 때 원래 필을 복원한다.
 it('fades existing pills before options appear and restores their interaction on close',()=>{
@@ -184,4 +207,26 @@ it('allows horizontal wheel and swipe inside the pill row and contains both edge
   list.scrollLeft=0;expect(wheel(-80).defaultPrevented).toBe(true);expect(touch('touchmove',150).defaultPrevented).toBe(true);
   expect(wheel(0,80).defaultPrevented).toBe(true);expect(parent).not.toHaveBeenCalled();
  }finally{v.unmount();stop();}
+});
+
+// 닫힘은 메뉴 퇴장 뒤 원래 필을 개별 복구하며 반대 전환도 이전 애니메이션을 남기지 않는다.
+it('stagger-exits the menu then stagger-enters the original pills, cancelling both phases on reopen',()=>{
+ const previous=Element.prototype.animate,entries:{target:Element;frames:Keyframe[];options:KeyframeAnimationOptions;cancel:ReturnType<typeof vi.fn>}[]=[];
+ Element.prototype.animate=function(frames,options){const entry={target:this,frames:frames as Keyframe[],options:options as KeyframeAnimationOptions,cancel:vi.fn()};entries.push(entry);return {...entry,effect:{getKeyframes:()=>entry.frames,setKeyframes:(frames:Keyframe[])=>{entry.frames=frames;},updateTiming:(timing:KeyframeAnimationOptions)=>Object.assign(entry.options,timing)}} as unknown as Animation;};
+ const Harness=({active}:{active:boolean})=><div data-promptbox-shell=""><div data-bb-chat-ui-info-bar=""><button>Goal</button><button>Diff</button><div data-bb-chat-ui-slot-toolbar="" data-shared-row=""><button>정보</button></div></div><FluidOptionsPanel active={active} plugins={{plusMenuItems:[],MenuEntry:()=>null}} actions={[{kind:'plan',text:'/plan '}]} onAttach={()=>{}} onClose={()=>{}} onAction={()=>{}} onPluginSelected={()=>{}}/></div>;
+ try{
+  const v=renderSlot({component:Harness},{active:true},{});
+  const first=[...entries];entries.length=0;v.rerender(<Harness active={false}/>);
+  expect(first.every(entry=>entry.cancel.mock.calls.length===1)).toBe(true);
+  const exits=entries.filter(entry=>entry.options.duration===200),returns=entries.filter(entry=>entry.options.duration===460);
+  expect(exits.map(entry=>entry.options.delay)).toEqual([0,45]);
+  expect(returns.map(entry=>entry.target.textContent)).toEqual(['Goal','Diff','정보']);
+  expect(returns.map(entry=>entry.options.delay)).toEqual([245,290,335]);
+  expect(returns.every(entry=>entry.options.fill==='both' && entry.frames.at(-1)?.opacity===1)).toBe(true);
+  const closing=[...entries];entries.length=0;v.rerender(<Harness active/> );
+  expect(closing.every(entry=>entry.cancel.mock.calls.length===1)).toBe(true);
+  expect(entries.filter(entry=>entry.options.duration===200).map(entry=>entry.options.delay)).toEqual([0,45,90]);
+  expect(entries.filter(entry=>entry.options.duration===460).map(entry=>entry.options.delay)).toEqual([290,335]);
+  v.unmount();expect(entries.every(entry=>entry.cancel.mock.calls.length===1)).toBe(true);
+ }finally{Element.prototype.animate=previous;}
 });

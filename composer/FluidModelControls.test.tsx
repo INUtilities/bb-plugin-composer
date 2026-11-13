@@ -98,13 +98,14 @@ it('aborts late discovery on a scope change without applying a stale selection',
  expect(view.inspection.composer.selections).toHaveLength(0);expect(models.mock.calls[0][0].signal.aborted).toBe(true);
 });
 
-// 별도 effort가 있을 때만 native 요약의 중복 글자와 reasoning 로딩 자리를 숨긴다.
-it('hides only the duplicate native reasoning summary and retains model, tier and menu',()=>{
+// 모델 버튼의 캐럿과 중복 effort 요약만 숨기고 공급자·모델·메뉴 동작을 유지한다.
+it('hides the model caret and duplicate reasoning summary while retaining model, tier and menu',()=>{
  const stop=injectFluidComposer(document),clicked=vi.fn();
- const controls=<><button type="button" aria-label="Provider, model and reasoning" onClick={clicked}><span className="contents" title="Model v2 · Medium reasoning"><svg data-tier-icon=""/><span data-model-base="">Model</span><span data-model-tag="">v2</span><span data-promptbox-hide-compact="" data-native-effort="">Medium</span></span><svg data-caret=""/><span data-shortcut="">shortcut</span></button><button type="button" aria-label="Provider, model and reasoning loading" disabled><span className="contents"><svg/><span className="sr-only">Loading models</span><div data-model-loading-placeholder="trigger-reasoning"/><div data-model-loading-placeholder="trigger-model"/></span></button><div role="dialog" aria-label="모델 설정"><span data-promptbox-hide-compact="" data-menu-effort="">Medium</span></div></>;
+ const controls=<><button type="button" aria-label="Provider, model and reasoning" onClick={clicked}><span className="contents" title="Model v2 · Medium reasoning"><svg data-tier-icon=""/><span data-model-base="">Model</span><span data-model-tag="">v2</span><span data-promptbox-hide-compact="" data-native-effort="">Medium</span></span><svg data-caret="" data-icon="ChevronDown"/><span data-shortcut="">shortcut</span></button><button type="button" aria-label="Provider, model and reasoning loading" disabled><span className="contents"><svg/><span className="sr-only">Loading models</span><div data-model-loading-placeholder="trigger-reasoning"/><div data-model-loading-placeholder="trigger-model"/></span></button><div role="dialog" aria-label="모델 설정"><span data-promptbox-hide-compact="" data-menu-effort="">Medium</span></div></>;
  const view=renderSlot({component:()=> <FluidModelControls controls={controls} onError={()=>{}}/>},{},{composer:{selection:{providerId:'provider',model:'model',reasoningLevel:'medium'}}});
  try{expect(getComputedStyle(view.container.querySelector('[data-native-effort]')!).display).toBe('none');expect(getComputedStyle(view.container.querySelector('[data-model-loading-placeholder="trigger-reasoning"]')!).display).toBe('none');
- for(const mark of ['[data-model-base]','[data-model-tag]','[data-tier-icon]','[data-caret]','[data-shortcut]','[data-menu-effort]','[data-model-loading-placeholder="trigger-model"]'])expect(getComputedStyle(view.container.querySelector(mark)!).display).not.toBe('none');
+ for(const mark of ['[data-model-base]','[data-model-tag]','[data-tier-icon]','[data-shortcut]','[data-menu-effort]','[data-model-loading-placeholder="trigger-model"]'])expect(getComputedStyle(view.container.querySelector(mark)!).display).not.toBe('none');
+ expect(getComputedStyle(view.container.querySelector('[data-caret]')!).display).toBe('none');
  fireEvent.click(screen.getByRole('button',{name:'Provider, model and reasoning'}));expect(clicked).toHaveBeenCalledTimes(1);
  }finally{view.unmount();stop();}
 });

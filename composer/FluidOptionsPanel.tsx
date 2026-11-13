@@ -6,6 +6,7 @@ import { InlineDropdownMenuItems } from './components/ui/dropdown-menu';
 import { orderedPromptActions, PROMPT_ACTION_PRESENTATION } from './src/PromptBoxActionsMenu';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
 import { dropletIn, EASE } from '../lib/motion';
+import { fluidOptionPills, fluidOptionStaggerDuration } from '../lib/fluid-options-motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 export interface FluidOptionsPanelProps {
@@ -29,63 +30,92 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
   const root = useRef<HTMLDivElement>(null);
   const entering = useRef<Animation[]>([]);
   const fading = useRef<Animation[]>([]);
-  const outgoingOpacity = useRef(new Map<Element, string>());
+  const restingOpacity = useRef(new Map<Element, number>());
+  const outgoing = useRef(new Map<Element, {opacity:number;transform:string}>());
+  const restoreInteraction = useRef<() => void>(() => {});
   // 직접 조작과 해제 때 필 전체의 순차 등장을 즉시 끝낸다.
   const stopEntering = useCallback(() => { for (const animation of entering.current) animation.cancel(); entering.current = []; }, []);
   const visible = orderedPromptActions(actions).filter(action => action.text.length > 0);
-  // 옵션 퇴장까지 기존 정보 필의 위치와 비활성 상태를 유지한다.
+  // 시각 상태의 수명과 클릭 차단의 수명을 분리해 빌리기 전 상호작용을 복구한다.
   useLayoutEffect(() => {
-    const shell = root.current?.closest('[data-promptbox-shell]') ?? root.current?.closest('form');
-    const bars = Array.from(shell?.querySelectorAll<HTMLElement>('[data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]') ?? []);
+    if (!root.current) return;
+    const {shell,bars,pills}=fluidOptionPills(root.current);
+    for (const pill of pills) {
+      const opacity=Number.parseFloat(getComputedStyle(pill).opacity);
+      restingOpacity.current.set(pill,Number.isFinite(opacity)?opacity:1);
+    }
     const priorInert = bars.map(bar => bar.inert);
+    restoreInteraction.current = () => { bars.forEach((bar,index) => { bar.inert = priorInert[index]; }); };
     shell?.setAttribute('data-bb-chat-ui-fluid-options-open', '');
     bars.forEach(bar => { bar.inert = true; });
-    return () => { shell?.removeAttribute('data-bb-chat-ui-fluid-options-open'); bars.forEach((bar,index) => { bar.inert = priorInert[index]; }); };
+    return () => {
+      shell?.removeAttribute('data-bb-chat-ui-fluid-options-open');
+      shell?.removeAttribute('data-bb-chat-ui-fluid-options-returning');
+      restoreInteraction.current(); restoreInteraction.current = () => {};
+    };
   }, []);
-  // 기존 상단 pill과 같은 등장 모션을 실제 옵션 항목에 연결한다.
+  // 양쪽 필을 퇴장 → 순차 등장으로 연결하고 재전환은 현재 보이는 상태에서 시작한다.
   useLayoutEffect(() => {
     const panel = root.current;
-    const list = panel?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-panel-list]');
-    const items = Array.from(list?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
-    if (!active) {
-      const motion = panel?.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
-      if (!motion?.matches) fading.current = items.map((item,index) => item.animate?.(
-        [{opacity:outgoingOpacity.current.get(item) || getComputedStyle(item).opacity || 1},{opacity:0}],
-        {duration:200,delay:index*45,easing:EASE.exit,fill:'both'})).filter((animation):animation is Animation => !!animation);
-      // 동작 줄이기는 진행 중인 퇴장도 즉시 끝낸다.
-      const reduce = () => { if (motion?.matches) { for (const animation of fading.current) animation.cancel(); fading.current = []; } };
-      motion?.addEventListener('change', reduce);
-      return () => { for (const animation of fading.current) animation.cancel(); fading.current = []; motion?.removeEventListener('change', reduce); };
+    if (!panel) return;
+    const list=panel.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-panel-list]');
+    const items=Array.from(list?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    const {shell,bars,pills}=fluidOptionPills(panel);
+    for (const item of items) if (!restingOpacity.current.has(item)) {
+      const opacity=Number.parseFloat(getComputedStyle(item).opacity);
+      restingOpacity.current.set(item,Number.isFinite(opacity)?opacity:1);
     }
-    if (list) { list.scrollTop = 0; list.scrollLeft = 0; }
-    (root.current?.querySelector<HTMLElement>(ENABLED_OPTIONS)
-      ?? root.current?.closest('[data-bb-chat-ui-fluid-composer]')?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-toggle] button')
-      ?? root.current)?.focus({ preventScroll: true });
-    const motion = root.current?.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
-    const shell = panel?.closest('[data-promptbox-shell]') ?? panel?.closest('form');
-    const bars = Array.from(shell?.querySelectorAll<HTMLElement>('[data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]') ?? []);
-    const pills = bars.flatMap(bar => Array.from(bar.children).flatMap(child => child.hasAttribute('data-bb-chat-ui-slot-toolbar') ? []
-      : (child as HTMLElement).style.display==='contents' ? Array.from(child.children):[child]));
+    const motion=panel.ownerDocument.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
+    // 옵션 퇴장 뒤 원래 필이 보이기 시작하면 마지막 탄성 모션을 기다리지 않고 누를 수 있다.
+    const restore=()=>{
+      restoreInteraction.current();
+      shell?.setAttribute('data-bb-chat-ui-fluid-options-returning','');
+    };
+    let returnTimer: ReturnType<typeof setTimeout> | undefined;
+    if (active) {
+      shell?.removeAttribute('data-bb-chat-ui-fluid-options-returning');
+      bars.forEach(bar=>{bar.inert=true;});
+      if (list) { list.scrollTop=0; list.scrollLeft=0; }
+      (panel.querySelector<HTMLElement>(ENABLED_OPTIONS)
+        ?? panel.closest('[data-bb-chat-ui-fluid-composer]')?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-toggle] button')
+        ?? panel).focus({preventScroll:true});
+    } else if (motion?.matches) restore();
+    else returnTimer=setTimeout(restore,fluidOptionStaggerDuration(items.length,200));
     if (!motion?.matches) {
-      fading.current = pills.map((pill,index) => pill.animate?.([{opacity:1},{opacity:0}], {duration:200,delay:index*45,easing:EASE.exit,fill:'both'})).filter((animation): animation is Animation => !!animation);
-      const delay = pills.length ? 200 + (pills.length - 1) * 45 : 0;
-      entering.current = items.map((item,index) => {
-        const animation = dropletIn(item, {delay:delay+index*45});
-        const effect = animation?.effect as KeyframeEffect | null;
-        const opacity = Number.parseFloat(getComputedStyle(item).opacity);
-        if (effect?.getKeyframes && effect.setKeyframes) effect.setKeyframes(effect.getKeyframes().map((frame,index) => ({...frame,opacity:index===0 ? 0:Number.isFinite(opacity) ? opacity:1})));
+      const leaving=active?pills:items, arriving=active?items:pills;
+      fading.current=leaving.map((item,index)=>{
+        const snapshot=outgoing.current.get(item);
+        const opacity=snapshot?.opacity ?? restingOpacity.current.get(item) ?? 1;
+        const transform=snapshot?.transform ?? 'none';
+        return item.animate?.([{opacity,transform},{opacity:0,transform}],{duration:200,delay:index*45,easing:EASE.exit,fill:'both'});
+      }).filter((animation):animation is Animation=>!!animation);
+      const delay=fluidOptionStaggerDuration(leaving.length,200);
+      const arrivals=arriving.map((item,index)=>{
+        const animation=dropletIn(item,{delay:delay+index*45});
+        const effect=animation?.effect as KeyframeEffect | null;
+        const snapshot=outgoing.current.get(item), opacity=restingOpacity.current.get(item) ?? 1;
+        if (effect?.getKeyframes && effect.setKeyframes) effect.setKeyframes(effect.getKeyframes().map((frame,index)=>({
+          ...frame,opacity:index===0 ? snapshot?.opacity ?? 0:opacity,
+          ...(index===0 && snapshot && snapshot.opacity>0 ? {transform:snapshot.transform}:{}),
+        })));
+        // 원래 행의 CSS 숨김을 유지하므로 마지막 필의 복귀까지 최종 프레임을 보관한다.
+        if (!active) effect?.updateTiming?.({fill:'both'});
         return animation;
-      }).filter((animation): animation is Animation => animation !== null);
+      }).filter((animation):animation is Animation=>!!animation);
+      if (active) entering.current=arrivals;
+      else fading.current.push(...arrivals);
     }
-    // 동작 줄이기는 등장과 퇴장을 모두 즉시 끝낸다.
-    const reduce = () => { if (motion?.matches) { stopEntering(); for (const animation of fading.current) animation.cancel(); fading.current = []; } };
-    motion?.addEventListener('change', reduce);
-    return () => {
-      outgoingOpacity.current = new Map(items.map(item => [item,getComputedStyle(item).opacity]));
-      stopEntering();
-      for (const animation of fading.current) animation.cancel();
-      fading.current = [];
-      motion?.removeEventListener('change', reduce);
+    // 동작 줄이기는 모든 모션을 끝내며 닫힘의 수명 정리는 Body가 함께 처리한다.
+    const reduce=()=>{if (motion?.matches) {clearTimeout(returnTimer);if(!active)restore();stopEntering();for (const animation of fading.current) animation.cancel();fading.current=[];}};
+    motion?.addEventListener('change',reduce);
+    return ()=>{
+      clearTimeout(returnTimer);
+      outgoing.current=new Map([...items,...pills].map(item=>{
+        const style=getComputedStyle(item),opacity=Number.parseFloat(style.opacity);
+        return [item,{opacity:Number.isFinite(opacity)?opacity:1,transform:style.transform || 'none'}];
+      }));
+      stopEntering();for (const animation of fading.current) animation.cancel();fading.current=[];
+      motion?.removeEventListener('change',reduce);
     };
   }, [active, stopEntering]);
 

@@ -254,3 +254,26 @@ it('renders the information drawing directly in the upper metadata pill',async()
  expect(button.querySelector('[data-icon="Settings2"]')).toBeNull();
  fireEvent.click(button);expect(screen.getByRole('region',{name:'컴포저 정보와 설정'})).toBeTruthy();expect(run).not.toHaveBeenCalled();v.unmount();
 });
+
+// 실제 브라우저의 inert 속성 반영을 사용해 두 비활성 처리의 복구 충돌을 재현한다.
+it('restores pointer and keyboard access to the information pills after options finish closing',async()=>{
+ const descriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'inert');
+ Object.defineProperty(HTMLElement.prototype,'inert',{configurable:true,get(){return this.hasAttribute('inert');},set(value){this.toggleAttribute('inert',!!value);}});
+ const {v}=mount(),shell=document.createElement('div'),bar=document.createElement('div');
+ shell.setAttribute('data-promptbox-shell','');bar.setAttribute('data-bb-chat-ui-info-bar','');bar.innerHTML='<button>Goal</button>';
+ document.body.append(shell);shell.append(bar,v.container);
+ try{
+  await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+  await v.setComposerText('보존할 초안');
+  await waitFor(()=>expect(bar.querySelector('[data-bb-chat-ui-fluid-details-toggle]')).toBeTruthy());
+  fireEvent.click(screen.getByRole('button',{name:'Prompt actions'}));
+  await screen.findByRole('region',{name:'컴포저 옵션'});
+  expect(bar.hasAttribute('inert')).toBe(true);
+  fireEvent.click(screen.getByRole('button',{name:'Prompt actions'}));
+  await waitFor(()=>expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel]')).toBeNull());
+  const info=screen.getByRole('button',{name:'정보와 설정'});
+  expect(bar.hasAttribute('inert')).toBe(false);
+  expect(info.closest('[inert]')).toBeNull();
+  fireEvent.click(info);expect(info.getAttribute('aria-expanded')).toBe('true');
+ }finally{v.unmount();shell.remove();if(descriptor)Object.defineProperty(HTMLElement.prototype,'inert',descriptor);else delete (HTMLElement.prototype as any).inert;}
+});

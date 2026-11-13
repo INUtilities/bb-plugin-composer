@@ -385,3 +385,27 @@ it('keeps a wrapped composer expanded while Korean IME composition temporarily f
   expect(row.getAttribute('data-multiline')).toBe('false');
  }finally{view.unmount();bounds.mockRestore();}
 });
+
+// 메뉴가 사라진 직후 원래 필이 순간 노출되지 않도록 마지막 복귀까지 tray 수명을 유지한다.
+it('keeps the closing tray until the last original pill has returned',()=>{
+ const ui=(open:boolean)=><div data-promptbox-shell=""><div data-bb-chat-ui-info-bar=""><button>Goal</button><button>Diff</button></div><FluidComposerBody panelOpen={open} panel={<div role="menu"><button role="menuitem">Attach</button><button role="menuitem">Plan</button></div>} editor={<textarea defaultValue="보존할 초안"/>} options={<button>+</button>} actions={null} attachments={null}/></div>;
+ const v=render(ui(true));act(()=>vi.advanceTimersByTime(20));v.rerender(ui(false));
+ const count=v.container.querySelectorAll('[data-bb-chat-ui-fluid-panel-layer] [role=menuitem]').length;
+ expect(count).toBe(2);
+ const menuExit=200+(count-1)*45;
+ act(()=>vi.advanceTimersByTime(menuExit));
+ expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).not.toBeNull();
+ act(()=>vi.advanceTimersByTime(504));expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).not.toBeNull();
+ act(()=>vi.advanceTimersByTime(1));expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).toBeNull();
+ v.unmount();expect(vi.getTimerCount()).toBe(0);
+});
+
+// 원래 필이 복귀하는 도중 동작 줄이기를 켜도 숨김 소유권이 남지 않는다.
+it('ends the original-pill return immediately when reduced motion is enabled',()=>{
+ const ui=(open:boolean)=><div data-promptbox-shell=""><div data-bb-chat-ui-info-bar=""><button>Goal</button><button>Diff</button></div>{view(open)}</div>;
+ const v=render(ui(true));act(()=>vi.advanceTimersByTime(20));v.rerender(ui(false));
+ act(()=>vi.advanceTimersByTime(300));expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).not.toBeNull();
+ reduced=true;act(()=>{for(const listener of [...listeners])listener();});
+ expect(v.container.querySelector('[data-bb-chat-ui-fluid-panel-layer]')).toBeNull();
+ v.unmount();expect(listeners.size).toBe(0);expect(vi.getTimerCount()).toBe(0);
+});

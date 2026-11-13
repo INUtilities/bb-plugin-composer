@@ -3430,7 +3430,7 @@ export function PromptBoxInternal({
       {picker => <FluidComposerDetails scopeKey={composerScopeKey} suspended={fluidVoiceActive}
         onOpen={() => { picker.close(); dismissComposerMenu(); setFluidOptionsOpen(false); }}>
       {(detailsToggle, details) => <>
-      <FluidComposerToolbar hidden={fluidVoiceActive} inactive={picker.open || fluidOptionsOpen}>{picker.modeToggle}{detailsToggle}</FluidComposerToolbar>
+      <FluidComposerToolbar hidden={fluidVoiceActive} inactive={picker.open}>{picker.modeToggle}{detailsToggle}</FluidComposerToolbar>
       {details}
       <FluidComposerBody
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}

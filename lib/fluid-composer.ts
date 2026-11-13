@@ -11,7 +11,7 @@ html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new
 [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] { position:relative; }
 html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]):not([hidden]) { display:flex !important; position:absolute; bottom:calc(100% + 8px); right:0; z-index:30; width:max-content; max-width:100%; padding:12px 16px; border-radius:18px; background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); box-shadow:0 8px 24px -12px color-mix(in oklab,var(--foreground) 22%,transparent); }
 .dark [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { background:${DARK_GLASS_FACE}; }
-[data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
+[data-bb-chat-ui-fluid-options-open]:not([data-bb-chat-ui-fluid-options-returning]) :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
 [data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > :not([data-bb-chat-ui-slot-toolbar]) { opacity:0; }
 [data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { flex-wrap:wrap; max-height:none; overflow:visible; opacity:1; pointer-events:auto; }
 [data-bb-chat-ui-fluid-details-open] :is([data-follow-up-composer-footer], [data-new-thread-footer]) > div { flex-wrap:wrap; overflow:visible; }
@@ -85,6 +85,7 @@ html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb
 [data-bb-chat-ui-fluid-composer]:not([data-bb-chat-ui-slot-enabled]) [data-bb-chat-ui-fluid-row][data-multiline="false"]:not([data-voice-mode="true"]) > [data-bb-chat-ui-fluid-options] { padding-left:0; }
 [data-bb-chat-ui-fluid-model-controls] { display:flex; align-items:center; gap:2px; min-width:0; }
 [data-bb-chat-ui-fluid-model-controls] [data-bb-chat-ui-fluid-native-controls] { flex-wrap:nowrap; gap:2px; }
+[data-bb-chat-ui-fluid-model-controls] [data-bb-chat-ui-fluid-native-controls] button[aria-label^="Provider, model and reasoning"] > svg[data-icon="ChevronDown"] { display:none; }
 /* 닫힘·열림과 phone의 잔여 hover 모두 입력 안의 모델 버튼에 배경을 만들지 않는다. */
 [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-model-controls] button[aria-label^="Provider, model and reasoning"],
 [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-model-controls] button[aria-label^="Provider, model and reasoning"]:is(:hover,:active,[data-state="open"]) { background:transparent; }

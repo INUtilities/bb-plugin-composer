@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_INPUT_EASING, FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND, FLUID_COMPOSER_LINE_MS, FLUID_COMPOSER_MORPH_MS, FLUID_EDITOR_FOLLOW_ANIMATION, readFluidEditorPosition } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
+import { fluidOptionCloseDuration } from '../lib/fluid-options-motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 // 입력 높이와 모서리를 유지하고 옵션 필을 입력창 위에 독립적으로 표시한다.
@@ -37,8 +38,8 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const win = panelLayer.current?.ownerDocument.defaultView;
     if (!win) return;
     const motion = win.matchMedia('(prefers-reduced-motion: reduce)');
-    const count = panelLayer.current?.querySelectorAll('[role="menuitem"]').length ?? 0;
-    const timer = win.setTimeout(() => setPanelPresent(false), 200 + Math.max(0, count - 1) * 45);
+    const duration = panelLayer.current ? fluidOptionCloseDuration(panelLayer.current) : 0;
+    const timer = win.setTimeout(() => setPanelPresent(false), duration);
     // 동작 줄이기를 켜면 남아 있는 옵션도 즉시 제거한다.
     const reduce = () => { if (motion.matches) setPanelPresent(false); };
     reduce(); motion.addEventListener('change', reduce);
