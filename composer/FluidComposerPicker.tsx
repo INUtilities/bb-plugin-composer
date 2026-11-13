@@ -55,8 +55,8 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
   const locked=disabled || state.applying, wheelDisabled=locked || !visible;
   // 채팅 하단에 블러 한 겹을 연결해 컴포저 축소와 창 너비 변경을 그대로 따른다.
   useEffect(()=>{setBackdropHost(formRef.current?.closest<HTMLElement>('[data-scroll-footer]') ?? null);},[formRef,state.key]);
-  // 실제 phone 활성화마다 선택 햅틱을 한 번 전달한다.
-  const pulse=(trusted:boolean)=>{if(trusted && device==='phone') postHaptic(readHapticBridge(window),'selection');};
+  // 슬롯 전환과 실제 항목 선택은 손끝에서 구분되도록 약한 진동을 보낸다.
+  const pulse=(trusted:boolean)=>{if(trusted && device==='phone') postHaptic(readHapticBridge(window),'impact-light');};
   // 취소할 때만 선택 화면을 닫고 필요한 경로에서 설정 버튼에 포커스를 돌린다.
   const dismiss=(restore=false)=>{picker.close();if(restore) trigger.current?.focus({preventScroll:true});};
   // 다른 컴포저에서 기존 방식으로 바꾸어도 숨은 목록 요청을 즉시 취소한다.
@@ -214,7 +214,7 @@ export function FluidComposerPicker({formRef,disabled=false,onOpen,onError,child
       }}><SettingsGlyph/>{picker.selection?.serviceTier==='fast'?<span data-bb-chat-ui-slot-fast-badge=""><FastGlyph/></span>:null}</Button>,
     confirm:visible?<button ref={done} type="button" data-bb-chat-ui-slot-confirm="" data-handoff={picker.handoff || undefined}
       aria-label={picker.handoff?`${targetName}로 핸드오프`:'설정 완료'} aria-busy={state.applying || undefined} disabled={locked || state.loading || !state.draft.model || !!state.error}
-      onClick={()=>{const key=state.key;void picker.confirm().then(applied=>{if(applied && currentKey.current===key)trigger.current?.focus({preventScroll:true});});}}>
+      onClick={()=>{pulse(true);const key=state.key;void picker.confirm().then(applied=>{if(applied && currentKey.current===key)trigger.current?.focus({preventScroll:true});});}}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={picker.handoff?'M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4':'M20 6 9 17l-5-5'}/></svg>
     </button>:null,
     overlay:<div data-bb-chat-ui-slot-overlay="">

@@ -9,7 +9,11 @@ beforeEach(() => {
   sessionStorage.clear();
   vi.stubGlobal('matchMedia', (media:string) => ({media,matches:false,addEventListener(){},removeEventListener(){}}));
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => {
+  cleanup();
+  delete (window as Window & {bb?:unknown}).bb;
+  vi.unstubAllGlobals();
+});
 
 // 닫힌 목록의 배치 보정 스크롤은 새 설정 조회나 선택을 시작하지 않는다.
 it('ignores a hidden wheel scroll instead of reopening the picker',async()=>{
@@ -91,6 +95,25 @@ it('toggles the actual mode without replacing the input, clearing the draft or e
   fireEvent.click(toggle);
   expect(toggle.getAttribute('aria-pressed')).toBe('true');
   expect(models).not.toHaveBeenCalled();
+});
+
+it('pulses the phone haptic when the slot confirmation button is pressed',async()=>{
+ vi.stubGlobal('matchMedia',(query:string)=>({
+  media:query,
+  matches:query==='(hover: none)'||query==='(pointer: coarse)'||query==='(any-pointer: coarse)'||query==='(orientation: portrait)',
+  addEventListener(){},removeEventListener(){},
+ }));
+ const width=vi.spyOn(window.screen,'width','get').mockReturnValue(390);
+ const height=vi.spyOn(window.screen,'height','get').mockReturnValue(844);
+ const post=vi.fn();Object.assign(window,{bb:{native:{capabilities:['haptic'],post}}});
+ try {
+  mount();
+  fireEvent.click(screen.getByRole('button',{name:'모델과 Effort 설정'}));
+  await screen.findByRole('option',{name:'Opus'});
+  post.mockClear();
+  fireEvent.click(screen.getByRole('button',{name:'설정 완료'}));
+  expect(post).toHaveBeenCalledExactlyOnceWith({type:'haptic',kind:'impact-light'});
+ } finally { width.mockRestore(); height.mockRestore(); }
 });
 
 // 여백 표식은 닫힐 때도 남겨 전환을 잇고 입력기가 해제될 때 원래 상태로 복구한다.
