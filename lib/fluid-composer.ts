@@ -9,14 +9,16 @@ export const fluidComposerCss = `
 ${fluidPickerCss}
 /* BB footer는 같은 DOM에서 한 줄의 메타정보 필로 표시한다. */
 html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { display:flex !important; }
-html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { display:none !important; }
+html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new-thread-footer]),
+html[data-bb-chat-ui-fluid-mode] [data-app-composer][data-app-composer-role][data-promptbox-shell] :is([data-follow-up-composer-footer], [data-new-thread-footer]):not([data-bb-chat-ui-fluid-details]) { display:none !important; }
 [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] { position:relative; }
-html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] [data-bb-chat-ui-fluid-details]:not([hidden]) {
+html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] [data-bb-chat-ui-fluid-details][role="region"]:not([hidden]) {
   display:flex !important; position:absolute !important; gap:8px; justify-content:flex-start; align-items:center;
   top:var(--bb-chat-ui-pill-row-center,0px); bottom:auto; left:var(--bb-chat-ui-pill-row-left,0px); right:auto;
   width:var(--bb-chat-ui-pill-row-width,100%); max-width:100%; min-width:0; min-height:0; max-height:none; transform:translateY(-50%);
-  z-index:30; margin:0; padding:8px 0; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+  z-index:30; margin:0; padding:8px 0; flex-wrap:nowrap; overflow-x:auto !important; overflow-y:hidden !important;
   overscroll-behavior:contain; scrollbar-width:none; opacity:1; pointer-events:auto;
+  border:0; border-radius:0; background:transparent; box-shadow:none;
 }
 html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-fluid-details][data-bb-chat-ui-fluid-details-before] { justify-content:safe flex-end; }
 [data-bb-chat-ui-fluid-details]::-webkit-scrollbar { display:none; }
