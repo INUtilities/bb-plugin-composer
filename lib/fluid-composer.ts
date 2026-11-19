@@ -11,8 +11,8 @@ ${fluidPickerCss}
 html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { display:flex !important; }
 html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new-thread-footer]) { display:none !important; }
 [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] { position:relative; }
-html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-fluid-details]:not([hidden]) {
-  display:flex !important; position:absolute; gap:8px; justify-content:flex-start; align-items:center;
+html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] [data-bb-chat-ui-fluid-details]:not([hidden]) {
+  display:flex !important; position:absolute !important; gap:8px; justify-content:flex-start; align-items:center;
   top:var(--bb-chat-ui-pill-row-center,0px); bottom:auto; left:var(--bb-chat-ui-pill-row-left,0px); right:auto;
   width:var(--bb-chat-ui-pill-row-width,100%); max-width:100%; min-width:0; min-height:0; max-height:none; transform:translateY(-50%);
   z-index:30; margin:0; padding:8px 0; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
