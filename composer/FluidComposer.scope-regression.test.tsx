@@ -19,6 +19,20 @@ it('review: normal effort lookup keeps the new-thread project when the selection
  expect(view.inspection.composer.submits).toHaveLength(0);
 });
 
+// 환경 공급자가 고른 머신에서 모델 목록을 읽고 첫 클릭으로 다음 단계를 선택한다.
+it('cycles new-thread effort on the machine selected by the environment provider',async()=>{
+ const models=vi.fn(async()=>({models:[model],selectedOnlyModels:[]}));
+ const view=renderSlot({component:()=> <FluidModelControls controls={null} onError={()=>{}}/>},{},{composer:{
+  scope:{kind:'new-thread',projectId:'project-current'},
+  selection:{providerId:'codex',model:'m',reasoningLevel:'medium',environment:{
+   type:'provider',environmentProviderId:'personal-workspace',machine:{type:'existing',hostId:'host-selected'},inputs:null,
+  }},
+ },sdk:{providers:{models}}});
+ fireEvent.click(screen.getByRole('button',{name:'Effort: Medium'}));
+ await screen.findByRole('button',{name:'Effort: High'});
+ expect(models).toHaveBeenCalledWith(expect.objectContaining({hostId:'host-selected',projectId:'project-current',providerId:'codex'}));
+ expect(view.inspection.composer.submits).toHaveLength(0);
+});
 it('review: a confirmation from the previous scope must not move keyboard focus in the new scope',async()=>{
  let api!:ReturnType<typeof useComposer>;let finish!:()=>void;const gate=new Promise<void>(resolve=>{finish=resolve;});
  function Harness(){api=useComposer();const ref=useRef<HTMLFormElement>(null);return <div data-scroll-footer=""><div data-promptbox-shell=""><form ref={ref}><FluidComposerPicker formRef={ref} onOpen={()=>{}} onError={()=>{}}>{p=><>{p.modeToggle}{p.trigger}<div data-bb-chat-ui-slot-submit="">{p.confirm}</div>{p.overlay}</>}</FluidComposerPicker></form></div></div>;}
