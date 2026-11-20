@@ -39,13 +39,28 @@ export function FluidComposerToolbar({hidden=false,inactive=false,children}:{hid
     const node=toolbar.current;
     if(!node || hidden) return;
     const previous=target?.style.getPropertyValue(WIDTH);
-    if(target){target.style.setProperty(WIDTH,String(node.offsetWidth+8));target.dispatchEvent(new Event('bb-chat-ui:composer-data',{bubbles:true}));}
+    let observer:ResizeObserver|undefined;
+    if(target){
+      const reserveWidth=()=>{
+        const width=String(node.offsetWidth+8);
+        if(target.style.getPropertyValue(WIDTH)===width) return;
+        target.style.setProperty(WIDTH,width);
+        target.dispatchEvent(new Event('bb-chat-ui:composer-data',{bubbles:true}));
+      };
+      reserveWidth();
+      const ResizeObserver=node.ownerDocument.defaultView?.ResizeObserver;
+      if(ResizeObserver){
+        observer=new ResizeObserver(reserveWidth);
+        observer.observe(node);
+      }
+    }
     const animations=staggerIn(node.children).filter((animation):animation is Animation=>!!animation);
     const motion=matchMedia('(prefers-reduced-motion: reduce)');
     // 동작 줄이기는 현재 필의 등장도 즉시 마친다.
     const reduce=()=>{if(motion.matches)for(const animation of animations)animation.cancel();};
     motion.addEventListener('change',reduce);
     return ()=>{
+      observer?.disconnect();
       for(const animation of animations)animation.cancel();motion.removeEventListener('change',reduce);
       if(target){if(previous)target.style.setProperty(WIDTH,previous);else target.style.removeProperty(WIDTH);target.dispatchEvent(new Event('bb-chat-ui:composer-data',{bubbles:true}));}
     };

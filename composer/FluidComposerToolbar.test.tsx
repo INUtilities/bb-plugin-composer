@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { FluidComposerToolbar } from './FluidComposerToolbar';
 
 beforeEach(()=>vi.stubGlobal('matchMedia',()=>({matches:false,addEventListener(){},removeEventListener(){}})));
@@ -51,4 +51,39 @@ it('makes the shared information row inert only while its controls are visually 
 it('also removes fallback toolbar controls from keyboard access while inactive',()=>{
  const v=render(<FluidComposerToolbar inactive><button>06 슬롯</button></FluidComposerToolbar>);
  expect(v.container.querySelector('[data-bb-chat-ui-slot-toolbar]')!.hasAttribute('inert')).toBe(true);
+});
+
+it('updates the shared row reservation when the slot toggle changes and releases it on unmount',async()=>{
+ const shell=document.createElement('div'),mount=document.createElement('div'),bar=document.createElement('div');
+ shell.setAttribute('data-promptbox-shell','');bar.setAttribute('data-bb-chat-ui-info-bar','');
+ shell.append(bar,mount);document.body.append(shell);
+ const property='--bb-chat-ui-fluid-toolbar-width';
+ const reservations:string[]=[];
+ shell.addEventListener('bb-chat-ui:composer-data',()=>reservations.push(bar.style.getPropertyValue(property)));
+ const observers=new Map<Element,()=>void>();
+ vi.stubGlobal('ResizeObserver',class {
+  private observed?:Element;
+  constructor(private resize:()=>void) {}
+  observe(target:Element){this.observed=target;observers.set(target,this.resize);}
+  disconnect(){if(this.observed)observers.delete(this.observed);}
+ });
+ const width=vi.spyOn(HTMLElement.prototype,'offsetWidth','get').mockImplementation(function(this:HTMLElement){
+  return this.childElementCount===2 ? 112 : 32;
+ });
+ const ui=(enabled:boolean)=><FluidComposerToolbar>{enabled && <button>06 슬롯</button>}<button>정보</button></FluidComposerToolbar>;
+ const v=render(ui(false),{container:mount});
+ try{
+  await waitFor(()=>expect(reservations).toEqual(['40']));
+  const toolbar=bar.querySelector('[data-bb-chat-ui-slot-toolbar]')!;
+  v.rerender(ui(true));
+  act(()=>observers.get(toolbar)?.());
+  expect(bar.style.getPropertyValue(property)).toBe('120');
+  act(()=>observers.get(toolbar)?.());
+  v.rerender(ui(false));
+  act(()=>observers.get(toolbar)?.());
+  expect(reservations).toEqual(['40','120','40']);
+  v.unmount();
+  expect(reservations).toEqual(['40','120','40','']);
+  expect(observers.size).toBe(0);
+ }finally{v.unmount();width.mockRestore();shell.remove();}
 });

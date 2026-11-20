@@ -1030,14 +1030,14 @@
       "source": "composer/FluidComposerToolbar.tsx",
       "destination": "composer/FluidComposerToolbar.tsx",
       "sourceSha256": "3b5ee58e216460cc6b6769c2cea35c1c556735edbf4336827aa89cbf9435e5cb",
-      "sha256": "893d4e609c348d2cf42c1d426c5436f4f2d0cafc52dc5de7cc6f39c0f4d41e1c",
+      "sha256": "b0a614b4a223301651b4fe2f3ea9d7a056be8f797212bd97665beeb911ec8376",
       "integrationOverlay": true
     },
     {
       "source": "composer/FluidComposerToolbar.test.tsx",
       "destination": "composer/FluidComposerToolbar.test.tsx",
       "sourceSha256": "9ee6b28cde51fe9c887d47230da516458a929db0a0be9afc7e122169421ec18d",
-      "sha256": "3ea013d82fe1c721f98c22197b313f0d618483a8fea922eec3db4af2e3603cd2",
+      "sha256": "85255d093d2266e0e11a59ee08ffcb7ba7f7a437c398e64c5466490fb839dcd8",
       "integrationOverlay": true
     }
   ],
