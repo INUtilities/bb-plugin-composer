@@ -38,7 +38,9 @@ export function FluidModelControls({ controls, disabled = false, onError }: { co
       routing = { environmentId: thread.environmentId };
     } else if (environment?.type === 'reuse') routing = { environmentId: environment.environmentId };
     else if (environment?.type === 'host') routing = environment.hostId ? { hostId: environment.hostId, projectId } : { projectId };
-    else if (!environment || environment.type === 'project-default') routing = { projectId };
+    else if (environment?.type === 'provider') {
+      routing = { hostId: environment.machine?.type === 'existing' ? environment.machine.hostId : undefined, projectId };
+    } else if (!environment || environment.type === 'project-default') routing = { projectId };
     else return [];
     if (signal.aborted) return [];
     const result = await sdk.providers.models({ ...routing, providerId, signal });

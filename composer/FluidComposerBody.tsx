@@ -3,11 +3,11 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import { bindFluidComposerHeight, FLUID_COMPOSER_INPUT_MS, FLUID_COMPOSER_INPUT_EASING, FLUID_COMPOSER_INPUT_OVERSHOOT_BOUND, FLUID_COMPOSER_LINE_MS, FLUID_COMPOSER_MORPH_MS, FLUID_EDITOR_FOLLOW_ANIMATION, readFluidEditorPosition } from '../lib/fluid-composer-height';
 import { needsFullWidthComposer } from '../lib/fluid-composer-layout';
 import { EASE } from '../lib/motion';
-import { fluidOptionCloseDuration } from '../lib/fluid-options-motion';
+import { bindFluidPillRow, FLUID_COMPOSER, fluidOptionCloseDuration } from '../lib/fluid-options-motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 // 입력 높이와 모서리를 유지하고 옵션 필을 입력창 위에 독립적으로 표시한다.
-export function FluidComposerBody({ editor, options, actions, attachments, voice, voiceMode = false, decoration, auxiliary, panel, panelOpen = false, toggle, draftText, draftEditVersion = 0, editorReady = true, phone = false }: {
+export function FluidComposerBody({ editor, options, actions, attachments, voice, voiceMode = false, decoration, auxiliary, panel, panelOpen = false, discardPanel = false, toggle, draftText, draftEditVersion = 0, editorReady = true, phone = false }: {
   editor: ReactNode;
   options: ReactNode;
   actions: ReactNode;
@@ -18,6 +18,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   auxiliary?: ReactNode;
   panel?: ReactNode;
   panelOpen?: boolean;
+  discardPanel?: boolean;
   toggle?: ReactNode;
   draftText?: string;
   draftEditVersion?: number;
@@ -32,8 +33,16 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const [multiline, setMultiline] = useState(false);
   const [panelPresent, setPanelPresent] = useState(panelOpen);
   const panelLayer = useRef<HTMLDivElement>(null);
+  const showPanel = !discardPanel && (panelOpen || panelPresent);
+  // 옵션이 표시되는 동안만 i 필을 기준으로 목록 위치를 맞춘다.
+  useLayoutEffect(() => {
+    const layer=panelLayer.current;
+    const composer=layer?.closest<HTMLElement>(FLUID_COMPOSER);
+    if (layer && composer) return bindFluidPillRow(layer,composer,'options');
+  },[showPanel]);
   // 퇴장이 끝날 때까지 옵션 노드를 유지하고 재열림·동작 줄이기·해제 때 예약을 정리한다.
   useLayoutEffect(() => {
+    if (discardPanel) { setPanelPresent(false); return; }
     if (panelOpen) { setPanelPresent(true); return; }
     if (!panelPresent) return;
     const win = panelLayer.current?.ownerDocument.defaultView;
@@ -45,7 +54,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     const reduce = () => { if (motion.matches) setPanelPresent(false); };
     reduce(); motion.addEventListener('change', reduce);
     return () => { win.clearTimeout(timer); motion.removeEventListener('change', reduce); };
-  }, [panelOpen, panelPresent]);
+  }, [panelOpen, panelPresent, discardPanel]);
   const multilineRef = useRef(false), layoutFrame = useRef<number | null>(null);
   const composing = useRef(false);
   // iPhone 한글은 composition 없이 삭제→삽입으로도 조합한다. 중간 초안은 접힘에 쓰지 않는다.
@@ -235,7 +244,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     };
   }, [multiline]);
   return <>
-    {panelOpen || panelPresent ? <div ref={panelLayer} data-bb-chat-ui-fluid-panel-layer="" inert={!panelOpen || undefined} aria-hidden={!panelOpen || undefined}>{panel}</div> : null}
+    {showPanel ? <div ref={panelLayer} data-bb-chat-ui-fluid-panel-layer="" inert={!panelOpen || undefined} aria-hidden={!panelOpen || undefined}>{panel}</div> : null}
     <div ref={viewport} data-bb-chat-ui-fluid-height="" data-multiline={multiline} data-bb-chat-ui-fluid-view="input" data-voice-mode={voiceMode || undefined}>
     <div data-bb-chat-ui-fluid-surface="" aria-hidden="true"/>
     {decoration}
