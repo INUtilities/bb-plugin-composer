@@ -32,8 +32,9 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6",
-      "sourceSha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6"
+      "sha256": "5827eb1c8452c51970ea80d42e888161774bdb1558329b84c4868bf52a8c508b",
+      "sourceSha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6",
+      "integrationOverlay": true
     },
     {
       "source": "composer/FluidComposer.tsx",
@@ -58,15 +59,16 @@
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "d6765fa19cf28f38f423fff5e3afeb89be9246121accb9288568c895fb99edad",
+      "sha256": "c1c4934444474e7533102a67339a8bd3701b445a79af050cd81f55af966e4b16",
       "sourceSha256": "c197522d8ac0c0c00c1905412f422ff8d7a651c1d97b2e8f50cd94afbb331632",
       "integrationOverlay": true
     },
     {
       "source": "composer/FluidComposerDetails.tsx",
       "destination": "composer/FluidComposerDetails.tsx",
-      "sha256": "ddf2c84c51b64c73f7b98e0ab0f012090b3cb12e1ee71a65701bb56e3c1a434e",
-      "sourceSha256": "ddf2c84c51b64c73f7b98e0ab0f012090b3cb12e1ee71a65701bb56e3c1a434e"
+      "sha256": "0e7e32c3c639abc71d062a014fed84398ade028b1c261fc3ada9711e9aaa0be4",
+      "sourceSha256": "ddf2c84c51b64c73f7b98e0ab0f012090b3cb12e1ee71a65701bb56e3c1a434e",
+      "integrationOverlay": true
     },
     {
       "source": "composer/FluidComposerToggle.tsx",
@@ -83,8 +85,9 @@
     {
       "source": "composer/FluidOptionsPanel.tsx",
       "destination": "composer/FluidOptionsPanel.tsx",
-      "sha256": "4555de49ad8c359031460166b10c4ee31d419c5ad35bc01e305bd768c60294a9",
-      "sourceSha256": "4555de49ad8c359031460166b10c4ee31d419c5ad35bc01e305bd768c60294a9"
+      "sha256": "abfa4fddd794f3c8c351b58f862b016e19ce13d8e1142278070a65c36dba8640",
+      "sourceSha256": "4555de49ad8c359031460166b10c4ee31d419c5ad35bc01e305bd768c60294a9",
+      "integrationOverlay": true
     },
     {
       "source": "composer/FluidVoiceControl.test.tsx",
@@ -297,7 +300,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "7730589f991d44973f67dabc2eaede45cde9a364222582c3d5461319c2aaa3fe",
+      "sha256": "b8f870953c7a66b9db0c95f89b0cac7e000c61d4d377309f9774bbe72f2301b0",
       "sourceSha256": "fa3b85470e5b81c2e16800a4136bb46d666987bba1a19c8112e8b021d0f51111",
       "integrationOverlay": true
     },
@@ -632,7 +635,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "7ecbfc0e6b836deec65bb9e0c76f44de28d83793770f7fb7670c447e7aca0745",
+      "sha256": "9041e528f2869e4ed328962b855bb65434d86f9e80ebc2f5aec8760acc6fec17",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"

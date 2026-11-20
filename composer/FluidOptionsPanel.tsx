@@ -5,8 +5,7 @@ import { Icon } from './components/ui/icon';
 import { InlineDropdownMenuItems } from './components/ui/dropdown-menu';
 import { orderedPromptActions, PROMPT_ACTION_PRESENTATION } from './src/PromptBoxActionsMenu';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
-import { dropletIn, EASE } from '../lib/motion';
-import { fluidOptionPills, fluidOptionStaggerDuration } from '../lib/fluid-options-motion';
+import { animateFluidPillSwap, fluidOptionPills, fluidPillExitDuration, readFluidPillFrames } from '../lib/fluid-options-motion';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
 
 export interface FluidOptionsPanelProps {
@@ -31,7 +30,7 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
   const entering = useRef<Animation[]>([]);
   const fading = useRef<Animation[]>([]);
   const restingOpacity = useRef(new Map<Element, number>());
-  const outgoing = useRef(new Map<Element, {opacity:number;transform:string}>());
+  const outgoing = useRef<ReadonlyMap<Element, {opacity:number;transform:string}>>(new Map());
   const restoreInteraction = useRef<() => void>(() => {});
   // 직접 조작과 해제 때 필 전체의 순차 등장을 즉시 끝낸다.
   const stopEntering = useCallback(() => { for (const animation of entering.current) animation.cancel(); entering.current = []; }, []);
@@ -80,28 +79,11 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
         ?? panel.closest('[data-bb-chat-ui-fluid-composer]')?.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-toggle] button')
         ?? panel).focus({preventScroll:true});
     } else if (motion?.matches) restore();
-    else returnTimer=setTimeout(restore,fluidOptionStaggerDuration(items.length,200));
+    else returnTimer=setTimeout(restore,fluidPillExitDuration(items.length));
     if (!motion?.matches) {
       const leaving=active?pills:items, arriving=active?items:pills;
-      fading.current=leaving.map((item,index)=>{
-        const snapshot=outgoing.current.get(item);
-        const opacity=snapshot?.opacity ?? restingOpacity.current.get(item) ?? 1;
-        const transform=snapshot?.transform ?? 'none';
-        return item.animate?.([{opacity,transform},{opacity:0,transform}],{duration:200,delay:index*45,easing:EASE.exit,fill:'both'});
-      }).filter((animation):animation is Animation=>!!animation);
-      const delay=fluidOptionStaggerDuration(leaving.length,200);
-      const arrivals=arriving.map((item,index)=>{
-        const animation=dropletIn(item,{delay:delay+index*45});
-        const effect=animation?.effect as KeyframeEffect | null;
-        const snapshot=outgoing.current.get(item), opacity=restingOpacity.current.get(item) ?? 1;
-        if (effect?.getKeyframes && effect.setKeyframes) effect.setKeyframes(effect.getKeyframes().map((frame,index)=>({
-          ...frame,opacity:index===0 ? snapshot?.opacity ?? 0:opacity,
-          ...(index===0 && snapshot && snapshot.opacity>0 ? {transform:snapshot.transform}:{}),
-        })));
-        // 원래 행의 CSS 숨김을 유지하므로 마지막 필의 복귀까지 최종 프레임을 보관한다.
-        if (!active) effect?.updateTiming?.({fill:'both'});
-        return animation;
-      }).filter((animation):animation is Animation=>!!animation);
+      const {exits,arrivals}=animateFluidPillSwap(leaving,arriving,restingOpacity.current,outgoing.current,!active);
+      fading.current=exits;
       if (active) entering.current=arrivals;
       else fading.current.push(...arrivals);
     }
@@ -110,10 +92,7 @@ export function FluidOptionsPanel({ active = true, actions = [], plugins, onAtta
     motion?.addEventListener('change',reduce);
     return ()=>{
       clearTimeout(returnTimer);
-      outgoing.current=new Map([...items,...pills].map(item=>{
-        const style=getComputedStyle(item),opacity=Number.parseFloat(style.opacity);
-        return [item,{opacity:Number.isFinite(opacity)?opacity:1,transform:style.transform || 'none'}];
-      }));
+      outgoing.current=readFluidPillFrames([...items,...pills]);
       stopEntering();for (const animation of fading.current) animation.cancel();fading.current=[];
       motion?.removeEventListener('change',reduce);
     };

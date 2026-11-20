@@ -9,7 +9,8 @@ import { injectFluidComposer } from '../lib/fluid-composer';
 // 기존 방식의 계약은 토글을 끈 상태에서 계속 검증한다.
 beforeEach(()=>{sessionStorage.setItem('bb-chat-ui:fluid-slot-picker','off');vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}}));});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
-function mount(){
+// 실제 BB와 같은 그룹 구조로 메타정보가 들어 있는 작성창을 만든다.
+function mount(nativeFooter=false){
  const run=vi.fn();
  const renderer:ExperimentalComposerRendererApi={key:'options-test',inputLocked:false,focusComposerShortcut:null,decorationSources:[],
   view:{scope:{kind:'thread',threadId:'thr_options_test'},layout:'expanded',draft:{text:'보관할 초안',isEmpty:false,attachmentCount:0},run:{isRunning:false,isSubmitting:false}},
@@ -20,7 +21,10 @@ function mount(){
    submission:{enter:{kind:'send',requiresInput:true,shortcut:{ariaKeyshortcuts:'Enter',label:'Enter'},run},modifier:null,showModifierInMenu:false}},
   threadLinks:{parse:()=>null,cached:()=>null,resolve:async()=>{}},clipboard:{readMessage:()=>null,readMessageImage:async()=>new File([],'unused')},dispatchAppCommandKey:()=>false,showError:vi.fn(),attachmentSrc:()=>''};
  // 같은 컴포넌트 경로로 다시 그려 실제 입력 수명을 검사한다.
- const TestComposer=()=> <PromptBoxInternal {...renderer.input} fluid/>;
+ const TestComposer=()=> nativeFooter ? <div data-promptbox-shell="">
+  <PromptBoxInternal {...renderer.input} fluid/>
+  <div data-new-thread-footer=""><div><button>Project</button></div><div><button>Permission</button></div></div>
+ </div> : <PromptBoxInternal {...renderer.input} fluid/>;
  const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
  return{v,renderer,run,TestComposer};
 }
@@ -60,7 +64,7 @@ it('keeps options on one horizontal scroll row instead of wrapping above the com
 });
 // 정보 필을 컴포저 위로 옮기고 기존 정보와 초안을 유지한다.
 it('places the information pill above the input and reuses the existing information region',async()=>{
- const {v,run}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+ const {v,run}=mount(true);await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
  const editor=v.container.querySelector('.ProseMirror'),toggle=screen.getByRole('button',{name:'정보와 설정'}),send=screen.getByRole('button',{name:'Submit (Enter)'});
  const actions=v.container.querySelector('[data-bb-chat-ui-fluid-actions]')!;
  expect(actions.contains(toggle)).toBe(false);expect(actions.contains(send)).toBe(true);
@@ -86,13 +90,19 @@ it('keeps the expanded desktop send controls inside one rounded pill and preserv
   await screen.findByRole('menuitem',{name:'Queue'});
  }finally{v.unmount();stop();}
 });
-it.each(['data-follow-up-composer-footer','data-new-thread-footer'])('opens the original information and controls from a local round button with %s',async footerMark=>{
+// 대화와 새 스레드에서 호스트가 제공한 각 컨트롤을 그대로 필로 표시한다.
+it.each(['data-follow-up-composer-footer','data-new-thread-footer'])('expands every native metadata control beside the local info button with %s',async footerMark=>{
  const stop=injectFluidComposer(document),{v,run}=mount();
  const shell=document.createElement('div'),other=document.createElement('div');
  shell.setAttribute('data-promptbox-shell','');other.setAttribute('data-promptbox-shell','');
  const bar=document.createElement('div'),footer=document.createElement('div'),unrelated=document.createElement('div');
  bar.setAttribute('data-bb-chat-ui-info-bar','');footer.setAttribute(footerMark,'');unrelated.setAttribute(footerMark,'');
- bar.innerHTML='<button type="button">Goal</button>';footer.textContent='Project · Branch · Permission · Context';
+ bar.innerHTML='<button type="button">Goal</button>';
+ const settings='<button type="button">Project</button><button type="button">Branch</button>';
+ footer.innerHTML='<div>'+(footerMark==='data-follow-up-composer-footer' ? '<div>'+settings+'</div>' : settings)
+  +'</div><div><button type="button" aria-haspopup="menu">Permission</button><span>Context</span></div>';
+ const project=footer.querySelector('button')!, selectProject=vi.fn();
+ project.addEventListener('click',selectProject);
  document.body.append(shell,other);shell.append(bar,v.container,footer);other.append(unrelated);
  try{
   await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
@@ -111,16 +121,93 @@ it.each(['data-follow-up-composer-footer','data-new-thread-footer'])('opens the 
   expect(screen.getByRole('button',{name:'모델 선택'})).toBe(model);
   expect(getComputedStyle(bar).display).toBe('flex');expect(getComputedStyle(footer).display).toBe('flex');
   expect(getComputedStyle(footer).position).toBe('absolute');
+  expect(getComputedStyle(footer).overflowX).toBe('auto');
+  expect(getComputedStyle(footer).flexWrap).toBe('nowrap');
+  expect(details).toBe(footer);
+  expect(footer.parentElement).toBe(shell);
+  expect(screen.getByRole('button',{name:'Project'})).toBe(project);
+  for (const item of [...footer.querySelectorAll('button'),screen.getByText('Context')]) {
+   expect(getComputedStyle(item).borderRadius).toBe('999px');
+  }
+  fireEvent.click(project);
+  expect(selectProject).toHaveBeenCalledOnce();
   expect(getComputedStyle(unrelated).display).toBe('none');
-  const replacement=document.createElement('div');replacement.setAttribute(footerMark,'');footer.replaceWith(replacement);
+  const replacement=document.createElement('div');
+  replacement.setAttribute(footerMark,'');
+  replacement.innerHTML=footer.innerHTML;
+  footer.replaceWith(replacement);
+  await waitFor(()=>expect(screen.getByRole('region',{name:'컴포저 정보와 설정'})).toBe(replacement));
   expect(getComputedStyle(replacement).display).toBe('flex');
-  fireEvent.keyDown(details,{key:'Escape'});
+  fireEvent.keyDown(replacement,{key:'Escape'});
   expect(toggle.getAttribute('aria-expanded')).toBe('false');expect(document.activeElement).toBe(toggle);
   expect(getComputedStyle(replacement).display).toBe('none');expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
   expect(v.container.querySelector('.ProseMirror')).toBe(editor);expect(v.inspection.composer.text).toBe('보관할 초안');
   fireEvent.click(toggle);expect(getComputedStyle(replacement).display).toBe('flex');
   expect(run).not.toHaveBeenCalled();v.unmount();expect(shell.hasAttribute('data-bb-chat-ui-fluid-details-open')).toBe(false);
  }finally{v.unmount();shell.remove();other.remove();stop();}
+});
+// +와 메타정보는 같은 높이에 표시하고 첫 필부터 동일한 시차로 나타난다.
+it('aligns both pill rows to the info button and shares option timings',async()=>{
+ const stop=injectFluidComposer(document),{v}=mount(true);
+ const previous=Element.prototype.animate;
+ const entries:{target:Element;frames:Keyframe[];timing:KeyframeAnimationOptions}[]=[];
+ // 실제 동작 타이밍을 받아 비교하고 jsdom에서 한 프레임도 재생하지 않는다.
+ Element.prototype.animate=function(frames,timing){
+  const entry={target:this,frames:frames as Keyframe[],timing:timing as KeyframeAnimationOptions};
+  entries.push(entry);
+  return {cancel:vi.fn(),effect:{
+   getKeyframes:()=>entry.frames,
+   setKeyframes:(value:Keyframe[])=>{entry.frames=value;},
+  }} as unknown as Animation;
+ };
+ try{
+  const editor=await screen.findByRole('textbox');
+  const toggle=screen.getByRole('button',{name:'정보와 설정'});
+  const shell=v.container.querySelector('[data-promptbox-shell]')!;
+  const form=v.container.querySelector('form')!;
+  const bounds=new DOMRect(200,500,500,90), buttonBounds=new DOMRect(200,500,32,32);
+  vi.spyOn(shell,'getBoundingClientRect').mockReturnValue(bounds);
+  vi.spyOn(form,'getBoundingClientRect').mockReturnValue(bounds);
+  vi.spyOn(toggle,'getBoundingClientRect').mockReturnValue(buttonBounds);
+  fireEvent.click(toggle);
+  const region=screen.getByRole('region',{name:'컴포저 정보와 설정'});
+  expect(region.style.getPropertyValue('--bb-chat-ui-pill-row-center')).toBe('16px');
+  expect(region.style.getPropertyValue('--bb-chat-ui-pill-row-left')).toBe('40px');
+  const metadata=entries.filter(entry=>region.contains(entry.target));
+  const plus=screen.getByRole('button',{name:'Prompt actions'});
+  fireEvent.click(plus);
+  const list=screen.getByRole('menu',{name:'추가 옵션'});
+  const layer=list.closest<HTMLElement>('[data-bb-chat-ui-fluid-panel-layer]')!;
+  expect(layer.style.getPropertyValue('--bb-chat-ui-pill-row-center')).toBe('16px');
+  const options=entries.filter(entry=>list.contains(entry.target)).slice(0,metadata.length);
+  expect(metadata).toHaveLength(2);
+  expect(metadata.map(entry=>entry.frames)).toEqual(options.map(entry=>entry.frames));
+  const delay=(entry:typeof metadata[number],index:number,all:typeof metadata)=>Number(entry.timing.delay)-Number(all[0].timing.delay);
+  expect(metadata.map(delay)).toEqual([0,45]);
+  expect(options.map(delay)).toEqual([0,45]);
+  expect(metadata.map(entry=>entry.timing.duration)).toEqual(options.map(entry=>entry.timing.duration));
+  expect(screen.queryByRole('region',{name:'컴포저 정보와 설정'})).toBeNull();
+  expect(screen.getByRole('textbox')).toBe(editor);
+ }finally{v.unmount();stop();Element.prototype.animate=previous;}
+});
+it('keeps host-hidden metadata controls and groups out of the expanded row',async()=>{
+ const stop=injectFluidComposer(document),{v}=mount(true);
+ try{
+  const footer=v.container.querySelector('[data-new-thread-footer]')!;
+  const hiddenControl=document.createElement('button');
+  hiddenControl.hidden=true;
+  hiddenControl.textContent='Unavailable metadata';
+  footer.firstElementChild!.append(hiddenControl);
+  const hiddenGroup=document.createElement('div');
+  hiddenGroup.hidden=true;
+  hiddenGroup.innerHTML='<button>Hidden setting</button>';
+  footer.append(hiddenGroup);
+  fireEvent.click(screen.getByRole('button',{name:'정보와 설정'}));
+  await screen.findByRole('region',{name:'컴포저 정보와 설정'});
+  expect(getComputedStyle(hiddenControl).display).toBe('none');
+  expect(getComputedStyle(hiddenGroup).display).toBe('none');
+  expect(screen.getByRole('button',{name:'Project'})).toBeTruthy();
+ }finally{v.unmount();stop();}
 });
 it('asks a collapsed host to mount its footer without leaving focus on the editor',async()=>{
  const stop=injectFluidComposer(document),{v,run}=mount();
@@ -133,12 +220,14 @@ it('asks a collapsed host to mount its footer without leaving focus on the edito
   const editor=v.container.querySelector<HTMLElement>('.ProseMirror')!;
   editor.addEventListener('focus',()=>{
    owner.setAttribute('data-follow-up-composer-expanded','');
-   const footer=document.createElement('div');footer.setAttribute('data-follow-up-composer-footer','');footer.textContent='Project · Permission';owner.append(footer);
+   const footer=document.createElement('div');footer.setAttribute('data-follow-up-composer-footer','');
+   footer.innerHTML='<div><div><button>Project</button></div></div><div><button>Permission</button></div>';
+   owner.append(footer);
   },{once:true});
   fireEvent.click(screen.getByRole('button',{name:'Prompt actions'}));
   await screen.findByRole('region',{name:'컴포저 옵션'});
   const toggle=screen.getByRole('button',{name:'정보와 설정'});toggle.focus();fireEvent.click(toggle);
-  await waitFor(()=>expect(owner.querySelector('[data-follow-up-composer-footer]')).toBeTruthy());
+  await screen.findByRole('region',{name:'컴포저 정보와 설정'});
   expect(getComputedStyle(owner.querySelector('[data-follow-up-composer-footer]')!).display).toBe('flex');
   expect(document.activeElement).toBe(toggle);expect(v.inspection.composer.text).toBe('보관할 초안');expect(run).not.toHaveBeenCalled();
   expect(v.container.querySelector('form')!.getAttribute('data-bb-chat-ui-fluid-view')).toBe('input');
@@ -231,7 +320,7 @@ it('keeps the plus button and glyph at their base size through pointer activatio
 
 // 대화가 바뀌어도 입력 배치를 다시 만들지 않고 열린 정보만 닫는다.
 it('closes details on a scope change without remounting the input layout',async()=>{
- const {v,renderer,TestComposer}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+ const {v,renderer,TestComposer}=mount(true);await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
  const viewport=v.container.querySelector('[data-bb-chat-ui-fluid-height]');
  fireEvent.click(screen.getByRole('button',{name:'정보와 설정'}));
  expect(screen.getByRole('region',{name:'컴포저 정보와 설정'})).toBeTruthy();
@@ -243,7 +332,7 @@ it('closes details on a scope change without remounting the input layout',async(
 
 // 시안과 실제 입력창이 같은 고정 SVG를 쓰고 호스트의 이름 해석을 거치지 않는지 확인한다.
 it('renders the information drawing directly in the upper metadata pill',async()=>{
- const {v,run}=mount();await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
+ const {v,run}=mount(true);await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
  const button=screen.getByRole('button',{name:'정보와 설정'}),icon=button.querySelector<SVGSVGElement>('svg[data-bb-chat-ui-fluid-settings-icon]')!;
  expect(icon).toBeTruthy();expect(icon.getAttribute('viewBox')).toBe('0 0 24 24');
  expect(icon.getAttribute('width')).toBe('16');expect(icon.getAttribute('height')).toBe('16');
