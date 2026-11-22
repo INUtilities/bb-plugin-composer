@@ -66,7 +66,7 @@
     {
       "source": "composer/FluidComposerDetails.tsx",
       "destination": "composer/FluidComposerDetails.tsx",
-      "sha256": "0e7e32c3c639abc71d062a014fed84398ade028b1c261fc3ada9711e9aaa0be4",
+      "sha256": "a0f1fbb4e526a524d0829dcadfa58e8bed0b2b611a55b4f0e3320a6e082590c4",
       "sourceSha256": "ddf2c84c51b64c73f7b98e0ab0f012090b3cb12e1ee71a65701bb56e3c1a434e",
       "integrationOverlay": true
     },
@@ -300,7 +300,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "b8f870953c7a66b9db0c95f89b0cac7e000c61d4d377309f9774bbe72f2301b0",
+      "sha256": "b6d95e247c56bbe1a1459c4bcc206d90472dab3afc1ba49e0923757692b4d894",
       "sourceSha256": "fa3b85470e5b81c2e16800a4136bb46d666987bba1a19c8112e8b021d0f51111",
       "integrationOverlay": true
     },
@@ -1033,14 +1033,14 @@
       "source": "composer/FluidComposerToolbar.tsx",
       "destination": "composer/FluidComposerToolbar.tsx",
       "sourceSha256": "3b5ee58e216460cc6b6769c2cea35c1c556735edbf4336827aa89cbf9435e5cb",
-      "sha256": "b0a614b4a223301651b4fe2f3ea9d7a056be8f797212bd97665beeb911ec8376",
+      "sha256": "129087234211f3cd95d1ecec2dbc3237421dd2dc5db0ca93f141af293c7d4fa4",
       "integrationOverlay": true
     },
     {
       "source": "composer/FluidComposerToolbar.test.tsx",
       "destination": "composer/FluidComposerToolbar.test.tsx",
       "sourceSha256": "9ee6b28cde51fe9c887d47230da516458a929db0a0be9afc7e122169421ec18d",
-      "sha256": "85255d093d2266e0e11a59ee08ffcb7ba7f7a437c398e64c5466490fb839dcd8",
+      "sha256": "bb73d1646ccc98e9198c3420359833062f14e52bbadba9d2bd2e883078bea7d5",
       "integrationOverlay": true
     }
   ],

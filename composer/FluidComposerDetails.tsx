@@ -2,7 +2,7 @@ import { useId, useLayoutEffect, useRef, type ReactNode, type RefObject } from '
 import { Button } from './components/ui/button';
 import { postHaptic, readHapticBridge } from '../lib/send-haptic';
 import { bindComposerScrollBoundary } from '../lib/composer-scroll-boundary';
-import { animateFluidPillSwap, bindFluidPillRow, FLUID_DETAILS_TOGGLE, FLUID_FOOTER, fluidDetailPills,
+import { animateFluidPillSwap, bindFluidPillRow, FIXED_JUMP, FLUID_DETAILS_TOGGLE, FLUID_FOOTER, fluidDetailPills,
   fluidOptionPills, fluidPillExitDuration, fluidPillReturnDuration, readFluidPillFrames } from '../lib/fluid-options-motion';
 
 const DETAILS='data-bb-chat-ui-fluid-details';
@@ -66,7 +66,8 @@ function bindDetailsRow(composer:HTMLElement, id:string, onDispose:()=>void) {
   // 두 행의 현재 프레임에서 출발하고 닫힌 메타정보는 즉시 키보드 대상에서 뺀다.
   function play(active:boolean) {
     if (!footer) { if (!active) dispose(); return; }
-    const base=fluidOptionPills(composer).pills.filter(pill=>!pill.matches(FLUID_DETAILS_TOGGLE) && !pill.querySelector(FLUID_DETAILS_TOGGLE));
+    const base=fluidOptionPills(composer).pills.filter(pill=>
+      !pill.matches(`${FLUID_DETAILS_TOGGLE}, ${FIXED_JUMP}`) && !pill.querySelector(FLUID_DETAILS_TOGGLE));
     const items=fluidDetailPills(footer);
     const leaving=active ? base : items, arriving=active ? items : base;
     const frames=readFluidPillFrames([...leaving,...arriving]);

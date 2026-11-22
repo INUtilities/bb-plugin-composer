@@ -1,6 +1,8 @@
 import { dropletIn, EASE } from './motion.ts';
 
 const BARS='[data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]';
+const SCROLL_TRACK='[data-bb-chat-ui-info-scroll-track]';
+export const FIXED_JUMP='[data-bb-chat-ui-info-scroll-row] > [data-bb-chat-ui-info-jump]';
 export const FLUID_COMPOSER='[data-bb-chat-ui-fluid-composer]';
 export const FLUID_DETAILS_TOGGLE='[data-bb-chat-ui-fluid-details-toggle]';
 export const FLUID_FOOTER='[data-follow-up-composer-footer], [data-new-thread-footer]';
@@ -69,7 +71,9 @@ export function bindFluidPillRow(row:HTMLElement, composer:HTMLElement, kind:'op
     const bounds=composer.getBoundingClientRect();
     const buttonWidth=anchor.offsetWidth || button.width;
     const buttonStart=button.left+(button.width-buttonWidth)/2, buttonEnd=buttonStart+buttonWidth;
-    const after=bounds.right-buttonEnd, before=buttonStart-bounds.left;
+    const jump=anchor.closest('[data-bb-chat-ui-info-scroll-row]')?.querySelector<HTMLElement>(FIXED_JUMP);
+    const right=jump ? Math.min(bounds.right, jump.getBoundingClientRect().left-8) : bounds.right;
+    const after=right-buttonEnd, before=buttonStart-bounds.left;
     const startsAfter=after>=before;
     const left=startsAfter ? buttonEnd+8 : bounds.left;
     row.style.setProperty('--bb-chat-ui-pill-row-left',(left-frame.left-parent.clientLeft+parent.scrollLeft)+'px');
@@ -105,8 +109,12 @@ export function fluidDetailPills(footer:HTMLElement) {
 export function fluidOptionPills(root:Element) {
   const shell=root.closest('[data-promptbox-shell]') ?? root.closest('form');
   const bars=Array.from(shell?.querySelectorAll<HTMLElement>(BARS) ?? []);
-  const pills=bars.flatMap(bar=>Array.from(bar.children).flatMap(child=>child.hasAttribute('data-bb-chat-ui-slot-toolbar') ? []
-    : (child as HTMLElement).style.display==='contents' ? Array.from(child.children):[child]))
+  const rowItems=bars.flatMap(bar=>Array.from(bar.children).flatMap(child=>child.matches('[data-bb-chat-ui-info-scroll-rail]')
+    ? Array.from(child.querySelector(SCROLL_TRACK)?.children ?? []) : [child]));
+  const pills=rowItems.flatMap(child=>{
+    if (child.matches('[data-bb-chat-ui-slot-toolbar], [data-bb-chat-ui-info-leading]')) return [];
+    return child instanceof HTMLElement && child.style.display==='contents' ? Array.from(child.children) : [child];
+  })
     .filter((pill):pill is HTMLElement=>pill instanceof HTMLElement && !pill.closest('[hidden]') && getComputedStyle(pill).display!=='none');
   return {shell,bars,pills};
 }

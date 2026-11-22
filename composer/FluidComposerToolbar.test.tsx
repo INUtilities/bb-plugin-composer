@@ -87,3 +87,21 @@ it('updates the shared row reservation when the slot toggle changes and releases
   expect(observers.size).toBe(0);
  }finally{v.unmount();width.mockRestore();shell.remove();}
 });
+
+it('anchors information before the scroll area and puts the slot toggle inside it',async()=>{
+ const shell=document.createElement('div'),mount=document.createElement('div'),bar=document.createElement('div');
+ shell.setAttribute('data-promptbox-shell','');bar.setAttribute('data-bb-chat-ui-info-bar','');
+ bar.setAttribute('data-bb-chat-ui-info-scroll-row','');
+ bar.innerHTML='<div data-bb-chat-ui-info-leading></div><div data-bb-chat-ui-info-scroll-track></div><button>맨 아래로 이동</button>';
+ shell.append(bar,mount);document.body.append(shell);
+ const ui=<FluidComposerToolbar leading={<button>정보</button>}><button>06 슬롯</button></FluidComposerToolbar>;
+ const v=render(ui,{container:mount});
+ try {
+  await waitFor(()=>expect(screen.getByRole('button',{name:'정보'}).closest('[data-bb-chat-ui-info-leading]')).toBeTruthy());
+  expect(screen.getByRole('button',{name:'06 슬롯'}).closest('[data-bb-chat-ui-info-scroll-track]')).toBeTruthy();
+  expect(bar.style.getPropertyValue('--bb-chat-ui-fluid-toolbar-width')).toBe('');
+  bar.removeAttribute('data-bb-chat-ui-info-scroll-row');
+  await waitFor(()=>expect(screen.getByRole('button',{name:'정보'}).closest('[data-bb-chat-ui-slot-toolbar]')?.parentElement).toBe(bar));
+  expect([...bar.querySelectorAll('[data-bb-chat-ui-slot-toolbar] button')].map(button=>button.textContent)).toEqual(['정보','06 슬롯']);
+ } finally {v.unmount();shell.remove();}
+});

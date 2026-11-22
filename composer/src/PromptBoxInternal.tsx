@@ -3442,7 +3442,7 @@ export function PromptBoxInternal({
         onOpen={() => { picker.close(); dismissComposerMenu(); setFluidPillRow('details'); }}
         onClose={closeFluidDetails}>
       {detailsToggle => <>
-      <FluidComposerToolbar hidden={fluidVoiceActive} inactive={picker.open}>{picker.modeToggle}{detailsToggle}</FluidComposerToolbar>
+      <FluidComposerToolbar hidden={fluidVoiceActive} inactive={picker.open} leading={detailsToggle}>{picker.modeToggle}</FluidComposerToolbar>
       <FluidComposerBody
         phone={device === 'phone'}
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
