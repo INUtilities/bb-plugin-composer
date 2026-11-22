@@ -34,5 +34,7 @@ export function needsFullWidthComposer(row: HTMLElement, editor: HTMLElement, op
   };
   const paragraph = editor.firstElementChild?.tagName === 'P' ? editor.firstElementChild : editor;
   const width = Array.from(paragraph.childNodes).reduce((sum, child) => sum + inlineWidth(child), 0);
-  return width > Math.max(1, available) + 1;
+  // The browser wraps on subpixel overflow too. Allowing an extra pixel here
+  // would collapse back into a column that triggers expansion on the next probe.
+  return width > Math.max(1, available);
 }

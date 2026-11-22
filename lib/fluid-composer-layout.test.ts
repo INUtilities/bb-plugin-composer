@@ -25,6 +25,21 @@ test('viewport width and the actual send-action width participate in compact fit
  }finally{f.dom.window.close();}
 });
 
+test('keeps the expanded layout when the text exceeds the compact column by a fraction of a pixel',()=>{
+ const f=fixture();
+ try{
+  f.editor.querySelector('p')!.textContent='물ㄹ';
+  // 358px에서 row·editor 여백, 두 컨트롤, 두 간격을 빼면 254px이다.
+  f.text(254.5);
+  f.height(48);
+  assert.equal(f.probe(),true,'the compact column wraps');
+  f.height(24);
+  assert.equal(f.probe(),true,'the full-width column must not collapse back into that wrap');
+  f.text(254);
+  assert.equal(f.probe(),false,'text that fits exactly can collapse');
+ }finally{f.dom.window.close();}
+});
+
 // 이름을 다시 접을 때는 아이콘 폭으로 복귀하고 직접 입력한 줄바꿈은 유지한다.
 test('uses the collapsed effort width after a preview without losing explicit newlines',()=>{
  const f=fixture();try{
