@@ -11,7 +11,8 @@ import { injectFluidComposer } from '../lib/fluid-composer';
 beforeEach(()=>{sessionStorage.setItem('bb-chat-ui:fluid-slot-picker','off');vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}}));});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 // 실제 BB와 같은 그룹 구조로 메타정보가 들어 있는 작성창을 만든다.
-function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'new-thread'='thread', worktreeName:string|null=null){
+function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'new-thread'='thread',
+ environment:{name:string|null;branchName:string|null;environmentProviderId?:string}={name:null,branchName:'master'}){
  const run=vi.fn();
  const renderer:ExperimentalComposerRendererApi={key:'options-test',inputLocked:false,focusComposerShortcut:null,decorationSources:[],
   view:{scope:surface==='thread' ? {kind:'thread',threadId:'thr_options_test'} : {kind:'new-thread',projectId:'proj_options_test'},
@@ -33,17 +34,19 @@ function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'n
   </div> : box;
  };
  const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer,
+  environmentProviders:{status:'ready',providers:[{id:'project-checkout',displayName:'Project checkout',
+   description:null,icon:null,logoUrl:null,pluginId:'builtin',machineProviderId:null}]},
   sdk:{subscribe:()=>vi.fn(),
    projects:{get:vi.fn().mockResolvedValue({name:'Composer test project'})},
    threads:{
-    get:vi.fn().mockResolvedValue({projectId:'proj_options_test',environment:{name:worktreeName,branchName:'master'}}),
+    get:vi.fn().mockResolvedValue({projectId:'proj_options_test',environment}),
     context:async()=>({usage:{usedTokens:200,modelContextWindow:1000,estimated:false}}),
    }}});
  return{v,renderer,run,TestComposer};
 }
 // 작업트리 이름을 먼저 표시하고, 클릭은 기존 브랜치 복사로 연결한다.
 it.each(['Project checkout',null])('shows the worktree name when available and copies the branch (%s)',async worktreeName=>{
- const {v}=mount(false,true,'thread',worktreeName);
+ const {v}=mount(false,true,'thread',{name:worktreeName,branchName:'master'});
  try{
   const button=await screen.findByRole('button',{name:/^Worktree:.*Copy branch/});
   expect(button.textContent).toBe(worktreeName ?? 'master');
@@ -52,6 +55,16 @@ it.each(['Project checkout',null])('shows the worktree name when available and c
   expect(button.getAttribute('title')).toContain('master');
   fireEvent.click(button);
   expect(v.inspection.experimental_clipboardWrites).toEqual([{text:'master'}]);
+ }finally{v.unmount();}
+});
+
+// Git 브랜치가 없는 프로젝트 체크아웃은 BB에 등록된 환경 이름을 표시한다.
+it('names a resolved checkout with no worktree name or branch',async()=>{
+ const {v}=mount(false,true,'thread',{name:null,branchName:null,environmentProviderId:'project-checkout'});
+ try{
+  const checkout=await screen.findByLabelText('Worktree: Project checkout');
+  expect(checkout.textContent).toBe('Project checkout');
+  expect(screen.queryByRole('button',{name:/^Worktree:/})).toBeNull();
  }finally{v.unmount();}
 });
 

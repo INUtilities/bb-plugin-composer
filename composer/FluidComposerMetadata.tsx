@@ -2,18 +2,25 @@ import {
   experimental_copyToClipboard as copyToClipboard,
   experimental_Icon as Icon,
   experimental_useComposerRenderer as useComposerRenderer,
+  useEnvironmentProviders,
   useSdk,
 } from '@get-bb/plugin-sdk/app';
 import { useEffect, useState } from 'react';
 
 type Sdk = ReturnType<typeof useSdk>;
 type ContextUsage = Awaited<ReturnType<Sdk['threads']['context']>>['usage'];
-type WorkspaceMetadata = { projectName: string; worktreeName: string | null; branch: string | null };
+type WorkspaceMetadata = {
+  projectName: string;
+  worktreeName: string | null;
+  branch: string | null;
+  environmentProviderId: string | null;
+};
 
 // 입력 포커스와 별개로 현재 스레드의 프로젝트·작업트리·컨텍스트를 표시한다.
 export function FluidComposerMetadata({ threadId }: { threadId: string }) {
   const sdk = useSdk();
   const { showError } = useComposerRenderer();
+  const { providers: environmentProviders } = useEnvironmentProviders();
   const [workspace, setWorkspace] = useState<WorkspaceMetadata | null>(null);
   const [usage, setUsage] = useState<ContextUsage>(null);
 
@@ -35,6 +42,7 @@ export function FluidComposerMetadata({ threadId }: { threadId: string }) {
           projectName: project.name,
           worktreeName: environment?.name?.trim() || environment?.branchName || null,
           branch: environment?.branchName ?? null,
+          environmentProviderId: environment?.environmentProviderId ?? null,
         });
       } catch {
         // 일시적으로 읽지 못하면 같은 스레드의 마지막 값을 유지한다.
@@ -85,7 +93,8 @@ export function FluidComposerMetadata({ threadId }: { threadId: string }) {
   const usedPercent = usage && usage.modelContextWindow > 0
     ? Math.round(usage.usedTokens / usage.modelContextWindow * 100) : null;
   const branch = workspace?.branch;
-  const worktreeName = workspace?.worktreeName;
+  const worktreeName = workspace?.worktreeName
+    ?? environmentProviders.find(provider => provider.id === workspace?.environmentProviderId)?.displayName;
   const worktreeLabel = <><Icon name="GitBranch" className="size-3.5 shrink-0" />
     <span>{worktreeName ?? '—'}</span></>;
 
