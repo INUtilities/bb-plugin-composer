@@ -246,18 +246,20 @@ html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-visual] > [data-bb-
 [data-bb-chat-ui-voice-bars] > svg { display:block; width:100%; height:100%; overflow:visible; }
 ${voiceForm} [data-bb-chat-ui-voice-visual] {
   inset-inline-end:var(--bb-chat-ui-fluid-voice-reserve);
+  border-radius:var(--bb-chat-ui-fluid-input-radius);
   transition:inset-inline-end ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out};
 }
 ${voiceForm} [data-bb-chat-ui-voice-glow] { opacity:.28; }
 ${voiceForm} [data-bb-chat-ui-voice-bars] {
-  inset-inline:16px; top:50%; max-width:320px; margin-inline:auto;
-  transform:translateY(-50%); opacity:.94;
-  filter:drop-shadow(0 0 3px color-mix(in oklab,var(--foreground) 48%,transparent));
+  inset-inline:16px; top:50%; height:34px; max-width:320px; margin-inline:auto;
+  transform:translateY(-50%); opacity:1;
+  filter:drop-shadow(0 0 2px color-mix(in oklab,var(--foreground) 82%,transparent))
+    drop-shadow(0 0 6px color-mix(in oklab,var(--ring,var(--foreground)) 64%,transparent));
 }
 ${voiceForm}:has(${voiceCapture}[data-gesture="hold"]) [data-bb-chat-ui-voice-bars] {
   inset-inline-end:calc(var(--bb-chat-ui-fluid-control-size) + 16px);
 }
-${voiceForm} [data-bb-chat-ui-voice-bars] > svg { stroke-width:1.6px; }
+${voiceForm} [data-bb-chat-ui-voice-bars] > svg { stroke-width:2.2px; }
 @media (prefers-reduced-motion: reduce) { [data-bb-chat-ui-voice-neck] { animation:none !important; opacity:0; } [data-bb-chat-ui-voice-actions] > button::before { animation:none !important; } :is([data-bb-chat-ui-voice-waveform], [data-bb-chat-ui-voice-visual]) { transition:none !important; } }
 /* 한 줄은 반원을 유지하고 여러 줄 입력의 실제 clip과 배경만 스쿼클로 바꾼다. */
 @supports (corner-shape: squircle) {

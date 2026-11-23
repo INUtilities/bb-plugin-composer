@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Composer 음성 파형</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: Canvas;
+      --foreground: CanvasText;
+      --muted-foreground: GrayText;
+      --border: ButtonBorder;
+      --popover: Canvas;
+      --ring: color-mix(in oklab, CanvasText 72%, AccentColor);
+      --destructive: crimson;
+      --destructive-foreground: white;
+      font: 14px/1.5 system-ui, sans-serif;
+      color: var(--foreground);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    .voice-demo { max-width: 760px; margin-inline: auto; }
+    .demo-stage {
+      height: clamp(192px, 40vw, 300px);
+      padding: 20px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(55deg, transparent 51%, color-mix(in oklab, var(--foreground) 14%, transparent) 56%, transparent 59% 60%, color-mix(in oklab, var(--foreground) 7%, transparent) 62%, transparent 66%),
+        radial-gradient(ellipse at 58% 12%, color-mix(in oklab, var(--foreground) 13%, var(--background)), var(--background) 80%);
+    }
+    .demo-stage form { max-width: 520px; }
+    .demo-editor {
+      width: 100%; min-width: 0; padding: 0 8px; border: 0; border-radius: 8px;
+      background: transparent; color: var(--foreground); font: 16px/24px system-ui, sans-serif;
+    }
+    button {
+      display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0;
+      border-radius: 999px; background: var(--foreground); color: var(--background); cursor: pointer;
+    }
+    :is(button, input):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+    button:disabled { opacity: .55; cursor: default; }
+    button svg { width: 16px; height: 16px; pointer-events: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+    output { display: block; margin: 8px 0; color: var(--muted-foreground); }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <!-- demo script -->
+</body>
+</html>

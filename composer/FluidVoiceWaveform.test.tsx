@@ -15,6 +15,7 @@ it('renders the composer glow without an orb or a second audio loop', () => {
   expect(v.container.querySelector('svg')).toBeNull();expect(frames).not.toHaveBeenCalled();
 });
 
+// 음량 분석 수명을 공유하면서 파형의 높이가 실제 입력을 따라가는지 확인한다.
 it('shares one audio context and frame between glow, held rings and wide click bars across gesture changes',()=>{
  const frames=new Map<number,FrameRequestCallback>();let next=0,value=150;
  vi.spyOn(window,'requestAnimationFrame').mockImplementation(cb=>{frames.set(++next,cb);return next;});vi.spyOn(window,'cancelAnimationFrame').mockImplementation(id=>{frames.delete(id);});
@@ -29,12 +30,13 @@ it('shares one audio context and frame between glow, held rings and wide click b
  v.rerender(<FluidVoiceWaveform appearance="glow" indicator="bars" stream={stream}/>);
  expect(v.container.querySelector('[data-bb-chat-ui-voice-glow]')).toBe(glow);expect(glow!.innerHTML).toBe(light);
  expect(create).toHaveBeenCalledOnce();expect(close).not.toHaveBeenCalled();expect(frames.size).toBe(1);
- const bars=[...v.container.querySelectorAll('[data-bb-chat-ui-voice-bar]')];expect(bars).toHaveLength(49);
+ const bars=[...v.container.querySelectorAll('[data-bb-chat-ui-voice-bar]')];expect(bars).toHaveLength(41);
+ // 그려진 SVG 선의 길이를 읽는다.
  const height=(bar:Element)=>Number(bar.getAttribute('y2'))-Number(bar.getAttribute('y1'));
- expect(bars.map(height).every(h=>h===2)).toBe(true);
+ const rest=bars.map(height);expect(Math.max(...rest)-Math.min(...rest)).toBeGreaterThan(1.5);
  for(let time=34;time<=1200;time+=34)tick(time);
  expect(bars.some(bar=>height(bar)>10)).toBe(true);expect(new Set(bars.map(height)).size).toBeGreaterThan(7);
- value=128;for(let time=1234;time<=4600;time+=34)tick(time);expect(bars.every(bar=>height(bar)<2.01)).toBe(true);
+ value=128;for(let time=1234;time<=4600;time+=34)tick(time);expect(bars.every(bar=>height(bar)<5.1)).toBe(true);
  v.unmount();expect(close).toHaveBeenCalledOnce();expect(frames.size).toBe(0);expect(disconnect).toHaveBeenCalledTimes(2);
 });
 

@@ -6,6 +6,7 @@
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
+    "2026-11-23: the voice capsule uses a brighter irregular 41-bar waveform. The offline design demo uses the production renderer and synthesized audio.",
     "2026-11-23: tap recording detaches a round stop; held recording keeps the mic attached. Both insert the transcript and share the normal right-facing send action.",
     "Latest approved Chat UI source with model/Effort, 06 staged picker, Fast, handoff and single-line right placement.",
     "Merged with standalone Composer origin/main 41108c7: preserve native iPhone Enter/beforeinput, first-commit layout and moving-caret protection.",
@@ -105,7 +106,7 @@
     {
       "source": "composer/FluidVoiceWaveform.test.tsx",
       "destination": "composer/FluidVoiceWaveform.test.tsx",
-      "sha256": "e4bf6caa733bc4836320f5474c77fc07296297e73eb88e32da605baa55e9da5b",
+      "sha256": "3420f03043db8fdaee740e5a76b86a695cdd091df3179be8823cadf31eb66bee",
       "sourceSha256": "e4bf6caa733bc4836320f5474c77fc07296297e73eb88e32da605baa55e9da5b"
     },
     {
@@ -557,13 +558,13 @@
     {
       "source": "composer/voice-bars-renderer.test.ts",
       "destination": "composer/voice-bars-renderer.test.ts",
-      "sha256": "4ffcb8a7518d6ca9f8528ef6682fb18dd6c5e53ed78bbcddd577ec5473fe2732",
+      "sha256": "36e9bce186e76bb5690b0de78325d1f1d5f83489c865c463736dfec2ff274cd6",
       "sourceSha256": "4ffcb8a7518d6ca9f8528ef6682fb18dd6c5e53ed78bbcddd577ec5473fe2732"
     },
     {
       "source": "composer/voice-bars-renderer.ts",
       "destination": "composer/voice-bars-renderer.ts",
-      "sha256": "b213996e8e1d19a78668b946103b1698e13bd701423011f1a4b9f8f0ae40e9bc",
+      "sha256": "f2f5a7a0d64a54e8f0ee1b1c30c38d4efd818fc53d0dae1264e3093f35e0412f",
       "sourceSha256": "b213996e8e1d19a78668b946103b1698e13bd701423011f1a4b9f8f0ae40e9bc"
     },
     {
@@ -633,7 +634,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "a04e15be9c513f0128f573f1733b28d5c3c5e09a2a7487ef0a09b1bee68ab1e0",
+      "sha256": "b01ccb88c4f58e6cc8c8b17fe3d8dffe311bfc0b0055e529b3680ae6d9d2d9aa",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"
