@@ -33,7 +33,7 @@ export function FluidComposerMetadata({ threadId }: { threadId: string }) {
         if (signal.aborted || request !== workspaceRequest) return;
         setWorkspace({
           projectName: project.name,
-          worktreeName: environment?.branchName ?? environment?.name ?? null,
+          worktreeName: environment?.name?.trim() || environment?.branchName || null,
           branch: environment?.branchName ?? null,
         });
       } catch {
@@ -85,8 +85,9 @@ export function FluidComposerMetadata({ threadId }: { threadId: string }) {
   const usedPercent = usage && usage.modelContextWindow > 0
     ? Math.round(usage.usedTokens / usage.modelContextWindow * 100) : null;
   const branch = workspace?.branch;
+  const worktreeName = workspace?.worktreeName;
   const worktreeLabel = <><Icon name="GitBranch" className="size-3.5 shrink-0" />
-    <span>{workspace?.worktreeName ?? '—'}</span></>;
+    <span>{worktreeName ?? '—'}</span></>;
 
   // 기존 작업트리 버튼과 같이 현재 브랜치 이름을 복사한다.
   async function copyBranch() {
@@ -99,9 +100,12 @@ export function FluidComposerMetadata({ threadId }: { threadId: string }) {
       <Icon name="Folder" className="size-3.5 shrink-0" />
       <span>{workspace?.projectName ?? '—'}</span>
     </span>
-    {branch ? <button data-bb-composer-metadata-item="" type="button" title={`Copy branch: ${branch}`} aria-label={`Worktree: ${branch}. Copy branch name`} onClick={copyBranch}>
+    {branch ? <button data-bb-composer-metadata-item="" type="button"
+      title={worktreeName === branch ? `Copy branch: ${branch}` : `${worktreeName} · Copy branch: ${branch}`}
+      aria-label={`Worktree: ${worktreeName}. ${worktreeName === branch ? 'Copy branch name' : `Copy branch ${branch}`}`}
+      onClick={copyBranch}>
       {worktreeLabel}
-    </button> : <span data-bb-composer-metadata-item="" title={workspace?.worktreeName ?? undefined} aria-label={`Worktree: ${workspace?.worktreeName ?? 'Unavailable'}`}>
+    </button> : <span data-bb-composer-metadata-item="" title={worktreeName ?? undefined} aria-label={`Worktree: ${worktreeName ?? 'Unavailable'}`}>
       {worktreeLabel}
     </span>}
     <details data-bb-composer-metadata-context="">

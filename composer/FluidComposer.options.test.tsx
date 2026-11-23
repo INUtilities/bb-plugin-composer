@@ -11,7 +11,7 @@ import { injectFluidComposer } from '../lib/fluid-composer';
 beforeEach(()=>{sessionStorage.setItem('bb-chat-ui:fluid-slot-picker','off');vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}}));});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 // 실제 BB와 같은 그룹 구조로 메타정보가 들어 있는 작성창을 만든다.
-function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'new-thread'='thread'){
+function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'new-thread'='thread', worktreeName:string|null=null){
  const run=vi.fn();
  const renderer:ExperimentalComposerRendererApi={key:'options-test',inputLocked:false,focusComposerShortcut:null,decorationSources:[],
   view:{scope:surface==='thread' ? {kind:'thread',threadId:'thr_options_test'} : {kind:'new-thread',projectId:'proj_options_test'},
@@ -33,9 +33,28 @@ function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'n
   </div> : box;
  };
  const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer,
-  sdk:{subscribe:()=>vi.fn(),threads:{context:async()=>({usage:{usedTokens:200,modelContextWindow:1000,estimated:false}})}}});
+  sdk:{subscribe:()=>vi.fn(),
+   projects:{get:vi.fn().mockResolvedValue({name:'Composer test project'})},
+   threads:{
+    get:vi.fn().mockResolvedValue({projectId:'proj_options_test',environment:{name:worktreeName,branchName:'master'}}),
+    context:async()=>({usage:{usedTokens:200,modelContextWindow:1000,estimated:false}}),
+   }}});
  return{v,renderer,run,TestComposer};
 }
+// 작업트리 이름을 먼저 표시하고, 클릭은 기존 브랜치 복사로 연결한다.
+it.each(['Project checkout',null])('shows the worktree name when available and copies the branch (%s)',async worktreeName=>{
+ const {v}=mount(false,true,'thread',worktreeName);
+ try{
+  const button=await screen.findByRole('button',{name:/^Worktree:.*Copy branch/});
+  expect(button.textContent).toBe(worktreeName ?? 'master');
+  expect(button.getAttribute('aria-label')).toContain(worktreeName ?? 'master');
+  expect(button.getAttribute('aria-label')).toContain('master');
+  expect(button.getAttribute('title')).toContain('master');
+  fireEvent.click(button);
+  expect(v.inspection.experimental_clipboardWrites).toEqual([{text:'master'}]);
+ }finally{v.unmount();}
+});
+
 // 포커스가 바뀌어도 입력 아래의 같은 행과 컨텍스트 읽기를 유지한다.
 it('keeps composer metadata below the same editor through focus, blur and options',async()=>{
  const stop=injectFluidComposer(document),{v}=mount(false,true);

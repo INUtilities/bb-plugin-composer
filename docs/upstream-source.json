@@ -33,7 +33,7 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "6d1d01b232f307986935aa94e6546d77a0f838f8a298e10776bbdf32a456d3eb",
+      "sha256": "8796aed7f96d45c5ac458b7db1307ee3378cee49ff35d1e7b44eb7e48a00ca11",
       "sourceSha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6",
       "integrationOverlay": true
     },
