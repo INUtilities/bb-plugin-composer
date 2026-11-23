@@ -11,9 +11,8 @@ import { injectFluidComposer } from '../lib/fluid-composer';
 beforeEach(()=>{sessionStorage.setItem('bb-chat-ui:fluid-slot-picker','off');vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}}));});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 // 실제 BB와 같은 그룹 구조로 메타정보가 들어 있는 작성창을 만든다.
-function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'new-thread'='thread',
- environment:{name:string|null;branchName:string|null;environmentProviderId?:string}={name:null,branchName:'master'}){
- const run=vi.fn();
+function mount(nativeFooter=false,surface:'thread'|'new-thread'='thread'){
+ const run=vi.fn(),openPermissions=vi.fn();
  const renderer:ExperimentalComposerRendererApi={key:'options-test',inputLocked:false,focusComposerShortcut:null,decorationSources:[],
   view:{scope:surface==='thread' ? {kind:'thread',threadId:'thr_options_test'} : {kind:'new-thread',projectId:'proj_options_test'},
    layout:'expanded',draft:{text:'보관할 초안',isEmpty:false,attachmentCount:0},run:{isRunning:false,isSubmitting:false}},
@@ -25,120 +24,33 @@ function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'n
   threadLinks:{parse:()=>null,cached:()=>null,resolve:async()=>{}},clipboard:{readMessage:()=>null,readMessageImage:async()=>new File([],'unused')},dispatchAppCommandKey:()=>false,showError:vi.fn(),attachmentSrc:()=>''};
  // 같은 컴포넌트 경로로 다시 그려 실제 입력 수명을 검사한다.
  const TestComposer=()=> {
-  const box=withPinnedMetadata ? <FluidComposer/> : <PromptBoxInternal {...renderer.input} fluid/>;
+  const box=nativeFooter ? <FluidComposer/> : <PromptBoxInternal {...renderer.input} fluid/>;
   return nativeFooter ? <div data-promptbox-shell="" data-app-composer="" data-app-composer-role="primary">
    {box}
-   <div {...(surface==='thread' ? {'data-follow-up-composer-footer':''} : {'data-new-thread-footer':''})}><div><button>Project</button></div><div>
-    {surface==='new-thread' ? <button data-promptbox-hide-tiny="">Worktree</button> : null}<button>Permission</button>
+   <div style={{display:'flex'}} {...(surface==='thread' ? {'data-follow-up-composer-footer':''} : {'data-new-thread-footer':''})}><div><button>Project</button></div><div>
+    {surface==='new-thread' ? <button data-promptbox-hide-tiny="">Worktree</button> : null}<button onClick={openPermissions}>Permissions</button>
    </div></div>
   </div> : box;
  };
- const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안',
-  selection:{providerId:'codex',permissionMode:'auto'}},composerRenderer:renderer,
-  experimental_panelTabs:{open:false,selectedKey:null,tabs:[{key:'info',title:'Info',status:null,closable:false,detail:{kind:'info'}}]},
-  experimental_panel:{selectTab:()=>true},
-  environmentProviders:{status:'ready',providers:[{id:'project-checkout',displayName:'Project checkout',
-   description:null,icon:null,logoUrl:null,pluginId:'builtin',machineProviderId:null}]},
-  sdk:{subscribe:()=>vi.fn(),
-   projects:{get:vi.fn().mockResolvedValue({name:'Composer test project'})},
-   threads:{
-    get:vi.fn().mockResolvedValue({projectId:'proj_options_test',environmentId:'env_options_test',sectionId:'section_test',pinnedAt:1,
-      environment:{status:'ready',hostLifecycle:'active',path:'/project',...environment}}),
-    context:async()=>({usage:{usedTokens:200,modelContextWindow:1000,estimated:false}}),
-    timeline:vi.fn().mockResolvedValue({sessionOptions:[],activePromptMode:null}),
-   }}});
- return{v,renderer,run,TestComposer};
+ const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
+ return{v,renderer,run,openPermissions};
 }
-// 작업트리 이름을 먼저 표시하고, 클릭은 기존 브랜치 복사로 연결한다.
-it.each(['Project checkout',null])('shows the worktree name when available and copies the branch (%s)',async worktreeName=>{
- const {v}=mount(false,true,'thread',{name:worktreeName,branchName:'master'});
+// BB가 제공하는 하단 컨트롤을 원래 DOM에서 그대로 사용한다.
+it.each(['thread','new-thread'] as const)('keeps the native %s footer and its controls in place',async surface=>{
+ const stop=injectFluidComposer(document),{v,openPermissions}=mount(true,surface);
  try{
-  const button=await screen.findByRole('button',{name:/^Worktree:.*Copy branch/});
-  expect(button.textContent).toBe(worktreeName ?? 'master');
-  expect(button.getAttribute('aria-label')).toContain(worktreeName ?? 'master');
-  expect(button.getAttribute('aria-label')).toContain('master');
-  expect(button.getAttribute('title')).toContain('master');
-  fireEvent.click(button);
-  expect(v.inspection.experimental_clipboardWrites).toEqual([{text:'master'}]);
- }finally{v.unmount();}
-});
-
-// Git 브랜치가 없는 프로젝트 체크아웃은 BB에 등록된 환경 이름을 표시한다.
-it('names a resolved checkout with no worktree name or branch',async()=>{
- const {v}=mount(false,true,'thread',{name:null,branchName:null,environmentProviderId:'project-checkout'});
- try{
-  const checkout=await screen.findByLabelText('Worktree: Project checkout');
-  expect(checkout.textContent).toBe('Project checkout');
-  expect(screen.queryByRole('button',{name:/^Worktree:/})).toBeNull();
- }finally{v.unmount();}
-});
-
-// 포커스가 바뀌어도 입력 아래의 같은 행과 컨텍스트 읽기를 유지한다.
-it('keeps all composer information and actions below the same editor through focus, blur and options',async()=>{
- const stop=injectFluidComposer(document),{v}=mount(false,true);
- try{
-  const row=await screen.findByRole('group',{name:'Composer metadata'});
-  const footer=screen.getByRole('group',{name:'Composer footer'});
-  const newThread=await screen.findByRole('button',{name:'New thread in this environment'});
-  const permissions=screen.getByRole('combobox',{name:'Permission mode'});
-  const details=screen.getByRole('button',{name:'Thread details'});
-  const usage=await screen.findByLabelText('Context window 20% used');
-  const form=v.container.querySelector('form')!;
-  const editor=form.querySelector<HTMLElement>('.ProseMirror')!;
-  expect(form.compareDocumentPosition(footer)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(form.contains(footer)).toBe(false);
-  expect(footer.contains(newThread) && footer.contains(permissions) && footer.contains(details)).toBe(true);
-  expect(screen.queryByRole('button',{name:'정보와 설정'})).toBeNull();
-  expect(permissions.getAttribute('data-routing-id')).toBe('env_options_test');
-  expect(getComputedStyle(row).display).toBe('grid');
-  editor.focus();
-  expect(screen.getByRole('group',{name:'Composer metadata'})).toBe(row);
-  editor.blur();
-  fireEvent.click(screen.getByRole('button',{name:'Prompt actions'}));
-  await screen.findByRole('region',{name:'컴포저 옵션'});
-  expect(screen.getByRole('group',{name:'Composer metadata'})).toBe(row);
-  expect(screen.getByRole('combobox',{name:'Permission mode'})).toBe(permissions);
-  expect(screen.getByRole('button',{name:'New thread in this environment'})).toBe(newThread);
-  expect(usage.closest('details')?.querySelector('p')?.textContent).toContain(`200 / ${(1000).toLocaleString()} tokens`);
- }finally{v.unmount();stop();}
-});
-
-// 하단 설정에서 BB의 권한, 스레드 패널, 같은 환경 새 초안 동작을 사용한다.
-it('routes footer actions through BB and hides the duplicate host footer',async()=>{
- const stop=injectFluidComposer(document),{v}=mount(true,true);
- try{
-  const newThread=await screen.findByRole('button',{name:'New thread in this environment'});
-  const native=v.container.querySelector<HTMLElement>('[data-follow-up-composer-footer]')!;
-  expect(getComputedStyle(native).display).toBe('none');
-  fireEvent.change(screen.getByRole('combobox',{name:'Permission mode'}),{target:{value:'accept-edits'}});
-  await waitFor(()=>expect(v.inspection.composer.selections.at(-1)?.permissionMode).toBe('accept-edits'));
-  fireEvent.click(screen.getByRole('button',{name:'Thread details'}));
-  expect(v.inspection.experimental_panelCalls.at(-1)).toMatchObject({method:'selectTab',key:'info'});
-  fireEvent.click(newThread);
-  expect(v.inspection.navigateCalls.at(-1)).toEqual({method:'toCompose',options:{projectId:'proj_options_test',environmentId:'env_options_test',
-    placement:{sectionId:'section_test',pinned:true},focusPrompt:true}});
- }finally{v.unmount();stop();}
-});
-
-// 새 스레드에서 BB가 제공하는 프로젝트와 작업트리 선택기를 하단에 유지한다.
-it('restores native new-thread selectors without opening the info pill',async()=>{
- const stop=injectFluidComposer(document),{v}=mount(true,true,'new-thread');
- try{
-  const editor=await waitFor(()=>{
-   const node=v.container.querySelector<HTMLElement>('.ProseMirror');
-   expect(node).toBeTruthy();
-   return node!;
-  });
-  const footer=v.container.querySelector<HTMLElement>('[data-new-thread-footer]')!;
+  const footer=v.container.querySelector(surface==='thread' ? '[data-follow-up-composer-footer]' : '[data-new-thread-footer]')!;
   const project=screen.getByRole('button',{name:'Project'});
-  expect(footer.contains(project)).toBe(true);
+  const permissions=screen.getByRole('button',{name:'Permissions'});
+  const editor=await screen.findByRole('textbox');
+  expect(footer.contains(project) && footer.contains(permissions)).toBe(true);
   expect(getComputedStyle(footer).display).toBe('flex');
-  expect(getComputedStyle(screen.getByRole('button',{name:'Worktree'})).display).toBe('inline-flex');
   expect(screen.queryByRole('button',{name:'정보와 설정'})).toBeNull();
   editor.focus();
-  expect(screen.getByRole('button',{name:'Project'})).toBe(project);
+  expect(screen.getByRole('button',{name:'Permissions'})).toBe(permissions);
   editor.blur();
-  expect(screen.getByRole('button',{name:'Project'})).toBe(project);
+  fireEvent.click(permissions);
+  expect(openPermissions).toHaveBeenCalledOnce();
  }finally{v.unmount();stop();}
 });
 // 옵션 필을 열어도 같은 입력과 전송을 사용할 수 있는지 확인한다.

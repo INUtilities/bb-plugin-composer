@@ -4,51 +4,22 @@ import { EASE } from './motion.ts';
 import { fluidPickerCss } from './fluid-picker.ts';
 
 const actionPill = '[data-bb-chat-ui-fluid-panel-list] [role="menuitem"]';
-const newThreadFooter = '[data-promptbox-shell]:has([data-bb-composer-surface="new-thread"]) > [data-new-thread-footer]';
+const fluidShell = '[data-promptbox-shell]:has([data-bb-chat-ui-fluid-composer])';
 
 export const fluidComposerCss = `
 ${fluidPickerCss}
 html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { display:flex !important; }
-/* 정보와 설정은 같은 Composer의 하단에서 한 번만 표시한다. */
-[data-promptbox-shell]:has([data-bb-composer-footer]) [data-follow-up-composer-footer] { display:none !important; }
-/* 새 스레드의 선택 컨트롤은 호스트가 소유한 하단에 둔다. */
-html[data-bb-chat-ui-fluid-mode] [data-app-composer][data-app-composer-role]${newThreadFooter}:not([hidden]) {
-  display:flex !important; flex-wrap:wrap; max-width:100%; min-width:0;
+/* BB가 렌더링한 하단의 기본 높이와 클릭을 좁은 패널에서도 유지한다. */
+@container follow-up-composer style(--follow-up-composer-container-compact:true) {
+  [data-follow-up-composer]:has([data-bb-chat-ui-fluid-composer]):not([data-follow-up-composer-footer-visible]) [data-follow-up-composer-footer]:not([hidden]) {
+    opacity:1; pointer-events:auto; min-height:1.5rem; max-height:1.5rem; margin-top:0.25rem;
+  }
 }
-html[data-bb-chat-ui-fluid-mode] ${newThreadFooter} :is([data-promptbox-hide-branch-compact],[data-promptbox-hide-tiny]):not([hidden]) {
-  display:inline-flex !important;
+@container promptbox-shell (width <= 22rem) {
+  ${fluidShell} :is([data-follow-up-composer-footer],[data-new-thread-footer]) :is([data-promptbox-hide-branch-compact],[data-promptbox-hide-tiny]):not([hidden]) {
+    display:inline-flex !important;
+  }
 }
-[data-bb-composer-footer] {
-  display:flex; flex-wrap:wrap; align-items:center; gap:0 4px; width:100%; min-width:0;
-  padding:4px 4px 0; box-sizing:border-box; font-size:12px; line-height:16px; color:var(--muted-foreground);
-}
-[data-bb-composer-metadata] {
-  position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content;
-  flex:1 1 15rem; align-items:center; gap:4px; min-width:0;
-}
-[data-bb-composer-footer-actions] {
-  display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:4px; min-width:0; margin-inline-start:auto;
-}
-[data-bb-composer-session-mode] { display:flex; align-items:center; gap:4px; min-height:28px; min-width:0; }
-[data-bb-composer-session-mode] select { min-width:0; max-width:100%; cursor:pointer; background:var(--background); border-radius:var(--radius); }
-[data-bb-composer-session-mode] select:focus-visible { outline:2px solid var(--ring); }
-[data-bb-composer-metadata-item] {
-  display:flex; align-items:center; gap:4px; min-width:0; min-height:28px; padding:0 6px;
-  border-radius:999px; text-align:left;
-}
-[data-bb-composer-metadata-item] > span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-[data-bb-composer-metadata-item] > svg { flex:none; width:14px; height:14px; }
-[data-bb-composer-footer] :is(button, summary)[data-bb-composer-metadata-item]:not(:disabled) { cursor:pointer; }
-[data-bb-composer-footer] :is(button, summary)[data-bb-composer-metadata-item]:not(:disabled):hover { background:var(--accent); }
-[data-bb-composer-metadata-item]:focus-visible { outline:2px solid var(--ring); outline-offset:-2px; }
-[data-bb-composer-metadata-context] > summary { list-style:none; }
-[data-bb-composer-metadata-context] > summary::-webkit-details-marker { display:none; }
-[data-bb-composer-metadata-breakdown] {
-  position:absolute; right:4px; bottom:100%; z-index:30; width:max-content; max-width:calc(100% - 8px);
-  max-height:min(32dvh,14rem); overflow:auto; box-sizing:border-box; padding:8px 12px;
-  background:var(--popover); color:var(--popover-foreground); border:1px solid var(--border); border-radius:var(--radius);
-}
-[data-bb-composer-metadata-breakdown] > p { margin:4px 0; }
 [data-bb-chat-ui-fluid-options-open]:not([data-bb-chat-ui-fluid-options-returning]) :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
 [data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > :not([data-bb-chat-ui-slot-toolbar]) { opacity:0; }
 [data-bb-chat-ui-fluid-composer] {

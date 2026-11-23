@@ -3420,7 +3420,7 @@ export function PromptBoxInternal({
     setFluidOptionsOpen(true);
   };
   if (fluid) return (
-    <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-composer-device={device} data-bb-composer-surface={surface} data-bb-chat-ui-fluid-view="input" data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
+    <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-composer-device={device} data-bb-chat-ui-fluid-view="input" data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
       onSubmit={handleSubmit} onKeyDown={event => {
         if (fluidOptionsOpen && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeFluidOptions(); }
         else handleComposerMenuKeyDown(event.nativeEvent);

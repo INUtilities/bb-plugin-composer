@@ -21,8 +21,7 @@ function mount(text = '보관할 초안') {
   threadLinks:{parse:()=>null,cached:()=>null,resolve:async()=>{}}, clipboard:{readMessage:()=>null,readMessageImage:async()=>new File([],'unused')},
   dispatchAppCommandKey:()=>false, showError:vi.fn(), attachmentSrc:()=>'',
  };
- return {run, mounted:renderSlot({component:Composer},{},{composer:{scope,text},composerRenderer:renderer,
-  sdk:{subscribe:()=>vi.fn(),threads:{context:async()=>({usage:null})}}})};
+ return {run, mounted:renderSlot({component:Composer},{},{composer:{scope,text},composerRenderer:renderer})};
 }
 
 it('installs Fluid only while the standalone composer is mounted and restores prior root state', async () => {
