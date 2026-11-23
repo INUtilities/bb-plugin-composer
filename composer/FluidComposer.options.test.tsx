@@ -4,30 +4,80 @@ import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderSlot } from '@get-bb/plugin-sdk/testing/app';
 import type { ExperimentalComposerRendererApi } from '@get-bb/plugin-sdk/app';
 import { PromptBoxInternal } from './src/PromptBoxInternal';
+import { FluidComposer } from './FluidComposer';
 import { injectFluidComposer } from '../lib/fluid-composer';
 
 // 기존 방식의 계약은 토글을 끈 상태에서 계속 검증한다.
 beforeEach(()=>{sessionStorage.setItem('bb-chat-ui:fluid-slot-picker','off');vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}}));});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 // 실제 BB와 같은 그룹 구조로 메타정보가 들어 있는 작성창을 만든다.
-function mount(nativeFooter=false){
+function mount(nativeFooter=false, withPinnedMetadata=false, surface:'thread'|'new-thread'='thread'){
  const run=vi.fn();
  const renderer:ExperimentalComposerRendererApi={key:'options-test',inputLocked:false,focusComposerShortcut:null,decorationSources:[],
-  view:{scope:{kind:'thread',threadId:'thr_options_test'},layout:'expanded',draft:{text:'보관할 초안',isEmpty:false,attachmentCount:0},run:{isRunning:false,isSubmitting:false}},
-  input:{surface:'thread',autoFocus:false,mentionTriggers:[],commandTriggers:[],resolveMentionLink:()=>null,mentionMenuPlacement:'top',
+  view:{scope:surface==='thread' ? {kind:'thread',threadId:'thr_options_test'} : {kind:'new-thread',projectId:'proj_options_test'},
+   layout:'expanded',draft:{text:'보관할 초안',isEmpty:false,attachmentCount:0},run:{isRunning:false,isSubmitting:false}},
+  input:{surface,autoFocus:false,mentionTriggers:[],commandTriggers:[],resolveMentionLink:()=>null,mentionMenuPlacement:'top',
    executionControls:<button type="button">모델 선택</button>,
    promptActions:[{kind:'goal',text:'/goal '},{kind:'skills',text:'$'},{kind:'plan',text:'/plan '}],
    attachments:{onAttachFiles:vi.fn()},
    submission:{enter:{kind:'send',requiresInput:true,shortcut:{ariaKeyshortcuts:'Enter',label:'Enter'},run},modifier:null,showModifierInMenu:false}},
   threadLinks:{parse:()=>null,cached:()=>null,resolve:async()=>{}},clipboard:{readMessage:()=>null,readMessageImage:async()=>new File([],'unused')},dispatchAppCommandKey:()=>false,showError:vi.fn(),attachmentSrc:()=>''};
  // 같은 컴포넌트 경로로 다시 그려 실제 입력 수명을 검사한다.
- const TestComposer=()=> nativeFooter ? <div data-promptbox-shell="">
-  <PromptBoxInternal {...renderer.input} fluid/>
-  <div data-new-thread-footer=""><div><button>Project</button></div><div><button>Permission</button></div></div>
- </div> : <PromptBoxInternal {...renderer.input} fluid/>;
- const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
+ const TestComposer=()=> {
+  const box=withPinnedMetadata ? <FluidComposer/> : <PromptBoxInternal {...renderer.input} fluid/>;
+  return nativeFooter ? <div data-promptbox-shell="" data-app-composer="" data-app-composer-role="primary">
+   {box}
+   <div data-new-thread-footer=""><div><button>Project</button></div><div>
+    {surface==='new-thread' ? <button data-promptbox-hide-tiny="">Worktree</button> : null}<button>Permission</button>
+   </div></div>
+  </div> : box;
+ };
+ const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer,
+  sdk:{subscribe:()=>vi.fn(),threads:{context:async()=>({usage:{usedTokens:200,modelContextWindow:1000,estimated:false}})}}});
  return{v,renderer,run,TestComposer};
 }
+// 포커스가 바뀌어도 입력 아래의 같은 행과 컨텍스트 읽기를 유지한다.
+it('keeps composer metadata below the same editor through focus, blur and options',async()=>{
+ const stop=injectFluidComposer(document),{v}=mount(false,true);
+ try{
+  const row=await screen.findByRole('group',{name:'Composer metadata'});
+  const usage=await screen.findByLabelText('Context window 20% used');
+  const form=v.container.querySelector('form')!;
+  const editor=form.querySelector<HTMLElement>('.ProseMirror')!;
+  expect(form.compareDocumentPosition(row)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(form.contains(row)).toBe(false);
+  expect(getComputedStyle(row).display).toBe('grid');
+  editor.focus();
+  expect(screen.getByRole('group',{name:'Composer metadata'})).toBe(row);
+  editor.blur();
+  fireEvent.click(screen.getByRole('button',{name:'Prompt actions'}));
+  await screen.findByRole('region',{name:'컴포저 옵션'});
+  expect(screen.getByRole('group',{name:'Composer metadata'})).toBe(row);
+  expect(usage.closest('details')?.querySelector('p')?.textContent).toContain(`200 / ${(1000).toLocaleString()} tokens`);
+ }finally{v.unmount();stop();}
+});
+
+// 새 스레드에서 BB가 제공하는 프로젝트와 작업트리 선택기를 하단에 유지한다.
+it('restores native new-thread selectors without opening the info pill',async()=>{
+ const stop=injectFluidComposer(document),{v}=mount(true,true,'new-thread');
+ try{
+  const editor=await waitFor(()=>{
+   const node=v.container.querySelector<HTMLElement>('.ProseMirror');
+   expect(node).toBeTruthy();
+   return node!;
+  });
+  const footer=v.container.querySelector<HTMLElement>('[data-new-thread-footer]')!;
+  const project=screen.getByRole('button',{name:'Project'});
+  expect(footer.contains(project)).toBe(true);
+  expect(getComputedStyle(footer).display).toBe('flex');
+  expect(getComputedStyle(screen.getByRole('button',{name:'Worktree'})).display).toBe('inline-flex');
+  expect(screen.queryByRole('button',{name:'정보와 설정'})).toBeNull();
+  editor.focus();
+  expect(screen.getByRole('button',{name:'Project'})).toBe(project);
+  editor.blur();
+  expect(screen.getByRole('button',{name:'Project'})).toBe(project);
+ }finally{v.unmount();stop();}
+});
 // 옵션 필을 열어도 같은 입력과 전송을 사용할 수 있는지 확인한다.
 it('opens options above the unchanged input and allows editing and submitting while they remain open',async()=>{
  const{v,run}=mount();

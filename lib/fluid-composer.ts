@@ -7,6 +7,8 @@ const metadataPill = ':is([data-bb-chat-ui-fluid-details] > :not(div), [data-bb-
 const metadataShell = '[data-promptbox-shell][data-bb-chat-ui-fluid-details-open]:has([data-bb-chat-ui-fluid-details-toggle])';
 const actionPill = '[data-bb-chat-ui-fluid-panel-list] [role="menuitem"]';
 const detailPill = `${metadataShell} ${metadataPill}:not([hidden])`;
+const newThreadFooter = '[data-promptbox-shell]:has([data-bb-composer-surface="new-thread"]) > [data-new-thread-footer]';
+const threadDetails = '[data-promptbox-shell]:has([data-bb-composer-metadata]) [data-follow-up-composer-footer][data-bb-chat-ui-fluid-details]';
 
 export const fluidComposerCss = `
 ${fluidPickerCss}
@@ -14,6 +16,39 @@ ${fluidPickerCss}
 html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { display:flex !important; }
 html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new-thread-footer]),
 html[data-bb-chat-ui-fluid-mode] [data-app-composer][data-app-composer-role][data-promptbox-shell] :is([data-follow-up-composer-footer], [data-new-thread-footer]):not([data-bb-chat-ui-fluid-details]) { display:none !important; }
+/* 새 스레드의 선택 컨트롤은 호스트가 소유한 하단에 둔다. */
+html[data-bb-chat-ui-fluid-mode] [data-app-composer][data-app-composer-role]${newThreadFooter}:not([hidden]) {
+  display:flex !important; flex-wrap:wrap; max-width:100%; min-width:0;
+}
+html[data-bb-chat-ui-fluid-mode] ${newThreadFooter} :is([data-promptbox-hide-branch-compact],[data-promptbox-hide-tiny]):not([hidden]) {
+  display:inline-flex !important;
+}
+/* 스레드의 상단 메뉴에서는 편집 가능한 네이티브 설정과 바로가기만 표시한다. */
+${threadDetails} > :first-child > :not([aria-label^="Thread details:"]):not([aria-label="New thread in this environment"]):not(:has([aria-label="New thread in this environment"])),
+${threadDetails} > :first-child > div > :not([aria-label="New thread in this environment"]),
+${threadDetails} button[aria-label^="Context window "] { display:none !important; }
+[data-bb-composer-metadata] {
+  position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content;
+  align-items:center; gap:4px; width:100%; min-width:0; padding:4px 4px 0; box-sizing:border-box;
+  font-size:12px; line-height:16px; color:var(--muted-foreground);
+}
+[data-bb-composer-metadata-item] {
+  display:flex; align-items:center; gap:4px; min-width:0; min-height:28px; padding:0 6px;
+  border-radius:999px; text-align:left;
+}
+[data-bb-composer-metadata-item] > span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+[data-bb-composer-metadata-item] > svg { flex:none; width:14px; height:14px; }
+[data-bb-composer-metadata] :is(button, summary)[data-bb-composer-metadata-item] { cursor:pointer; }
+[data-bb-composer-metadata] :is(button, summary)[data-bb-composer-metadata-item]:hover { background:var(--accent); }
+[data-bb-composer-metadata-item]:focus-visible { outline:2px solid var(--ring); outline-offset:-2px; }
+[data-bb-composer-metadata-context] > summary { list-style:none; }
+[data-bb-composer-metadata-context] > summary::-webkit-details-marker { display:none; }
+[data-bb-composer-metadata-breakdown] {
+  position:absolute; right:4px; bottom:100%; z-index:30; width:max-content; max-width:calc(100% - 8px);
+  max-height:min(32dvh,14rem); overflow:auto; box-sizing:border-box; padding:8px 12px;
+  background:var(--popover); color:var(--popover-foreground); border:1px solid var(--border); border-radius:var(--radius);
+}
+[data-bb-composer-metadata-breakdown] > p { margin:4px 0; }
 [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] { position:relative; }
 html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] [data-bb-chat-ui-fluid-details][role="region"]:not([hidden]) {
   display:flex !important; position:absolute !important; gap:8px; justify-content:flex-start; align-items:center;
