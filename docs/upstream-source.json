@@ -6,6 +6,7 @@
   "engineOrigin": "composer/UPSTREAM.json",
   "previousStandaloneCommit": "826d2c8",
   "notes": [
+    "2026-11-23: tap recording detaches a round stop; held recording keeps the mic attached. Both insert the transcript and share the normal right-facing send action.",
     "Latest approved Chat UI source with model/Effort, 06 staged picker, Fast, handoff and single-line right placement.",
     "Merged with standalone Composer origin/main 41108c7: preserve native iPhone Enter/beforeinput, first-commit layout and moving-caret protection.",
     "Latest approved 400ms expand / 150ms collapse, immediate host-clear and independent option pills supersede the older standalone 380ms/160ms/card-morph design.",
@@ -50,7 +51,7 @@
     {
       "source": "composer/FluidComposer.voice.test.tsx",
       "destination": "composer/FluidComposer.voice.test.tsx",
-      "sha256": "9f246576a5268038d27a16ccd21fa889bdf6ec3e48f670be36d34a7d048f312f",
+      "sha256": "2fe866628ce993c0fd2707cbd5d14cd3951760f4c5a4ebfa825fa692188016e0",
       "sourceSha256": "f9647987eb8b3ddbca15526a71988c48d12815481780a7c99b5833c8194b0af7",
       "integrationOverlay": true
     },
@@ -90,14 +91,14 @@
     {
       "source": "composer/FluidVoiceControl.test.tsx",
       "destination": "composer/FluidVoiceControl.test.tsx",
-      "sha256": "2aeb77d6a93a88a46982a53fb2bcfcf75215f9af8f49c3fd1b080025f9ad4773",
+      "sha256": "73803269ccfd97ea01e3edbbc6431b01abc5051e5e5c898e11f72276dad496d1",
       "sourceSha256": "e82224be383b7ace85549d4f4a7adc05dee7abc2a541ddb63acfe1172f5ca5d6",
       "integrationOverlay": true
     },
     {
       "source": "composer/FluidVoiceControl.tsx",
       "destination": "composer/FluidVoiceControl.tsx",
-      "sha256": "2f36530e38629725b5d936fb7a8a91211482b6ff25ebc413bcbd5b3ba1e8cbae",
+      "sha256": "97678dfde455597336c6dc9918f1b5158918fd780515c82c93e45aec38e72da4",
       "sourceSha256": "2df3ae57c7599b51ba77a2a77bb1526fbdd6e872709d2d5a0d6334170df6500e",
       "integrationOverlay": true
     },
@@ -297,7 +298,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "29177d4e0d6c061d0efed9a90152e420efe6fa2e01459bd087a3090d5d8e16f0",
+      "sha256": "9033a72e9565464cdf9ebaa614719eedf08668eb19a35f9c07e6ef36f4d6a16d",
       "sourceSha256": "fa3b85470e5b81c2e16800a4136bb46d666987bba1a19c8112e8b021d0f51111",
       "integrationOverlay": true
     },
@@ -632,7 +633,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "9604e75adc20f03cf31b8d42222e8a25b9ad42739081a5d5287b2632088c7686",
+      "sha256": "a04e15be9c513f0128f573f1733b28d5c3c5e09a2a7487ef0a09b1bee68ab1e0",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"

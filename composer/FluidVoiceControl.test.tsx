@@ -49,7 +49,8 @@ it('starts voice mode on click and stops recording on the next tap before any co
  expect(p.transcribe).not.toHaveBeenCalled();expect(capture).toHaveBeenCalledOnce();
 });
 it('keeps the normal microphone and the draft send fallback',()=>{const p=props(),v=render(<FluidVoiceControl {...p}/>);expect(screen.queryByText('초안 전송')).toBeNull();v.rerender(<FluidVoiceControl {...p} showFallback/>);expect(screen.getByText('초안 전송')).toBeTruthy();});
-it('keeps a short tap latched when the UI handles release late and shows the stop symbol after recording',async()=>{
+// 입력 처리 지연이 생겨도 짧은 탭은 계속 녹음한다.
+it('keeps a short tap latched when the UI handles release late and shows the stop symbol while recording',async()=>{
  const clock=vi.spyOn(performance,'now').mockReturnValue(1000),gesture=vi.fn();render(<FluidVoiceControl {...props()} appearance="composer" onGestureChange={gesture}/>);
  const button=screen.getByRole('button',{name:'음성모드 시작'});
  const press=createEvent.pointerDown(button,{button:0,pointerId:7});
@@ -61,29 +62,33 @@ it('keeps a short tap latched when the UI handles release late and shows the sto
  expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();
  clock.mockReturnValue(1800);fireEvent(button,release);fireEvent.click(button,{detail:1});
  expect(gesture).toHaveBeenLastCalledWith('toggle');expect(button.closest('[data-bb-chat-ui-voice-actions]')?.getAttribute('data-gesture')).toBe('toggle');
- expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();expect(tracks[0].stop).not.toHaveBeenCalled();
- await split(button);
  expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeTruthy();
+ expect(tracks[0].stop).not.toHaveBeenCalled();
 });
+// 각 시작과 종료 조작은 햅틱을 한 번씩 낸다.
 for(const held of [true,false])it(`pulses once on the real ${held?'hold':'tap'} activation without a following click duplicate`,async()=>{
  document.documentElement.setAttribute('data-bb-chat-ui-root-device','phone');const post=vi.fn();Object.assign(window,{bb:{native:{capabilities:['haptic'],post}}});const dispose=injectSendHaptic(document);
  try{
   const clock=vi.spyOn(Date,'now').mockReturnValue(1000),p=props();render(<form data-bb-chat-ui-fluid-composer=""><FluidVoiceControl {...p} appearance="composer"/></form>);
   const button=screen.getByRole('button',{name:'음성모드 시작'});down(button);expect(post).toHaveBeenCalledExactlyOnceWith({type:'haptic',kind:'selection'});
   await waitFor(()=>expect(Recorder.instances).toHaveLength(1));clock.mockReturnValue(held?1800:1080);up(button);fireEvent.click(button,{detail:1});
-  if(held){await waitFor(()=>expect(p.deliver).toHaveBeenCalledWith('변환된 초안','insert'));expect(post).toHaveBeenCalledTimes(2);}
-  else{expect(post).toHaveBeenCalledOnce();select(button);await screen.findByRole('button',{name:'음성 입력 중지'});expect(post).toHaveBeenCalledTimes(2);expect(p.transcribe).not.toHaveBeenCalled();}
+  if(!held){expect(post).toHaveBeenCalledOnce();select(button);}
+  await waitFor(()=>expect(p.deliver).toHaveBeenCalledWith('변환된 초안','insert'));
+  expect(post).toHaveBeenCalledTimes(2);
  }finally{dispose();}
 });
-it('captures immediately, latches a short tap, and stops on the next deliberate tap',async()=>{
+// 두 번째 탭은 녹음을 끝내고 입력창으로 전사문을 보낸다.
+it('captures immediately, latches a short tap, and inserts on the next deliberate tap',async()=>{
  const clock=vi.spyOn(Date,'now').mockReturnValue(1000),p=props();render(<FluidVoiceControl {...p} appearance="composer"/>);
  const button=screen.getByRole('button',{name:'음성모드 시작'});down(button);
  expect(capture).toHaveBeenCalledOnce();await waitFor(()=>expect(Recorder.instances).toHaveLength(1));
  clock.mockReturnValue(1080);up(button);fireEvent.click(button,{detail:1});
  expect(button.getAttribute('aria-pressed')).toBe('true');expect(tracks[0].stop).not.toHaveBeenCalled();expect(p.transcribe).not.toHaveBeenCalled();
  clock.mockReturnValue(1200);down(button);clock.mockReturnValue(1280);up(button);fireEvent.click(button,{detail:1});
- await screen.findByRole('button',{name:'음성 입력 중지'});
- expect(tracks[0].stop).toHaveBeenCalledOnce();expect(capture).toHaveBeenCalledOnce();expect(p.transcribe).not.toHaveBeenCalled();
+ await waitFor(()=>expect(p.deliver).toHaveBeenCalledExactlyOnceWith('변환된 초안','insert'));
+ expect(tracks[0].stop).toHaveBeenCalledOnce();expect(capture).toHaveBeenCalledOnce();expect(p.transcribe).toHaveBeenCalledOnce();
+ expect(screen.getByRole('button',{name:'음성모드 시작'})).toBe(button);
+ expect(screen.queryByRole('button',{name:'음성 내용 전송'})).toBeNull();
 });
 it('stops a held recording on release and transcribes exactly once after the final audio data',async()=>{
  Recorder.autoFinish=false;const clock=vi.spyOn(Date,'now').mockReturnValue(1000),p=props();render(<FluidVoiceControl {...p} appearance="composer"/>);
@@ -117,14 +122,22 @@ for(const event of ['pointerCancel','lostPointerCapture'] as const)it(`cancels a
  expect(tracks[0].stop).toHaveBeenCalledOnce();expect(p.transcribe).not.toHaveBeenCalled();expect(capture).toHaveBeenCalledOnce();
  expect(button.getAttribute('aria-pressed')).toBe('false');
 });
-it('keeps composer voice controls inline and releases capture before showing choices',async()=>{
+// 마지막 오디오 조각이 도착할 때까지 같은 정지 버튼을 유지한다.
+it('keeps composer Stop visible until final audio arrives and inserts without a choice menu',async()=>{
+ Recorder.autoFinish=false;
  const streamChanged=vi.fn(),p=props();render(<FluidVoiceControl {...p} appearance="composer" onStreamChange={streamChanged}/>);
  const button=await start();expect(streamChanged.mock.calls.at(-1)?.[0]?.getTracks()).toEqual(tracks);
  expect(button.querySelector('[data-bb-chat-ui-voice-orbit]')).toBeNull();
  expect(button.closest('[data-bb-chat-ui-voice-actions]')?.getAttribute('data-appearance')).toBe('composer');
- select(button);await waitFor(()=>expect((screen.getByRole('button',{name:'음성 입력 중지'}) as HTMLButtonElement).disabled).toBe(false));
+ const stop=screen.getByRole('button',{name:'음성 녹음 중지'});
+ expect(stop).toBe(button);select(stop);
+ expect(stop.getAttribute('aria-busy')).toBe('true');
+ expect(stop.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeTruthy();
+ expect(screen.queryByRole('group',{name:'음성 입력 동작'})).toBeNull();
  expect(tracks[0].stop).toHaveBeenCalledOnce();expect(streamChanged).toHaveBeenLastCalledWith(null);
- expect(p.transcribe).not.toHaveBeenCalled();expect(screen.getByRole('button',{name:'음성 내용 전송'})).toBeTruthy();
+ expect(p.transcribe).not.toHaveBeenCalled();
+ await act(async()=>Recorder.instances[0].finish());
+ expect(p.deliver).toHaveBeenCalledExactlyOnceWith('변환된 초안','insert');
 });
 it('stops capture immediately but reveals the choices only after the last exit ring',async()=>{
  const descriptor=Object.getOwnPropertyDescriptor(SVGElement.prototype,'animate');

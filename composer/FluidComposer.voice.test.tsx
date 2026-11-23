@@ -34,10 +34,16 @@ beforeEach(()=>{
 });
 afterEach(()=>{cleanup();removeStyles();vi.restoreAllMocks();vi.unstubAllGlobals();if(originalMedia)Object.defineProperty(navigator,'mediaDevices',originalMedia);else Reflect.deleteProperty(navigator,'mediaDevices');});
 
-for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false],['음성 내용 전송',true,false,false],['음성 내용 전송',true,true,false],['음성 입력 중지',false,false,true]]as const){
- it(`the real editor ${held?'held release inserts without sending':`${label} ${blocked?'retains a rejected send':'clears only an accepted send'}`}`,async()=>{
+for(const [description,send,blocked,held]of [
+ ['a tap on the detached stop inserts the transcript',false,false,false],
+ ['an explicit send retries a failed transcript and clears the draft',true,false,false],
+ ['a blocked recovery send retains the transcript',true,true,false],
+ ['releasing a hold inserts without sending',false,false,true],
+]as const){
+ it(description,async()=>{
   const clock=held?vi.spyOn(Date,'now').mockReturnValue(1000):null;
   const run=vi.fn(),transcribe=vi.fn(async()=>({text:'실제 입력 엔진 검수'}));
+  if(send)transcribe.mockRejectedValueOnce(new Error('transcription offline'));
   const renderer:ExperimentalComposerRendererApi={
    key:'voice-test',inputLocked:false,focusComposerShortcut:null,decorationSources:[],
    view:{scope:{kind:'thread',threadId:'thr_voice_test'},layout:'expanded',draft:{text:'',isEmpty:true,attachmentCount:0},run:{isRunning:false,isSubmitting:false}},
@@ -55,6 +61,7 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
   const originalEditor=v.container.querySelector('.ProseMirror');
   const mic=screen.getByRole('button',{name:'음성모드 시작'});
   const footer=screen.getByRole('button',{name:'Permissions'});
+  expect(v.container.querySelector('button[data-promptbox-submit-action][type="submit"]')).toBeNull();
   if(held)fireEvent.pointerDown(mic,{button:0});else fireEvent.click(mic,{detail:1});
   await waitFor(()=>expect(mic.getAttribute('aria-pressed')).toBe('true'));
   expect(screen.queryByRole('button',{name:'Prompt actions'})).toBeNull();
@@ -62,7 +69,9 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
   expect(screen.queryByRole('button',{name:'Permissions'})).toBeNull();
   expect(v.container.querySelector('[data-bb-chat-ui-voice-glow]')).toBeTruthy();
   expect(v.container.querySelectorAll('[data-bb-chat-ui-voice-bar]').length).toBeGreaterThan(7);
-  expect(mic.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();
+  expect(mic.closest('[data-bb-chat-ui-voice-actions]')?.getAttribute('data-gesture')).toBe(held?'hold':'toggle');
+  expect(Boolean(mic.querySelector('[data-bb-chat-ui-voice-stop-symbol]'))).toBe(!held);
+  expect(screen.queryByRole('button',{name:'음성 내용 전송'})).toBeNull();
   expect(screen.queryByRole('button',{name:'모델과 Effort 설정'})).toBeNull();
   act(()=>Speech.instances[0].onresult!({results:[{0:{transcript:'말하면서 보는 내용'}}]}));
   expect((await screen.findByText('말하면서 보는 내용')).closest('[role="status"]')?.classList.contains('sr-only')).toBe(true);
@@ -71,13 +80,18 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
   if(held){
    clock!.mockReturnValue(1800);fireEvent.pointerUp(mic,{button:0});fireEvent.click(mic,{detail:1});
   }else{
-   fireEvent.click(mic,{detail:1});
-   const action=await screen.findByRole('button',{name:label});
-   await waitFor(()=>expect((action as HTMLButtonElement).disabled).toBe(false));
+   const stop=screen.getByRole('button',{name:'음성 녹음 중지'});
+   expect(stop).toBe(mic);
    expect(transcribe).not.toHaveBeenCalled();expect(run).not.toHaveBeenCalled();
-   fireEvent.click(action);
+   fireEvent.click(stop,{detail:1});
+   if(send){
+    const recovery=await screen.findByRole('button',{name:'음성 내용 전송'});
+    expect(transcribe).toHaveBeenCalledOnce();
+    expect(v.inspection.composer.submits).toHaveLength(0);
+    fireEvent.click(recovery);
+   }
   }
-  await waitFor(()=>expect(transcribe).toHaveBeenCalledTimes(1));
+  await waitFor(()=>expect(transcribe).toHaveBeenCalledTimes(send?2:1));
   await waitFor(()=>expect(v.inspection.composer.text).toBe(send&&!blocked?'':'실제 입력 엔진 검수'));
   expect(screen.queryByText('말하면서 보는 내용')).toBeNull();
   expect(v.container.querySelector('.ProseMirror')).toBe(originalEditor);
@@ -89,11 +103,11 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
    expect(originalEditor!.textContent).toBe('');
    expect(v.inspection.composer.submits).toHaveLength(1);
   }else{
-   await waitFor(()=>expect(v.container.querySelector('button[data-promptbox-submit-action][type="submit"]')).toBeTruthy());
+   await waitFor(()=>expect(v.container.querySelector('button[data-promptbox-submit-action][type="submit"] [data-promptbox-send-plane]')).toBeTruthy());
    expect(screen.queryByRole('button',{name:'음성모드 시작'})).toBeNull();
    expect(v.inspection.composer.submits).toHaveLength(0);
   }
-  expect(transcribe).toHaveBeenCalledTimes(1);
+  expect(transcribe).toHaveBeenCalledTimes(send?2:1);
   expect(run).not.toHaveBeenCalled();
   v.unmount();
  });

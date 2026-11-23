@@ -54,16 +54,17 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
     return held;
   }, []);
   const cancel = useCallback(() => { if (press.current) ignorePointerClick.current = true; releasePress(); focusChoices.current = false; stopPreview(); setLeaving(false); setChoicesOpen(false); session.current?.cancel(); }, [stopPreview, releasePress]);
+  // 별도 파형 버튼에서 녹음한 내용의 사용 방식을 선택할 수 있게 한다.
   const openChoices = useCallback((focus = false) => {
     if (session.current?.snapshot.phase === 'starting') { cancel(); return; }
     if (session.current?.snapshot.phase !== 'recording') return;
     focusChoices.current = focus;
-    const inline = current.current.appearance === 'composer';
-    setLeaving(!inline); if (inline) setChoicesOpen(true);
+    setLeaving(true);
     pulse(); stopPreview(); session.current.release();
   }, [cancel, stopPreview]);
+  // 키보드로 사용하던 버튼의 초점을 선택 또는 오류 복구 단계에서 돌려준다.
   useLayoutEffect(() => {
-    if (!choicesOpen || state.phase !== 'ready' || !focusChoices.current) return;
+    if (!choicesOpen || (state.phase !== 'ready' && state.phase !== 'error') || !focusChoices.current) return;
     focusChoices.current = false; primary.current?.focus({ preventScroll: true });
   }, [choicesOpen, state.phase]);
   const start = useCallback((mode: FluidVoiceGesture = 'toggle') => {
@@ -109,6 +110,20 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
   useLayoutEffect(() => { if (props.disabled && session.current && holdVoiceIsActive(session.current.snapshot)) cancel(); }, [props.disabled, cancel]);
 
   const active = holdVoiceIsActive(state), busy = leaving || state.phase === 'stopping' || state.phase === 'transcribing';
+  const composerAppearance = props.appearance === 'composer';
+  const showStopSymbol = active && (!composerAppearance || (choicesOpen ? !busy : gesture === 'toggle'));
+  const showMic = !active || (composerAppearance && gesture === 'hold' && !choicesOpen);
+  const actionDescription = choicesOpen
+    ? '변환된 내용을 입력에 남깁니다.'
+    : active
+      ? !composerAppearance
+        ? '누르면 녹음을 멈추고 중지와 전송을 선택합니다.'
+        : gesture === 'hold'
+          ? '손을 떼면 녹음을 멈추고 전사문을 입력에 넣습니다.'
+          : '누르면 녹음을 멈추고 전사문을 입력에 넣습니다.'
+      : composerAppearance
+        ? '짧게 누르면 계속 녹음합니다. 길게 누르면 손을 뗄 때 녹음을 마칩니다.'
+        : '클릭하면 음성모드가 시작됩니다.';
   if (props.showFallback && !active) return props.fallback;
   return <span data-bb-chat-ui-voice-actions="" data-appearance={props.appearance} data-state={state.phase} data-gesture={props.appearance === 'composer' && active ? gesture : undefined} data-active={active || undefined} data-leaving={leaving || undefined} data-split={choicesOpen && active || undefined}
     data-bb-chat-ui-voice-split={choicesOpen && active ? '' : undefined} role={choicesOpen ? 'group' : undefined} aria-label={choicesOpen ? '음성 입력 동작' : undefined}>
@@ -118,7 +133,7 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
     <Button ref={primary} type="button" size="icon" variant="default" data-bb-chat-ui-voice-primary=""
       data-bb-chat-ui-voice-record={choicesOpen ? undefined : ''} data-bb-chat-ui-voice-stop={choicesOpen ? '' : undefined}
       aria-label={choicesOpen ? '음성 입력 중지' : active ? '음성 녹음 중지' : '음성모드 시작'} aria-pressed={choicesOpen ? undefined : active} aria-busy={busy}
-      aria-description={state.error ?? props.warning ?? (choicesOpen ? '변환된 내용을 입력에 남깁니다.' : active ? props.appearance === 'composer' && gesture === 'hold' ? '손을 떼면 녹음을 멈추고 전사문을 입력에 넣습니다.' : '누르면 녹음을 멈추고 중지와 전송을 선택합니다.' : props.appearance === 'composer' ? '클릭하면 계속 녹음합니다. 누른 채 말한 뒤 놓으면 전사해 입력창에 넣습니다.' : '클릭하면 음성모드가 시작됩니다.')}
+      aria-description={state.error ?? props.warning ?? actionDescription}
       disabled={props.disabled || busy}
       onPointerDown={event => {
         if (event.button !== 0 || event.isPrimary === false || press.current) return;
@@ -159,7 +174,9 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
       }}
       onPointerCancel={event => { if (press.current?.pointerId === event.pointerId) cancel(); }}
       onLostPointerCapture={event => { if (press.current?.pointerId === event.pointerId) cancel(); }}
-      onClick={event => {
+      onClick={
+      // 작성 중 녹음은 전사문을 입력하고 별도 파형은 기존 선택을 연다.
+      event => {
         event.preventDefault();
         const native = event.nativeEvent as MouseEvent & { pointerType?: string; sourceCapabilities?: { firesTouchEvents?: boolean } };
         const pointerClick = event.detail > 0 || !!native.pointerType || !!native.sourceCapabilities?.firesTouchEvents;
@@ -167,17 +184,19 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
         if (ignored && pointerClick) return;
         if (props.disabled || busy) return;
         if (choicesOpen) { if (state.phase === 'error') { pulse(); cancel(); } else finish('insert'); }
-        else if (active) openChoices(event.detail === 0);
+        else if (active && composerAppearance) {
+          if (session.current?.snapshot.phase === 'starting') cancel();
+          else { focusChoices.current = event.detail === 0; finish('insert'); }
+        } else if (active) openChoices(event.detail === 0);
         else start();
       }}
       onKeyDown={event => { if (event.key === ' ' || event.key === 'Enter') { if (event.repeat) event.preventDefault(); else ignorePointerClick.current = false; } }}
       onContextMenu={event => event.preventDefault()}>
-      {active ? <>
-        {props.appearance !== 'composer' ? <FluidVoiceWaveform stream={stream} exiting={leaving} onExited={() => {
-          if (session.current && holdVoiceIsActive(session.current.snapshot) && !current.current.disabled) { setLeaving(false); setChoicesOpen(true); }
-        }}/> : null}
-        {props.appearance !== 'composer' || (choicesOpen && !busy) ? <span data-bb-chat-ui-voice-stop-symbol="" aria-hidden="true"><Icon name="Square" className="size-3.5 fill-current [&_*]:stroke-0"/></span> : null}
-      </> : <Icon name="Mic" className="size-4"/>}
+      {active && !composerAppearance ? <FluidVoiceWaveform stream={stream} exiting={leaving} onExited={() => {
+        if (session.current && holdVoiceIsActive(session.current.snapshot) && !current.current.disabled) { setLeaving(false); setChoicesOpen(true); }
+      }}/> : null}
+      {showStopSymbol ? <span data-bb-chat-ui-voice-stop-symbol="" aria-hidden="true"><Icon name="Square" className="size-3.5 fill-current [&_*]:stroke-0"/></span> : null}
+      {showMic ? <Icon name="Mic" className="size-4"/> : null}
     </Button>
     {active ? <Button type="button" size="icon" variant="default" data-bb-chat-ui-voice-send="" aria-label="음성 내용 전송" aria-busy={busy}
       inert={!choicesOpen || undefined} aria-hidden={!choicesOpen || undefined} tabIndex={choicesOpen ? 0 : -1}

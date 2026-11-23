@@ -54,6 +54,7 @@ import {
   type FormEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactElement,
   type ReactNode,
   type Ref,
 } from "react";
@@ -282,11 +283,17 @@ function suppressTouchCompatibilityClick(ownerDocument: Document) {
   ownerDocument.addEventListener("keydown", clear, true);
 }
 
+const composerSendPlane = (
+  <svg data-promptbox-send-plane="" aria-hidden="true" focusable="false" className="size-4" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3.45 3.8 21.7 11.35a.7.7 0 0 1 0 1.3L3.45 20.2a.7.7 0 0 1-.94-.81l1.63-6.3L14.64 12l-10.5-1.09-1.63-6.3a.7.7 0 0 1 .94-.81Z" />
+  </svg>
+);
+
 interface PromptSubmitButtonProps {
   canSubmit: boolean;
   className: string;
   disabledReason: string | undefined;
-  icon: string | undefined;
+  icon: string | ReactElement | undefined;
   isBusy: boolean;
   isCompact: boolean;
   label: string | undefined;
@@ -296,6 +303,7 @@ interface PromptSubmitButtonProps {
   title: string;
 }
 
+// 같은 전송 동작을 포인터와 키보드에 연결하고 현재 동작의 아이콘을 표시한다.
 function PromptSubmitButton({
   canSubmit,
   className,
@@ -384,7 +392,9 @@ function PromptSubmitButton({
         />
       ) : (
         <>
-          <SdkIcon name={icon ?? "CornerDownLeft"} className="size-4" />
+          {typeof icon === "string" || icon === undefined ? (
+            <SdkIcon name={icon ?? "CornerDownLeft"} className="size-4" />
+          ) : icon}
           {label !== undefined && !isCompact ? (
             <span data-promptbox-submit-label="">{label}</span>
           ) : null}
@@ -3474,7 +3484,8 @@ export function PromptBoxInternal({
                 <Icon name="Square" className="size-3.5 fill-current [&_*]:stroke-0" />
               </Button> : <ComposerSendMenu isPointerCoarse={isPointerCoarse} modifierKind={modifierSubmitAction?.kind ?? null}
                 hasInput={hasSubmittableInput} canSubmit={canSubmit} onSubmit={showModifierInMenu && onModifierSubmit ? submitModifierPrompt : undefined}>
-                <PromptSubmitButton className={COMPACT_PROMPT_ACTION_BUTTON_CLASS} canSubmit={canSubmit} icon={submitIcon} label={submitLabel} isCompact
+                <PromptSubmitButton className={COMPACT_PROMPT_ACTION_BUTTON_CLASS} canSubmit={canSubmit}
+                  icon={primarySubmitAction.kind === "send" ? composerSendPlane : submitIcon} label={submitLabel} isCompact
                   disabledReason={!canSubmit ? isAttaching ? attachmentUploadTitle : submitDisabledReason : undefined}
                   isBusy={isSubmitting || isAttaching} onPointerDown={handleSubmitPointerDown} onClick={handleSubmitClick}
                   onTouchSubmit={handleTouchSubmit} title={effectiveSubmitTitle} />
