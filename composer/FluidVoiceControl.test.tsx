@@ -49,14 +49,16 @@ it('starts voice mode on click and stops recording on the next tap before any co
  expect(p.transcribe).not.toHaveBeenCalled();expect(capture).toHaveBeenCalledOnce();
 });
 it('keeps the normal microphone and the draft send fallback',()=>{const p=props(),v=render(<FluidVoiceControl {...p}/>);expect(screen.queryByText('초안 전송')).toBeNull();v.rerender(<FluidVoiceControl {...p} showFallback/>);expect(screen.getByText('초안 전송')).toBeTruthy();});
-it('replaces the held Stop symbol with the ring indicator and switches a released short tap to bars',async()=>{
+it('keeps the recording button clear through a short tap and shows the stop symbol after recording',async()=>{
  const clock=vi.spyOn(performance,'now').mockReturnValue(1000),gesture=vi.fn();render(<FluidVoiceControl {...props()} appearance="composer" onGestureChange={gesture}/>);
  const button=screen.getByRole('button',{name:'음성모드 시작'});down(button);await waitFor(()=>expect(Recorder.instances).toHaveLength(1));
  expect(gesture).toHaveBeenLastCalledWith('hold');expect(button.closest('[data-bb-chat-ui-voice-actions]')?.getAttribute('data-gesture')).toBe('hold');
  expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();
  clock.mockReturnValue(1080);up(button);fireEvent.click(button,{detail:1});
  expect(gesture).toHaveBeenLastCalledWith('toggle');expect(button.closest('[data-bb-chat-ui-voice-actions]')?.getAttribute('data-gesture')).toBe('toggle');
- expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeTruthy();expect(tracks[0].stop).not.toHaveBeenCalled();
+ expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();expect(tracks[0].stop).not.toHaveBeenCalled();
+ await split(button);
+ expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeTruthy();
 });
 for(const held of [true,false])it(`pulses once on the real ${held?'hold':'tap'} activation without a following click duplicate`,async()=>{
  document.documentElement.setAttribute('data-bb-chat-ui-root-device','phone');const post=vi.fn();Object.assign(window,{bb:{native:{capabilities:['haptic'],post}}});const dispose=injectSendHaptic(document);

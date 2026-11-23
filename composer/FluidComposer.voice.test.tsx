@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react
 import { renderSlot } from '@get-bb/plugin-sdk/testing/app';
 import type { ExperimentalComposerRendererApi } from '@get-bb/plugin-sdk/app';
 import { PromptBoxInternal } from './src/PromptBoxInternal';
+import { injectFluidComposer } from '../lib/fluid-composer';
 
 class Pointer extends MouseEvent {
   pointerId=1;pointerType='touch';isPrimary=true;
@@ -21,6 +22,7 @@ class Speech {
  start(){}abort(){}constructor(){Speech.instances.push(this);}
 }
 let originalMedia:PropertyDescriptor|undefined;
+let removeStyles:()=>void;
 beforeEach(()=>{
  vi.spyOn(HTMLCanvasElement.prototype,'getContext').mockReturnValue(null);
  originalMedia=Object.getOwnPropertyDescriptor(navigator,'mediaDevices');
@@ -28,8 +30,9 @@ beforeEach(()=>{
  vi.stubGlobal('MediaRecorder',Recorder);vi.stubGlobal('PointerEvent',Pointer);
  Speech.instances=[];vi.stubGlobal('SpeechRecognition',Speech);
  vi.stubGlobal('matchMedia',(media:string)=>({media,matches:false,onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return true;}}));
+ removeStyles=injectFluidComposer(document);
 });
-afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();if(originalMedia)Object.defineProperty(navigator,'mediaDevices',originalMedia);else Reflect.deleteProperty(navigator,'mediaDevices');});
+afterEach(()=>{cleanup();removeStyles();vi.restoreAllMocks();vi.unstubAllGlobals();if(originalMedia)Object.defineProperty(navigator,'mediaDevices',originalMedia);else Reflect.deleteProperty(navigator,'mediaDevices');});
 
 for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false],['음성 내용 전송',true,false,false],['음성 내용 전송',true,true,false],['음성 입력 중지',false,false,true]]as const){
  it(`the real editor ${held?'held release inserts without sending':`${label} ${blocked?'retains a rejected send':'clears only an accepted send'}`}`,async()=>{
@@ -39,32 +42,30 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
    key:'voice-test',inputLocked:false,focusComposerShortcut:null,decorationSources:[],
    view:{scope:{kind:'thread',threadId:'thr_voice_test'},layout:'expanded',draft:{text:'',isEmpty:true,attachmentCount:0},run:{isRunning:false,isSubmitting:false}},
    input:{surface:'thread',autoFocus:false,mentionTriggers:[],commandTriggers:[],resolveMentionLink:()=>null,mentionMenuPlacement:'top',
+    executionControls:<button type="button">모델 선택</button>,
     submission:{enter:{kind:'send',requiresInput:true,shortcut:{ariaKeyshortcuts:'Enter',label:'Enter'},run},modifier:null,showModifierInMenu:false},
     voice:{state:'idle',delivery:'insert',microphoneWarning:null,isSupported:true,unsupportedMessage:'unavailable',stream:null,failedRecordings:[],start:vi.fn(),stop:vi.fn(),send:vi.fn(),retry:vi.fn(),discard:vi.fn(),download:vi.fn(),cancel:vi.fn()}},
    threadLinks:{parse:()=>null,cached:()=>null,resolve:async()=>{}},clipboard:{readMessage:()=>null,readMessageImage:async()=>new File([],'unused')},
    dispatchAppCommandKey:()=>false,showError:vi.fn(),attachmentSrc:()=>'',
   };
-  const v=renderSlot({component:()=> <div data-promptbox-shell=""><PromptBoxInternal {...renderer.input} fluid/></div>},{},{composer:{scope:renderer.view.scope,...(blocked?{submittingBlockedReason:'offline'}:{})},composerRenderer:renderer,sdk:{system:{transcribeVoice:transcribe}}});
+  const v=renderSlot({component:()=> <div data-promptbox-shell=""><PromptBoxInternal {...renderer.input} fluid/>
+    <div data-follow-up-composer-footer=""><button type="button">Permissions</button></div>
+  </div>},{},{composer:{scope:renderer.view.scope,...(blocked?{submittingBlockedReason:'offline'}:{})},composerRenderer:renderer,sdk:{system:{transcribeVoice:transcribe}}});
   await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
   const originalEditor=v.container.querySelector('.ProseMirror');
   const mic=screen.getByRole('button',{name:'음성모드 시작'});
+  const footer=screen.getByRole('button',{name:'Permissions'});
   if(held)fireEvent.pointerDown(mic,{button:0});else fireEvent.click(mic,{detail:1});
   await waitFor(()=>expect(mic.getAttribute('aria-pressed')).toBe('true'));
-  expect(v.container.querySelector('[data-bb-chat-ui-fluid-row]')!.hasAttribute('data-voice-mode')).toBe(false);
-  expect(v.container.querySelector('[data-bb-chat-ui-fluid-composer]')!.hasAttribute('data-bb-chat-ui-fluid-voice-only')).toBe(false);
+  expect(screen.queryByRole('button',{name:'Prompt actions'})).toBeNull();
+  expect(screen.queryByRole('button',{name:'모델 선택'})).toBeNull();
+  expect(screen.queryByRole('button',{name:'Permissions'})).toBeNull();
   expect(v.container.querySelector('[data-bb-chat-ui-voice-glow]')).toBeTruthy();
-  if(held){expect(v.container.querySelector('[data-bb-chat-ui-voice-orbit]')).toBeTruthy();expect(mic.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();}
-  else expect(v.container.querySelectorAll('[data-bb-chat-ui-voice-bar]').length).toBeGreaterThan(7);
+  expect(v.container.querySelectorAll('[data-bb-chat-ui-voice-bar]').length).toBeGreaterThan(7);
+  expect(mic.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();
   expect(screen.queryByRole('button',{name:'모델과 Effort 설정'})).toBeNull();
-  expect((screen.getByRole('button',{name:'Prompt actions'}) as HTMLButtonElement).disabled).toBe(true);
-  expect(v.container.querySelector('[data-bb-chat-ui-fluid-editor]')!.hasAttribute('hidden')).toBe(false);
   act(()=>Speech.instances[0].onresult!({results:[{0:{transcript:'말하면서 보는 내용'}}]}));
-  await screen.findByText('말하면서 보는 내용');
-  const previewScroll=v.container.querySelector<HTMLElement>('[data-bb-chat-ui-voice-transcript]')!.parentElement!;
-  if(!held){const header=v.container.querySelector('[data-bb-chat-ui-voice-bars-space]')!;expect(previewScroll.contains(header)).toBe(false);expect(header.parentElement).toBe(previewScroll.parentElement);}
-  Object.defineProperty(previewScroll,'scrollHeight',{configurable:true,value:200});
-  act(()=>Speech.instances[0].onresult!({results:[{0:{transcript:'말하면서 보는 내용이 더 길어졌습니다'}}]}));
-  expect(previewScroll.scrollTop).toBe(200);
+  expect((await screen.findByText('말하면서 보는 내용')).closest('[role="status"]')?.classList.contains('sr-only')).toBe(true);
   expect(v.inspection.composer.text).toBe('');
   expect(v.container.querySelector('.ProseMirror')).toBe(originalEditor);
   if(held){
@@ -80,7 +81,9 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
   await waitFor(()=>expect(v.inspection.composer.text).toBe(send&&!blocked?'':'실제 입력 엔진 검수'));
   expect(screen.queryByText('말하면서 보는 내용')).toBeNull();
   expect(v.container.querySelector('.ProseMirror')).toBe(originalEditor);
-  expect(v.container.querySelector('[data-bb-chat-ui-fluid-composer]')!.hasAttribute('data-bb-chat-ui-fluid-voice-only')).toBe(false);
+  expect(screen.getByRole('button',{name:'Prompt actions'})).toBeTruthy();
+  expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Permissions'})).toBe(footer);
   if(send&&!blocked){
    await waitFor(()=>expect(screen.getByRole('button',{name:'음성모드 시작'})).toBeTruthy());
    expect(originalEditor!.textContent).toBe('');

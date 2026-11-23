@@ -33,6 +33,7 @@ function pulse(): void {
 }
 const HOLD_TO_TRANSCRIBE_MS = 250;
 
+// 녹음과 전사 동작을 같은 버튼 수명에 연결한다.
 export function FluidVoiceControl(props: FluidVoiceControlProps) {
   const current = useRef(props); current.current = props;
   const [state, setState] = useState(IDLE_HOLD_VOICE);
@@ -175,7 +176,7 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
         {props.appearance !== 'composer' ? <FluidVoiceWaveform stream={stream} exiting={leaving} onExited={() => {
           if (session.current && holdVoiceIsActive(session.current.snapshot) && !current.current.disabled) { setLeaving(false); setChoicesOpen(true); }
         }}/> : null}
-        {props.appearance !== 'composer' || gesture !== 'hold' || choicesOpen ? <span data-bb-chat-ui-voice-stop-symbol="" aria-hidden="true"><Icon name="Square" className="size-3.5 fill-current [&_*]:stroke-0"/></span> : null}
+        {props.appearance !== 'composer' || (choicesOpen && !busy) ? <span data-bb-chat-ui-voice-stop-symbol="" aria-hidden="true"><Icon name="Square" className="size-3.5 fill-current [&_*]:stroke-0"/></span> : null}
       </> : <Icon name="Mic" className="size-4"/>}
     </Button>
     {active ? <Button type="button" size="icon" variant="default" data-bb-chat-ui-voice-send="" aria-label="음성 내용 전송" aria-busy={busy}

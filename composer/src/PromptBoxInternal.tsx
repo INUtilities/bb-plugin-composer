@@ -1253,17 +1253,10 @@ export function PromptBoxInternal({
   const [fluidVoiceState, setFluidVoiceState] = useState(IDLE_HOLD_VOICE);
   const [fluidVoicePreview, setFluidVoicePreview] = useState(EMPTY_VOICE_PREVIEW);
   const [fluidVoiceStream, setFluidVoiceStream] = useState<MediaStream | null>(null);
-  const [fluidVoiceGesture, setFluidVoiceGesture] = useState<'hold' | 'toggle'>('toggle');
-  const fluidVoiceScroll = useRef<HTMLDivElement>(null);
   const [fluidOptionsOpen, setFluidOptionsOpen] = useState(false);
-  // i로 열린 메타정보만 닫는다.
   const fluidPluginSelection = useRef<{ scope: string; key: string; selection: ExperimentalComposerMenuSelection } | null>(null);
   const fluidVoiceActive = fluid && holdVoiceIsActive(fluidVoiceState);
-  const fluidVoiceBars = fluidVoiceGesture === 'toggle' && fluidVoiceState.phase === 'recording';
-  useLayoutEffect(() => {
-    const scroll = fluidVoiceScroll.current;
-    if (fluidVoiceActive && scroll) scroll.scrollTop = scroll.scrollHeight;
-  }, [fluidVoiceActive, fluidVoicePreview.text]);
+  const fluidVoiceWave = fluidVoiceActive && fluidVoiceState.phase !== 'ready' && fluidVoiceState.phase !== 'error';
   const isVoiceRecording = voice?.state === "recording";
   const isVoiceProcessing = voice?.state === "transcribing";
   const showVoiceActionGroup = isVoiceRecording || isVoiceProcessing;
@@ -3421,6 +3414,7 @@ export function PromptBoxInternal({
   };
   if (fluid) return (
     <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-composer-device={device} data-bb-chat-ui-fluid-view="input" data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
+      data-bb-chat-ui-fluid-voice-only={fluidVoiceActive || undefined}
       onSubmit={handleSubmit} onKeyDown={event => {
         if (fluidOptionsOpen && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeFluidOptions(); }
         else handleComposerMenuKeyDown(event.nativeEvent);
@@ -3434,19 +3428,19 @@ export function PromptBoxInternal({
         onOpen={() => { dismissComposerMenu(); setFluidOptionsOpen(false); if (promptActionFocusFrameRef.current !== null) { cancelAnimationFrame(promptActionFocusFrameRef.current); promptActionFocusFrameRef.current = null; } blurPromptEditor(editorRef.current); }}
         onError={renderer.showError}>
       {picker => <>
-      {picker.modeToggle ? <FluidComposerToolbar hidden={fluidVoiceActive} inactive={picker.open}>
+      {picker.modeToggle ? <FluidComposerToolbar hidden={voiceInteractionActive} inactive={picker.open}>
         {picker.modeToggle}
       </FluidComposerToolbar> : null}
       <FluidComposerBody
-        phone={device === 'phone'}
+        phone={device === 'phone'} voiceMode={voiceInteractionActive}
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
-        decoration={fluidVoiceActive ? <FluidVoiceWaveform appearance="glow" indicator={fluidVoiceGesture === 'hold' ? 'orb' : fluidVoiceBars ? 'bars' : undefined} stream={fluidVoiceStream} exiting={fluidVoiceState.phase !== "starting" && fluidVoiceState.phase !== "recording"}/> : null}
-        draftText={fluidVoiceActive ? fluidVoicePreview.text : value} draftEditVersion={draftEditVersion.current} editorReady={editor !== null}
+        decoration={fluidVoiceWave ? <FluidVoiceWaveform appearance="glow" indicator="bars" stream={fluidVoiceStream}/> : null}
+        draftText={value} draftEditVersion={draftEditVersion.current} editorReady={editor !== null}
         toggle={<FluidComposerToggle open={fluidOptionsOpen}
           disabled={composerInputLocked || isSubmitting || showVoiceActionGroup || fluidVoiceActive || picker.open}
           onClick={() => { if (fluidOptionsOpen) closeFluidOptions(); else openFluidOptions(); }}/>}
         panelOpen={fluidOptionsOpen}
-        discardPanel={picker.open || fluidVoiceActive}
+        discardPanel={picker.open || voiceInteractionActive}
         panel={<FluidOptionsPanel active={fluidOptionsOpen} actions={promptActions} plugins={contributions}
           onClose={closeFluidOptions}
           onPluginSelected={selection => { fluidPluginSelection.current = { scope: composerScopeKey, key: composerKey, selection }; setFluidOptionsOpen(false); }}
@@ -3455,15 +3449,8 @@ export function PromptBoxInternal({
           />}
         auxiliary={<>{handoff}{voice && voice.failedRecordings.length > 0 ? <FailedVoiceRecordings className="px-2 pt-2" recordings={voice.failedRecordings} retryDisabled={false} onRetry={voice.retry} onDownload={voice.download} onDiscard={voice.discard} /> : null}</>}
         editor={<div data-bb-chat-ui-voice-editor="" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
-          {fluidVoiceBars ? <div data-bb-chat-ui-voice-bars-space="" data-has-preview={!!fluidVoicePreview.text} aria-hidden="true"/> : null}
-          {fluidVoiceActive || (fluidVoiceState.error && !hasSubmittableInput) ? <div ref={fluidVoiceScroll} data-promptbox-editor-scroll="" role="status" aria-live="polite">
-            <div data-bb-chat-ui-voice-transcript="" hidden={fluidVoiceBars && !fluidVoicePreview.text} data-placeholder={!fluidVoicePreview.text || undefined}><p>{fluidVoicePreview.text ||
-              (fluidVoiceState.error ?? (fluidVoiceState.phase === 'starting' ? '마이크 준비 중…' : fluidVoiceState.phase === 'recording'
-                ? fluidVoicePreview.available ? '말씀해 주세요…' : '듣는 중…'
-                : fluidVoiceState.phase === 'transcribing' ? '음성을 변환하고 있습니다…' : '중지 또는 전송'))}</p>
-              {fluidVoiceState.error && fluidVoicePreview.text ? <p data-bb-chat-ui-voice-error="">{fluidVoiceState.error}</p> : null}
-            </div>
-            {fluidVoiceBars && !fluidVoicePreview.text ? <span className="sr-only">듣는 중…</span> : null}
+          {fluidVoiceState.error && !hasSubmittableInput ? <div data-promptbox-editor-scroll="" role="status" aria-live="polite">
+            <p data-bb-chat-ui-voice-error="">{fluidVoiceState.error}</p>
           </div> : null}
           <div hidden={fluidVoiceActive || (!!fluidVoiceState.error && !hasSubmittableInput)} inert={fluidVoiceActive || undefined} aria-hidden={fluidVoiceActive || undefined}>
             <ComposerEditorSlot editor={editor} scrollContainerRef={editorScrollContainerRef} inputLocked={composerInputLocked || fluidVoiceActive}
@@ -3475,7 +3462,7 @@ export function PromptBoxInternal({
           {picker.enabled && !voiceInteractionActive ? picker.trigger : null}
           <div data-bb-chat-ui-slot-submit="">
           <div data-promptbox-submit-group="" className="flex shrink-0 flex-row items-center" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
-            <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream} onGestureChange={setFluidVoiceGesture}
+            <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream}
               disabled={!voice?.isSupported || isSubmitting || composerInputLocked || showVoiceActionGroup}
               sendDisabled={submitDisabled || isSubmitting || isAttaching || composerInputLocked}
               sendIcon={submitIcon}
@@ -3503,6 +3490,10 @@ export function PromptBoxInternal({
         voice={voice && showVoiceActionGroup ? <VoiceRecordingBar isCompact state={renderedVoiceActionState} delivery={voice.delivery} stream={voice.stream}
           microphoneWarning={voice.microphoneWarning} submitIcon={submitIcon ?? "CornerDownLeft"} onConfirm={voice.stop} onSend={voice.send} onCancel={cancelVoiceInput} /> : undefined}
       />
+      {fluidVoiceActive ? <div className="sr-only" role="status" aria-live="polite">
+        {fluidVoiceState.error ?? (fluidVoicePreview.text || (fluidVoiceState.phase === 'starting' ? '마이크 준비 중…'
+          : fluidVoiceState.phase === 'transcribing' ? '음성을 변환하고 있습니다…' : fluidVoiceWave ? '듣는 중…' : '중지 또는 전송'))}
+      </div> : null}
       {picker.overlay}
       </>}
       </FluidComposerPicker>

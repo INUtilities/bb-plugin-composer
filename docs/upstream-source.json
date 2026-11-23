@@ -22,7 +22,8 @@
     "2026-11-11: WebKit이 지원하지 않는 overflow-clip-margin 의존을 fixed overlay로 대체하고 슬롯 다섯 행을 화면 안으로 배치했다. 여러 줄 commit에서 기존 높이 controller를 동기화해 ResizeObserver 전달 전의 목표 높이 지연을 줄였으며 기존 모션과 음성을 유지한다.",
     "2026-11-23: standalone restores project, worktree and context information below the input without tying their visibility to editor focus.",
     "2026-11-23: the thread footer keeps metadata, environment shortcuts, permissions, and agent modes below the input. This removes the standalone upper information toggle.",
-    "2026-11-23: use the BB-owned footer again. Only override CSS visibility in narrow panes; remove the standalone footer requests and controls."
+    "2026-11-23: use the BB-owned footer again. Only override CSS visibility in narrow panes; remove the standalone footer requests and controls.",
+    "2026-11-23: compact the active Fluid voice surface around the waveform, hide the native footer while recording and preserve the original editor and actions."
   ],
   "files": [
     {
@@ -49,7 +50,7 @@
     {
       "source": "composer/FluidComposer.voice.test.tsx",
       "destination": "composer/FluidComposer.voice.test.tsx",
-      "sha256": "d737ad106c9d92c491c2a3f71bc6365b78b0b14f2b0e76bb8099532860ff7486",
+      "sha256": "374cc1e37f28dd1981b6b700c3222470503228dff012413680a83584a64dfbcc",
       "sourceSha256": "f9647987eb8b3ddbca15526a71988c48d12815481780a7c99b5833c8194b0af7",
       "integrationOverlay": true
     },
@@ -89,14 +90,14 @@
     {
       "source": "composer/FluidVoiceControl.test.tsx",
       "destination": "composer/FluidVoiceControl.test.tsx",
-      "sha256": "83ab294e0964b63c8ef6e47682ae31a1c319c570f278c4d9de6ed4502bc263ac",
+      "sha256": "b44af9999c44ec9ba21e30133cbba63bdba49d61a0f2b608ba14e62021208b54",
       "sourceSha256": "e82224be383b7ace85549d4f4a7adc05dee7abc2a541ddb63acfe1172f5ca5d6",
       "integrationOverlay": true
     },
     {
       "source": "composer/FluidVoiceControl.tsx",
       "destination": "composer/FluidVoiceControl.tsx",
-      "sha256": "1ddd50bcd57059b27ed685530bd8e305c5dff1638dd591e6f21ea0ef1f5a8211",
+      "sha256": "4c24f695f8f4e8e2deeb8ee43d21a79cd65afccd65b0f96778949b9275cdf874",
       "sourceSha256": "2df3ae57c7599b51ba77a2a77bb1526fbdd6e872709d2d5a0d6334170df6500e",
       "integrationOverlay": true
     },
@@ -121,7 +122,7 @@
     {
       "source": "composer/README.md",
       "destination": "composer/README.md",
-      "sha256": "b6d4c31f6daf2fcc58718f7c57e73a2392adbcfbbd4a8a80462b4041f0292ad5",
+      "sha256": "f305ee0b5f93cb7e13efb893ec3dcefe7eac2df4990ca5db695b7661cbddad3e",
       "sourceSha256": "637b7e369898f141a27352a64bed550fc35a76426c852cc84dde4d36216090f2",
       "integrationOverlay": true
     },
@@ -296,7 +297,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "96a9dca1002fdb7b9f5ccbf1a18c3d45045f546211a8b304fe76929e329a4681",
+      "sha256": "29177d4e0d6c061d0efed9a90152e420efe6fa2e01459bd087a3090d5d8e16f0",
       "sourceSha256": "fa3b85470e5b81c2e16800a4136bb46d666987bba1a19c8112e8b021d0f51111",
       "integrationOverlay": true
     },
@@ -631,7 +632,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "bdcac965de848808d76938cf63602ac72243bc530e2ac01c574228333fa26e6c",
+      "sha256": "9604e75adc20f03cf31b8d42222e8a25b9ad42739081a5d5287b2632088c7686",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"
