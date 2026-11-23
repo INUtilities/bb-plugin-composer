@@ -49,17 +49,3 @@ it('keeps the input and attachments usable while the original information card o
   expect(f.card.hasAttribute('data-bb-chat-ui-info-open')).toBe(false);
   expect(f.mount.querySelector('textarea')).toBe(editor);
 });
-
-it('leaves the original native metadata card above the composer',async()=>{
-  const f=setup(), toggle=document.createElement('button'), footer=document.createElement('div');
-  toggle.setAttribute('data-bb-chat-ui-fluid-details-toggle','');footer.setAttribute('data-follow-up-composer-footer','');
-  footer.textContent='Project · Branch · Permission · Context';f.bar.append(toggle);f.shell.append(footer);
-  toggle.onclick=()=>{f.shell.toggleAttribute('data-bb-chat-ui-fluid-details-open');};
-  fireEvent.click(toggle);
-  await act(async()=>{});
-  expect(f.shell.hasAttribute('data-bb-chat-ui-fluid-details-open')).toBe(true);
-  expect(f.viewport.getAttribute('data-bb-chat-ui-fluid-view')).toBe('input');
-  expect(footer.parentElement).toBe(f.shell);
-  expect(footer.hasAttribute('data-bb-composer-info-surface')).toBe(false);
-  expect(f.mount.querySelector('textarea')!.closest('[inert]')).toBeNull();
-});

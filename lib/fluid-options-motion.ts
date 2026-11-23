@@ -2,8 +2,6 @@ import { dropletIn, EASE } from './motion.ts';
 
 const BARS='[data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]';
 export const FLUID_COMPOSER='[data-bb-chat-ui-fluid-composer]';
-export const FLUID_DETAILS_TOGGLE='[data-bb-chat-ui-fluid-details-toggle]';
-export const FLUID_FOOTER='[data-follow-up-composer-footer], [data-new-thread-footer]';
 const STEP=45, EXIT=200, ENTER=460;
 
 type PillFrame = {opacity:number;transform:string};
@@ -16,7 +14,7 @@ export function readFluidPillFrames(items:readonly HTMLElement[]) {
   }));
 }
 
-// 옵션과 메타정보에 같은 순차 페이드와 물방울 효과를 적용한다.
+// 상단 필과 옵션 사이에 순차 페이드와 물방울 효과를 적용한다.
 export function animateFluidPillSwap(leaving:readonly HTMLElement[], arriving:readonly HTMLElement[], resting:ReadonlyMap<Element,number>, previous:ReadonlyMap<Element,PillFrame>, restore:boolean) {
   const exits=leaving.flatMap((item,index) => {
     const opacity=previous.get(item)?.opacity ?? resting.get(item) ?? 1;
@@ -43,38 +41,31 @@ export function animateFluidPillSwap(leaving:readonly HTMLElement[], arriving:re
   return {exits,arrivals};
 }
 
-// 보이는 목록을 실제 i 버튼의 가운데 높이에 맞추고 메타정보의 인접 폭을 확보한다.
-export function bindFluidPillRow(row:HTMLElement, composer:HTMLElement, kind:'options'|'details') {
+// 컴포저 위에 정보 행이 있으면 옵션 목록을 같은 높이에 맞춘다.
+export function bindFluidPillRow(row:HTMLElement, composer:HTMLElement) {
   const shell=composer.closest('[data-promptbox-shell]') ?? composer;
   const view=row.ownerDocument.defaultView;
   let anchor:HTMLElement|null=null;
   const observer=view?.ResizeObserver ? new view.ResizeObserver(() => align()) : undefined;
-  // 공유 도구 행이 교체되면 새 i 버튼의 좌표와 크기를 사용한다.
+  // 표시 중인 정보 행의 가운데를 옵션 목록 배치에 사용한다.
   function align() {
-    const next=shell.querySelector<HTMLElement>(FLUID_DETAILS_TOGGLE);
+    const next=Array.from(shell.querySelectorAll<HTMLElement>(BARS))
+      .find(bar=>bar.getBoundingClientRect().height>0) ?? null;
     if (next!==anchor) {
       if (anchor) observer?.unobserve(anchor);
       anchor=next;
       if (anchor) observer?.observe(anchor);
     }
-    if (!anchor) return;
-    const button=anchor.getBoundingClientRect();
-    const toolbar=anchor.closest('[data-bb-chat-ui-slot-toolbar]')?.getBoundingClientRect();
-    const level=toolbar?.height ? toolbar : button;
-    const parent=row.offsetParent ?? (kind==='options' ? composer : shell);
+    if (!anchor) {
+      row.style.removeProperty('--bb-chat-ui-pill-row-center');
+      row.removeAttribute('data-bb-chat-ui-pill-row-positioned');
+      return;
+    }
+    const level=anchor.getBoundingClientRect();
+    const parent=row.offsetParent ?? composer;
     const frame=parent.getBoundingClientRect();
     row.style.setProperty('--bb-chat-ui-pill-row-center',(level.top+level.height/2-frame.top-parent.clientTop+parent.scrollTop)+'px');
     row.setAttribute('data-bb-chat-ui-pill-row-positioned','');
-    if (kind==='options') return;
-    const bounds=composer.getBoundingClientRect();
-    const buttonWidth=anchor.offsetWidth || button.width;
-    const buttonStart=button.left+(button.width-buttonWidth)/2, buttonEnd=buttonStart+buttonWidth;
-    const after=bounds.right-buttonEnd, before=buttonStart-bounds.left;
-    const startsAfter=after>=before;
-    const left=startsAfter ? buttonEnd+8 : bounds.left;
-    row.style.setProperty('--bb-chat-ui-pill-row-left',(left-frame.left-parent.clientLeft+parent.scrollLeft)+'px');
-    row.style.setProperty('--bb-chat-ui-pill-row-width',Math.max(0,(startsAfter ? after : before)-8)+'px');
-    row.toggleAttribute('data-bb-chat-ui-fluid-details-before',!startsAfter);
   }
   observer?.observe(composer);
   observer?.observe(shell);
@@ -85,20 +76,9 @@ export function bindFluidPillRow(row:HTMLElement, composer:HTMLElement, kind:'op
     observer?.disconnect();
     shell.removeEventListener('bb-chat-ui:composer-data',align);
     view?.removeEventListener('resize',align);
-    for (const key of ['center','left','width']) row.style.removeProperty('--bb-chat-ui-pill-row-'+key);
+    row.style.removeProperty('--bb-chat-ui-pill-row-center');
     row.removeAttribute('data-bb-chat-ui-pill-row-positioned');
-    row.removeAttribute('data-bb-chat-ui-fluid-details-before');
   };
-}
-
-// BB의 두 그룹과 데스크톱 후속 입력의 환경 그룹에서 기존 필을 순서대로 선택한다.
-export function fluidDetailPills(footer:HTMLElement) {
-  return Array.from(footer.children).flatMap(group => {
-    if (!group.matches('div')) return [group];
-    return Array.from(group.children).flatMap(item =>
-      footer.hasAttribute('data-follow-up-composer-footer') && group===footer.firstElementChild && item.matches('div')
-        ? Array.from(item.children) : [item]);
-  }).filter((item):item is HTMLElement => item instanceof HTMLElement && !item.closest('[hidden]') && getComputedStyle(item).display!=='none');
 }
 
 // 같은 컴포저의 표시 중인 필을 한 번씩, 화면의 DOM 순서로 고른다.

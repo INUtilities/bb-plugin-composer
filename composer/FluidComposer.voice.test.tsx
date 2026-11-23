@@ -47,10 +47,6 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
   const v=renderSlot({component:()=> <div data-promptbox-shell=""><PromptBoxInternal {...renderer.input} fluid/></div>},{},{composer:{scope:renderer.view.scope,...(blocked?{submittingBlockedReason:'offline'}:{})},composerRenderer:renderer,sdk:{system:{transcribeVoice:transcribe}}});
   await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
   const originalEditor=v.container.querySelector('.ProseMirror');
-  const details=screen.getByRole('button',{name:'정보와 설정'});
-  fireEvent.click(details);
-  const shell=v.container.querySelector('[data-promptbox-shell]')!;
-  expect(shell.hasAttribute('data-bb-chat-ui-fluid-details-open')).toBe(true);
   const mic=screen.getByRole('button',{name:'음성모드 시작'});
   if(held)fireEvent.pointerDown(mic,{button:0});else fireEvent.click(mic,{detail:1});
   await waitFor(()=>expect(mic.getAttribute('aria-pressed')).toBe('true'));
@@ -59,9 +55,7 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
   expect(v.container.querySelector('[data-bb-chat-ui-voice-glow]')).toBeTruthy();
   if(held){expect(v.container.querySelector('[data-bb-chat-ui-voice-orbit]')).toBeTruthy();expect(mic.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();}
   else expect(v.container.querySelectorAll('[data-bb-chat-ui-voice-bar]').length).toBeGreaterThan(7);
-  expect(shell.hasAttribute('data-bb-chat-ui-fluid-details-open')).toBe(false);
   expect(screen.queryByRole('button',{name:'모델과 Effort 설정'})).toBeNull();
-  expect(screen.queryByRole('button',{name:'정보와 설정'})).toBeNull();
   expect((screen.getByRole('button',{name:'Prompt actions'}) as HTMLButtonElement).disabled).toBe(true);
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-editor]')!.hasAttribute('hidden')).toBe(false);
   act(()=>Speech.instances[0].onresult!({results:[{0:{transcript:'말하면서 보는 내용'}}]}));
@@ -87,8 +81,6 @@ for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false
   expect(screen.queryByText('말하면서 보는 내용')).toBeNull();
   expect(v.container.querySelector('.ProseMirror')).toBe(originalEditor);
   expect(v.container.querySelector('[data-bb-chat-ui-fluid-composer]')!.hasAttribute('data-bb-chat-ui-fluid-voice-only')).toBe(false);
-  expect(screen.getByRole('button',{name:'정보와 설정'})).toBe(details);
-  expect(shell.hasAttribute('data-bb-chat-ui-fluid-details-open')).toBe(true);
   if(send&&!blocked){
    await waitFor(()=>expect(screen.getByRole('button',{name:'음성모드 시작'})).toBeTruthy());
    expect(originalEditor!.textContent).toBe('');

@@ -9,8 +9,8 @@ export const fluidPickerCss=`
 [data-bb-chat-ui-slot-toolbar][hidden] { display:none !important; }
 /* 슬롯은 fixed overlay에 그려 promptbox shell의 높이를 바꾸지 않는다. */
 [data-promptbox-shell][data-bb-chat-ui-slot-picker-open="true"] :is([data-bb-chat-ui-info-bar],[data-bb-chat-ui-slot-toolbar]) { opacity:0; pointer-events:none; transition:opacity 160ms ${EASE.exit}; }
-[data-bb-chat-ui-slot-mode], [data-bb-chat-ui-slot-toolbar] > [data-bb-chat-ui-fluid-details-toggle] { ${pillStyle.navigation} min-height:32px; color:var(--foreground); background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); box-shadow:0 6px 18px -12px color-mix(in oklab,var(--foreground) 22%,transparent),inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
-.dark [data-bb-chat-ui-slot-mode], .dark [data-bb-chat-ui-slot-toolbar] > [data-bb-chat-ui-fluid-details-toggle] { background:${DARK_GLASS_FACE}; }
+[data-bb-chat-ui-slot-mode] { ${pillStyle.navigation} min-height:32px; color:var(--foreground); background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); box-shadow:0 6px 18px -12px color-mix(in oklab,var(--foreground) 22%,transparent),inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
+.dark [data-bb-chat-ui-slot-mode] { background:${DARK_GLASS_FACE}; }
 [data-bb-chat-ui-slot-mode][aria-pressed="true"] { color:var(--foreground); }
 [data-bb-chat-ui-slot-mode] > span { font-size:inherit; opacity:.72; }
 html[data-bb-chat-ui-root-device="phone"] [data-bb-chat-ui-slot-mode] { min-height:32px; font-size:13px; }
