@@ -655,14 +655,14 @@
     {
       "source": "lib/fluid-composer-layout.ts",
       "destination": "lib/fluid-composer-layout.ts",
-      "sha256": "5b862d51021c0e427cde43c640d00e485693cd1862c98114e1b54628339547e3",
+      "sha256": "d4d5f46e81d2bc6810c3baa5ce839a7f6913658e0a6fb824f62fb3d228912c96",
       "sourceSha256": "065d1def4969ea45feba69a0ed13f702026ef041d92ba60753a95c7af12822b7",
       "integrationOverlay": true
     },
     {
       "source": "lib/fluid-composer-layout.test.ts",
       "destination": "lib/fluid-composer-layout.test.ts",
-      "sha256": "18dc4eae2605748aebc56859471cd93b475fe64647487cd69b9b2c4a6e13ec05",
+      "sha256": "6b35394a4a33e63aead0e8b34ba9858057a50bec92dd98ccfe63b2314f56afc8",
       "sourceSha256": "18dc4eae2605748aebc56859471cd93b475fe64647487cd69b9b2c4a6e13ec05"
     },
     {

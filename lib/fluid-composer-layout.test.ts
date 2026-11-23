@@ -25,6 +25,14 @@ test('viewport width and the actual send-action width participate in compact fit
  }finally{f.dom.window.close();}
 });
 
+// 1px 미만의 초과도 실제 좁은 편집 열에서 줄바꿈을 일으킨다.
+test('keeps the expanded layout when the line exceeds the compact width by a fraction of a pixel',()=>{
+ const f=fixture();try{
+  f.text(254);assert.equal(f.probe(),false);
+  f.text(254.3125);assert.equal(f.probe(),true);
+ }finally{f.dom.window.close();}
+});
+
 // 이름을 다시 접을 때는 아이콘 폭으로 복귀하고 직접 입력한 줄바꿈은 유지한다.
 test('uses the collapsed effort width after a preview without losing explicit newlines',()=>{
  const f=fixture();try{
