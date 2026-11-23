@@ -36,7 +36,7 @@ afterEach(()=>{cleanup();removeStyles();vi.restoreAllMocks();vi.unstubAllGlobals
 
 for(const [label,send,blocked,held]of [['음성 입력 중지',false,false,false],['음성 내용 전송',true,false,false],['음성 내용 전송',true,true,false],['음성 입력 중지',false,false,true]]as const){
  it(`the real editor ${held?'held release inserts without sending':`${label} ${blocked?'retains a rejected send':'clears only an accepted send'}`}`,async()=>{
-  const clock=held?vi.spyOn(performance,'now').mockReturnValue(1000):null;
+  const clock=held?vi.spyOn(Date,'now').mockReturnValue(1000):null;
   const run=vi.fn(),transcribe=vi.fn(async()=>({text:'실제 입력 엔진 검수'}));
   const renderer:ExperimentalComposerRendererApi={
    key:'voice-test',inputLocked:false,focusComposerShortcut:null,decorationSources:[],

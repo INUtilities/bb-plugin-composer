@@ -125,7 +125,7 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
         ignorePointerClick.current = false;
         if (props.appearance !== 'composer' || props.disabled || busy || !session.current || holdVoiceIsActive(session.current.snapshot)) return;
         event.preventDefault();
-        press.current = { pointerId: event.pointerId, at: event.currentTarget.ownerDocument.defaultView!.performance.now(), button: event.currentTarget };
+        press.current = { pointerId: event.pointerId, at: event.timeStamp, button: event.currentTarget };
         ignorePointerClick.current = true;
         try { event.currentTarget.setPointerCapture?.(event.pointerId); } catch { /* capture 미지원과 합성 입력도 기본 동작을 유지한다. */ }
         start('hold');
@@ -133,7 +133,7 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
       onPointerUp={event => {
         if (press.current?.pointerId !== event.pointerId) return;
         const held = releasePress()!;
-        if (event.currentTarget.ownerDocument.defaultView!.performance.now() - held.at < HOLD_TO_TRANSCRIBE_MS) {
+        if (event.timeStamp - held.at < HOLD_TO_TRANSCRIBE_MS) {
           setGesture('toggle'); current.current.onGestureChange?.('toggle'); return;
         }
         if (session.current?.snapshot.phase === 'starting') cancel();

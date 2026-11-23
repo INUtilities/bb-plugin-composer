@@ -50,7 +50,7 @@
     {
       "source": "composer/FluidComposer.voice.test.tsx",
       "destination": "composer/FluidComposer.voice.test.tsx",
-      "sha256": "374cc1e37f28dd1981b6b700c3222470503228dff012413680a83584a64dfbcc",
+      "sha256": "9f246576a5268038d27a16ccd21fa889bdf6ec3e48f670be36d34a7d048f312f",
       "sourceSha256": "f9647987eb8b3ddbca15526a71988c48d12815481780a7c99b5833c8194b0af7",
       "integrationOverlay": true
     },
@@ -90,14 +90,14 @@
     {
       "source": "composer/FluidVoiceControl.test.tsx",
       "destination": "composer/FluidVoiceControl.test.tsx",
-      "sha256": "b44af9999c44ec9ba21e30133cbba63bdba49d61a0f2b608ba14e62021208b54",
+      "sha256": "2aeb77d6a93a88a46982a53fb2bcfcf75215f9af8f49c3fd1b080025f9ad4773",
       "sourceSha256": "e82224be383b7ace85549d4f4a7adc05dee7abc2a541ddb63acfe1172f5ca5d6",
       "integrationOverlay": true
     },
     {
       "source": "composer/FluidVoiceControl.tsx",
       "destination": "composer/FluidVoiceControl.tsx",
-      "sha256": "4c24f695f8f4e8e2deeb8ee43d21a79cd65afccd65b0f96778949b9275cdf874",
+      "sha256": "2f36530e38629725b5d936fb7a8a91211482b6ff25ebc413bcbd5b3ba1e8cbae",
       "sourceSha256": "2df3ae57c7599b51ba77a2a77bb1526fbdd6e872709d2d5a0d6334170df6500e",
       "integrationOverlay": true
     },

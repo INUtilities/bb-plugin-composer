@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { StrictMode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { FluidVoiceControl, type FluidVoiceControlProps } from './FluidVoiceControl';
 import { injectSendHaptic } from '../lib/send-haptic';
 
@@ -49,12 +49,17 @@ it('starts voice mode on click and stops recording on the next tap before any co
  expect(p.transcribe).not.toHaveBeenCalled();expect(capture).toHaveBeenCalledOnce();
 });
 it('keeps the normal microphone and the draft send fallback',()=>{const p=props(),v=render(<FluidVoiceControl {...p}/>);expect(screen.queryByText('초안 전송')).toBeNull();v.rerender(<FluidVoiceControl {...p} showFallback/>);expect(screen.getByText('초안 전송')).toBeTruthy();});
-it('keeps the recording button clear through a short tap and shows the stop symbol after recording',async()=>{
+it('keeps a short tap latched when the UI handles release late and shows the stop symbol after recording',async()=>{
  const clock=vi.spyOn(performance,'now').mockReturnValue(1000),gesture=vi.fn();render(<FluidVoiceControl {...props()} appearance="composer" onGestureChange={gesture}/>);
- const button=screen.getByRole('button',{name:'음성모드 시작'});down(button);await waitFor(()=>expect(Recorder.instances).toHaveLength(1));
+ const button=screen.getByRole('button',{name:'음성모드 시작'});
+ const press=createEvent.pointerDown(button,{button:0,pointerId:7});
+ const release=createEvent.pointerUp(button,{button:0,pointerId:7});
+ Object.defineProperty(press,'timeStamp',{value:1000});
+ Object.defineProperty(release,'timeStamp',{value:1080});
+ fireEvent(button,press);await waitFor(()=>expect(Recorder.instances).toHaveLength(1));
  expect(gesture).toHaveBeenLastCalledWith('hold');expect(button.closest('[data-bb-chat-ui-voice-actions]')?.getAttribute('data-gesture')).toBe('hold');
  expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();
- clock.mockReturnValue(1080);up(button);fireEvent.click(button,{detail:1});
+ clock.mockReturnValue(1800);fireEvent(button,release);fireEvent.click(button,{detail:1});
  expect(gesture).toHaveBeenLastCalledWith('toggle');expect(button.closest('[data-bb-chat-ui-voice-actions]')?.getAttribute('data-gesture')).toBe('toggle');
  expect(button.querySelector('[data-bb-chat-ui-voice-stop-symbol]')).toBeNull();expect(tracks[0].stop).not.toHaveBeenCalled();
  await split(button);
@@ -63,7 +68,7 @@ it('keeps the recording button clear through a short tap and shows the stop symb
 for(const held of [true,false])it(`pulses once on the real ${held?'hold':'tap'} activation without a following click duplicate`,async()=>{
  document.documentElement.setAttribute('data-bb-chat-ui-root-device','phone');const post=vi.fn();Object.assign(window,{bb:{native:{capabilities:['haptic'],post}}});const dispose=injectSendHaptic(document);
  try{
-  const clock=vi.spyOn(performance,'now').mockReturnValue(1000),p=props();render(<form data-bb-chat-ui-fluid-composer=""><FluidVoiceControl {...p} appearance="composer"/></form>);
+  const clock=vi.spyOn(Date,'now').mockReturnValue(1000),p=props();render(<form data-bb-chat-ui-fluid-composer=""><FluidVoiceControl {...p} appearance="composer"/></form>);
   const button=screen.getByRole('button',{name:'음성모드 시작'});down(button);expect(post).toHaveBeenCalledExactlyOnceWith({type:'haptic',kind:'selection'});
   await waitFor(()=>expect(Recorder.instances).toHaveLength(1));clock.mockReturnValue(held?1800:1080);up(button);fireEvent.click(button,{detail:1});
   if(held){await waitFor(()=>expect(p.deliver).toHaveBeenCalledWith('변환된 초안','insert'));expect(post).toHaveBeenCalledTimes(2);}
@@ -71,7 +76,7 @@ for(const held of [true,false])it(`pulses once on the real ${held?'hold':'tap'} 
  }finally{dispose();}
 });
 it('captures immediately, latches a short tap, and stops on the next deliberate tap',async()=>{
- const clock=vi.spyOn(performance,'now').mockReturnValue(1000),p=props();render(<FluidVoiceControl {...p} appearance="composer"/>);
+ const clock=vi.spyOn(Date,'now').mockReturnValue(1000),p=props();render(<FluidVoiceControl {...p} appearance="composer"/>);
  const button=screen.getByRole('button',{name:'음성모드 시작'});down(button);
  expect(capture).toHaveBeenCalledOnce();await waitFor(()=>expect(Recorder.instances).toHaveLength(1));
  clock.mockReturnValue(1080);up(button);fireEvent.click(button,{detail:1});
@@ -81,7 +86,7 @@ it('captures immediately, latches a short tap, and stops on the next deliberate 
  expect(tracks[0].stop).toHaveBeenCalledOnce();expect(capture).toHaveBeenCalledOnce();expect(p.transcribe).not.toHaveBeenCalled();
 });
 it('stops a held recording on release and transcribes exactly once after the final audio data',async()=>{
- Recorder.autoFinish=false;const clock=vi.spyOn(performance,'now').mockReturnValue(1000),p=props();render(<FluidVoiceControl {...p} appearance="composer"/>);
+ Recorder.autoFinish=false;const clock=vi.spyOn(Date,'now').mockReturnValue(1000),p=props();render(<FluidVoiceControl {...p} appearance="composer"/>);
  const button=screen.getByRole('button',{name:'음성모드 시작'});down(button);await waitFor(()=>expect(Recorder.instances).toHaveLength(1));
  clock.mockReturnValue(1800);up(button);fireEvent.click(button,{detail:1});
  expect(tracks[0].stop).toHaveBeenCalledOnce();expect(p.transcribe).not.toHaveBeenCalled();
@@ -91,7 +96,7 @@ it('stops a held recording on release and transcribes exactly once after the fin
 });
 it('cancels a released hold while permission is pending and discards the late stream',async()=>{
  let resolve!:(stream:MediaStream)=>void;capture.mockImplementation(()=>new Promise<MediaStream>(r=>{resolve=r;}));
- const clock=vi.spyOn(performance,'now').mockReturnValue(1000),p=props();render(<FluidVoiceControl {...p} appearance="composer"/>);
+ const clock=vi.spyOn(Date,'now').mockReturnValue(1000),p=props();render(<FluidVoiceControl {...p} appearance="composer"/>);
  const button=screen.getByRole('button',{name:'음성모드 시작'});down(button);expect(capture).toHaveBeenCalledOnce();
  clock.mockReturnValue(1800);up(button);fireEvent.click(button,{detail:1});
  await act(async()=>resolve({getTracks:()=>tracks} as unknown as MediaStream));
@@ -99,7 +104,7 @@ it('cancels a released hold while permission is pending and discards the late st
  expect(button.getAttribute('aria-pressed')).toBe('false');
 });
 it('offers the existing Stop and Send recovery when automatic hold transcription fails',async()=>{
- const clock=vi.spyOn(performance,'now').mockReturnValue(1000),transcribe=vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce('재시도한 초안'),p=props({transcribe});
+ const clock=vi.spyOn(Date,'now').mockReturnValue(1000),transcribe=vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce('재시도한 초안'),p=props({transcribe});
  render(<FluidVoiceControl {...p} appearance="composer"/>);const button=screen.getByRole('button',{name:'음성모드 시작'});
  down(button);await waitFor(()=>expect(Recorder.instances).toHaveLength(1));clock.mockReturnValue(1800);up(button);fireEvent.click(button,{detail:1});
  await screen.findByRole('alert');expect(screen.getByRole('button',{name:'음성 입력 중지'})).toBeTruthy();expect(p.deliver).not.toHaveBeenCalled();
@@ -220,7 +225,7 @@ it('returns to a usable microphone if stopping fails instead of leaving a broken
 
 // 전사가 즉시 끝나 마이크가 전송 버튼으로 바뀌어도 같은 손뗌의 호환 click은 전송하지 않는다.
 for(const nextPress of [false,true])it(`guards a retargeted hold-release click and ${nextPress?'allows the next intentional pointer press':'allows a later keyboard activation'}`,async()=>{
- const clock=vi.spyOn(performance,'now').mockReturnValue(1000),send=vi.fn(),p=props();
+ const clock=vi.spyOn(Date,'now').mockReturnValue(1000),send=vi.fn(),p=props();
  const v=render(<form><FluidVoiceControl {...p} appearance="composer" fallback={<button type="button" onClick={send}>초안 전송</button>}/></form>);
  const mic=screen.getByRole('button',{name:'음성모드 시작'});down(mic);await waitFor(()=>expect(Recorder.instances).toHaveLength(1));
  clock.mockReturnValue(1800);up(mic);await waitFor(()=>expect(p.deliver).toHaveBeenCalledWith('변환된 초안','insert'));
