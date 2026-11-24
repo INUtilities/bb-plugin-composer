@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderSlot } from '@get-bb/plugin-sdk/testing/app';
 import type { ExperimentalComposerRendererApi } from '@get-bb/plugin-sdk/app';
 import { PromptBoxInternal } from './src/PromptBoxInternal';
@@ -28,6 +29,37 @@ function mount(nativeFooter=false){
  const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
  return{v,renderer,run,TestComposer};
 }
+it('keeps the native footer visible for a blank phone thread without focusing its editor', async () => {
+ vi.stubGlobal('matchMedia', (media: string) => ({
+  media, matches: media === '(hover: none)' || media === '(pointer: coarse)',
+  addEventListener() {}, removeEventListener() {},
+ }));
+ const {v, renderer}=mount();
+ function PhoneThread() {
+  const [expanded, setExpanded]=useState(false);
+  return <div data-promptbox-shell="">
+   <div data-follow-up-composer="" onFocusCapture={() => setExpanded(true)} onBlurCapture={() => setExpanded(false)}>
+    <PromptBoxInternal {...renderer.input} compact={expanded ? undefined : {when:'always',placeholder:'Reply'}} fluid/>
+    {expanded && <div data-follow-up-composer-footer=""><button type="button">Native permission</button></div>}
+   </div>
+   <button type="button">Outside composer</button>
+  </div>;
+ }
+ try {
+  await v.setComposerText('');
+  v.rerender(<PhoneThread/>);
+  const editor = await screen.findByRole('textbox');
+  expect(editor.closest('form')?.getAttribute('data-bb-composer-device')).toBe('phone');
+  expect(await screen.findByRole('button',{name:'Native permission'})).toBeTruthy();
+  expect(document.activeElement).not.toBe(editor);
+  const outside = screen.getByRole('button',{name:'Outside composer'});
+  act(() => {editor.focus(); outside.focus();});
+  expect(await screen.findByRole('button',{name:'Native permission'})).toBeTruthy();
+  expect(document.activeElement).toBe(outside);
+  expect(v.inspection.composer.text).toBe('');
+ } finally {v.unmount();}
+});
+
 it.each(['send', 'queue', 'steer'] as const)('keeps the paper-plane glyph while dispatching %s', async kind => {
  const {v, renderer, run, TestComposer}=mount();
  try {

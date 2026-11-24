@@ -22,7 +22,8 @@
     "2026-11-11: WebKit이 지원하지 않는 overflow-clip-margin 의존을 fixed overlay로 대체하고 슬롯 다섯 행을 화면 안으로 배치했다. 여러 줄 commit에서 기존 높이 controller를 동기화해 ResizeObserver 전달 전의 목표 높이 지연을 줄였으며 기존 모션과 음성을 유지한다.",
     "2026-11-23: Composer PR #4 adds the 41-bar waveform, detached stop for tap recording, and transcript insertion for tap and hold. The left-side information row and subpixel IME fit stay in place.",
     "2026-11-24: Composer restores the original BB footer for thread information and permissions from PR #4. Fluid keeps the existing Chat UI info row and model/Effort labels.",
-    "2026-11-24: Fluid uses the paper-plane glyph for send, queue and steer, while BB keeps their separate actions. Voice mode animates its screen position and fades the waveform as native footer visibility changes."
+    "2026-11-24: Fluid uses the paper-plane glyph for send, queue and steer, while BB keeps their separate actions. Voice mode animates its screen position and fades the waveform as native footer visibility changes.",
+    "2026-11-24: The empty phone follow-up composer requests the host footer without moving focus. The BB footer remains visible after focus leaves."
   ],
   "files": [
     {
@@ -35,7 +36,7 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "61d13f08e1e2541eecddbbb4da7960d633068e938379a79b3530d30c3b4496ba",
+      "sha256": "21a0bd9677ffc75b7cbc1f0c967cd55e4871fb7810ee30f49f060f27b10c1848",
       "sourceSha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6",
       "integrationOverlay": true
     },
@@ -299,7 +300,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "1882941f38867042b793da59c7c2b514dc13c959513c3ac610624f453f814f4e",
+      "sha256": "7b1e377a87149de573b2a980525f96df7140306fbbb627f7b5430f66bb1b4717",
       "sourceSha256": "fa3b85470e5b81c2e16800a4136bb46d666987bba1a19c8112e8b021d0f51111",
       "integrationOverlay": true
     },

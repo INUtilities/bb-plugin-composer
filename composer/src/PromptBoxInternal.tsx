@@ -1411,6 +1411,15 @@ export function PromptBoxInternal({
   const composerLayout = showCompactLayout ? "compact" : "expanded";
   const composerView = renderer.view;
   const composerScopeKey = JSON.stringify(composerView.scope);
+  useLayoutEffect(() => {
+    if (!fluid || device !== "phone" || composerView.scope.kind !== "thread" || compactWhen !== "always") return;
+    const form = formRef.current;
+    const owner = form?.closest<HTMLElement>("[data-follow-up-composer]");
+    const win = form?.ownerDocument.defaultView;
+    if (!form || !owner || owner.hidden || !win || owner.querySelector("[data-follow-up-composer-footer]")) return;
+    // BB는 모바일에서 접힌 하단을 렌더링하지 않는다. 입력 포커스 없이 호스트의 펼침만 요청한다.
+    form.dispatchEvent(new win.FocusEvent("focusin", { bubbles: true }));
+  }, [compactWhen, composerScopeKey, composerView.scope.kind, device, fluid]);
   const voicePosition = useRef<{ scope: string; top: number } | null>(null);
   const lastVoiceLayout = useRef({ scope: composerScopeKey, active: false });
   const updateFluidVoice = useCallback((next: HoldVoiceSnapshot) => {
