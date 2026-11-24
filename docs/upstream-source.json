@@ -115,8 +115,9 @@
     {
       "source": "composer/FluidVoiceWaveform.tsx",
       "destination": "composer/FluidVoiceWaveform.tsx",
-      "sha256": "6754a3bea69d15c6b3c324ed8420564b7a07ec597cb136c1e6fb46013ec8d391",
-      "sourceSha256": "6754a3bea69d15c6b3c324ed8420564b7a07ec597cb136c1e6fb46013ec8d391"
+      "sha256": "f0fc54edfd48fa4a6c219c9602830ab26f5ea609e81016fbc382feb94f458027",
+      "sourceSha256": "6754a3bea69d15c6b3c324ed8420564b7a07ec597cb136c1e6fb46013ec8d391",
+      "integrationOverlay": true
     },
     {
       "source": "composer/LICENSE",

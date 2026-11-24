@@ -1,10 +1,10 @@
-import { useId, useLayoutEffect, useRef } from 'react';
+import { memo, useId, useLayoutEffect, useRef } from 'react';
 import { createVoiceOrb, VOICE_ORBIT_RINGS, type VoiceOrbRenderer } from './voice-orb-renderer';
 import { createVoiceGlow } from './voice-glow-renderer';
 import { createVoiceBars, VOICE_BAR_COUNT } from './voice-bars-renderer';
 
 /** 같은 음량 분석으로 레퍼런스 구 또는 컴포저 하단 glow를 그린다. 원본 track은 session이 소유한다. */
-export function FluidVoiceWaveform({ stream, exiting = false, onExited, appearance = 'orb', indicator }: { stream: MediaStream | null; exiting?: boolean; onExited?(): void; appearance?: 'orb' | 'glow'; indicator?: 'orb' | 'bars' }) {
+export const FluidVoiceWaveform = memo(function FluidVoiceWaveform({ stream, exiting = false, onExited, appearance = 'orb', indicator }: { stream: MediaStream | null; exiting?: boolean; onExited?(): void; appearance?: 'orb' | 'glow'; indicator?: 'orb' | 'bars' }) {
   const root = useRef<HTMLSpanElement>(null), glow = useRef<HTMLSpanElement>(null), svg = useRef<SVGSVGElement>(null);
   const renderers = useRef<VoiceOrbRenderer[]>([]);
   const exited = useRef(onExited); exited.current = onExited;
@@ -86,13 +86,13 @@ export function FluidVoiceWaveform({ stream, exiting = false, onExited, appearan
     } catch { cleanup(); }
     return cleanup;
   }, [stream, appearance]);
-  const sphere = <svg ref={svg} viewBox="0 0 80 80" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth=".7">
+  const sphere = appearance === 'orb' || indicator === 'orb' ? <svg ref={svg} viewBox="0 0 80 80" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth=".7">
       <defs>{Array.from({ length: VOICE_ORBIT_RINGS }, (_, ring) =>
         <linearGradient key={ring} id={`${depthId}-${ring}`} data-bb-chat-ui-voice-depth="" gradientUnits="userSpaceOnUse" x1="-1" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="currentColor"/><stop offset="1" stopColor="currentColor"/>
         </linearGradient>)}</defs>
       {Array.from({ length: VOICE_ORBIT_RINGS }, (_, ring) => <path key={ring} data-bb-chat-ui-voice-ring="" stroke={`url(#${depthId}-${ring})`} vectorEffect="non-scaling-stroke" />)}
-    </svg>;
+    </svg> : null;
   return <span ref={root} data-bb-chat-ui-voice-waveform={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-orb={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-orbit={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-visual={appearance === 'glow' ? indicator ?? 'glow' : undefined} aria-hidden="true">
     {appearance !== 'glow' ? sphere : <>
       <span ref={glow} data-bb-chat-ui-voice-glow=""><i/><i/><i/></span>
@@ -102,4 +102,4 @@ export function FluidVoiceWaveform({ stream, exiting = false, onExited, appearan
         </svg></span> : null}
     </>}
   </span>;
-}
+});
