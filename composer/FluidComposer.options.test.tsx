@@ -29,6 +29,33 @@ function mount(nativeFooter=false){
  const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
  return{v,renderer,run,TestComposer};
 }
+it.each([
+ ['data-app-composer-role="primary" data-promptbox-shell', 'data-new-thread-footer'],
+ ['data-follow-up-composer', 'data-follow-up-composer-footer'],
+])('attaches the native footer above the editor only on phones (%s)', (owner, footerAttribute) => {
+ const stop = injectFluidComposer(document);
+ const fixture = document.createElement('div');
+ fixture.innerHTML = `<div ${owner}>
+  <div data-composer-box><form data-bb-chat-ui-fluid-composer data-bb-composer-device="phone"></form></div>
+  <div ${footerAttribute}><button type="button">Permission</button></div>
+ </div>`;
+ document.body.append(fixture);
+ const form = fixture.querySelector('form')!;
+ const box = fixture.querySelector('[data-composer-box]')!;
+ const footer = fixture.querySelector(`[${footerAttribute}]`)!;
+ try {
+  expect(getComputedStyle(box).order).toBe('1');
+  expect(getComputedStyle(footer).order).toBe('0');
+  expect(getComputedStyle(footer).marginBottom).toBe('-13px');
+  form.setAttribute('data-bb-composer-device', 'desktop');
+  expect(getComputedStyle(box).order).toBe('0');
+  expect(getComputedStyle(footer).marginBottom).not.toBe('-13px');
+ } finally {
+  fixture.remove();
+  stop();
+ }
+});
+
 it('keeps the native footer visible for a blank phone thread without focusing its editor', async () => {
  vi.stubGlobal('matchMedia', (media: string) => ({
   media, matches: media === '(hover: none)' || media === '(pointer: coarse)',

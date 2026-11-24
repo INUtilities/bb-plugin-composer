@@ -23,7 +23,8 @@
     "2026-11-23: Composer PR #4 adds the 41-bar waveform, detached stop for tap recording, and transcript insertion for tap and hold. The left-side information row and subpixel IME fit stay in place.",
     "2026-11-24: Composer restores the original BB footer for thread information and permissions from PR #4. Fluid keeps the existing Chat UI info row and model/Effort labels.",
     "2026-11-24: Fluid uses the paper-plane glyph for send, queue and steer, while BB keeps their separate actions. Voice mode animates its screen position and fades the waveform as native footer visibility changes.",
-    "2026-11-24: The empty phone follow-up composer requests the host footer without moving focus. The BB footer remains visible after focus leaves."
+    "2026-11-24: The empty phone follow-up composer requests the host footer without moving focus. The BB footer remains visible after focus leaves.",
+    "2026-11-25: BB footer controls sit in a phone-only card tucked behind the input. Desktop retains the original BB footer layout."
   ],
   "files": [
     {
@@ -36,7 +37,7 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "21a0bd9677ffc75b7cbc1f0c967cd55e4871fb7810ee30f49f060f27b10c1848",
+      "sha256": "b5eec0f9b24e52edf0b5758f699ef04b3a89ef9d06d15902cee3edccaeb02446",
       "sourceSha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6",
       "integrationOverlay": true
     },
@@ -637,7 +638,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "6f4cd39c3292378c36f92f3304d3a15bc7cfd48248b5af9fa3cd9ad549fd6d0c",
+      "sha256": "80d88095e6cffdc9c657a2e7aade4d522bdd6372c90e75220e13a48493076f95",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"

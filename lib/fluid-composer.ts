@@ -9,6 +9,8 @@ const voiceForm = '[data-bb-chat-ui-fluid-composer][data-bb-chat-ui-fluid-voice-
 const voiceCapture = '[data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"]:not([data-split="true"])';
 const voiceWithStop = `${voiceForm}:has(${voiceCapture}[data-gesture="toggle"])`;
 const phoneForm = '[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"]';
+const nativeFooter = ':is([data-follow-up-composer-footer], [data-new-thread-footer]):not([hidden])';
+const phoneFooterOwner = `:is([data-follow-up-composer], [data-promptbox-shell][data-app-composer-role="primary"]):not([hidden]):has(> [data-composer-box] ${phoneForm}):has(> ${nativeFooter})`;
 const modelTrigger = 'button[aria-label^="Provider, model and reasoning"]';
 const phoneExpandedRow = `${phoneForm}:not([data-bb-chat-ui-slot-enabled]) [data-bb-chat-ui-fluid-row][data-multiline="true"]:not([data-voice-mode="true"])`;
 const phoneSingleRow = `${phoneForm} [data-bb-chat-ui-fluid-row][data-multiline="false"]`;
@@ -29,6 +31,25 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { disp
   ${fluidShell} :is([data-follow-up-composer-footer],[data-new-thread-footer]) :is([data-promptbox-hide-branch-compact],[data-promptbox-hide-tiny]):not([hidden]) {
     display:inline-flex !important;
   }
+}
+/* 휴대폰에서는 BB 컨트롤을 입력 표면 뒤에 겹치는 상단 카드에 둔다. */
+${phoneFooterOwner} {
+  display:flex; flex-direction:column; reading-flow:flex-visual;
+}
+/* 기존 떠 있는 피드백 버튼이 표시되면 하단 액션의 화면 위치를 유지한다. */
+html[data-bb-chat-ui-root-device="phone"]:has([data-agentation-root]:not([hidden])) ${phoneFooterOwner} {
+  padding-block-end:2.75rem;
+}
+${phoneFooterOwner} > ${nativeFooter} {
+  order:0; position:relative; z-index:0;
+  margin:0 8px -13px; padding:0 6px 13px; gap:4px;
+  min-height:58px; max-height:none;
+  border:1px solid color-mix(in oklab,var(--foreground) 12%,transparent);
+  border-bottom:0; border-radius:16px 16px 0 0;
+  background-color:color-mix(in oklab,var(--foreground) 7%,var(--bb-chat-ui-glass-base,var(--background)));
+}
+${phoneFooterOwner} > [data-composer-box] {
+  order:1; position:relative; z-index:1; min-width:0;
 }
 [data-bb-chat-ui-fluid-options-open]:not([data-bb-chat-ui-fluid-options-returning]) :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
 [data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > :not([data-bb-chat-ui-slot-toolbar]) { opacity:0; }
