@@ -60,9 +60,6 @@ for(const [description,send,blocked,held]of [
   await waitFor(()=>expect(v.container.querySelector('.ProseMirror')).toBeTruthy());
   const originalEditor=v.container.querySelector('.ProseMirror');
   const mic=screen.getByRole('button',{name:'음성모드 시작'});
-  const info=screen.getByRole('button',{name:'정보와 설정'});
-  expect(screen.queryByRole('button',{name:'Permissions'})).toBeNull();
-  fireEvent.click(info);
   const footer=screen.getByRole('button',{name:'Permissions'});
   expect(v.container.querySelector('button[data-promptbox-submit-action][type="submit"]')).toBeNull();
   if(held)fireEvent.pointerDown(mic,{button:0});else fireEvent.click(mic,{detail:1});
@@ -70,7 +67,6 @@ for(const [description,send,blocked,held]of [
   expect(screen.queryByRole('button',{name:'Prompt actions'})).toBeNull();
   expect(screen.queryByRole('button',{name:'모델 선택'})).toBeNull();
   expect(screen.queryByRole('button',{name:'Permissions'})).toBeNull();
-  expect(screen.queryByRole('button',{name:'정보와 설정'})).toBeNull();
   expect(v.container.querySelector('[data-bb-chat-ui-voice-glow]')).toBeTruthy();
   expect(v.container.querySelectorAll('[data-bb-chat-ui-voice-bar]').length).toBeGreaterThan(7);
   expect(mic.closest('[data-bb-chat-ui-voice-actions]')?.getAttribute('data-gesture')).toBe(held?'hold':'toggle');
@@ -101,7 +97,6 @@ for(const [description,send,blocked,held]of [
   expect(v.container.querySelector('.ProseMirror')).toBe(originalEditor);
   expect(screen.getByRole('button',{name:'Prompt actions'})).toBeTruthy();
   expect(screen.getByRole('button',{name:'모델 선택'})).toBeTruthy();
-  expect(screen.getByRole('button',{name:'정보와 설정'})).toBe(info);
   expect(screen.getByRole('button',{name:'Permissions'})).toBe(footer);
   if(send&&!blocked){
    await waitFor(()=>expect(screen.getByRole('button',{name:'음성모드 시작'})).toBeTruthy());

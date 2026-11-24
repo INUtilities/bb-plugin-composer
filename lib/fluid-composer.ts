@@ -4,9 +4,7 @@ import { EASE } from './motion.ts';
 import { fluidPickerCss } from './fluid-picker.ts';
 
 const actionPill = '[data-bb-chat-ui-fluid-panel-list] [role="menuitem"]';
-const metadataPill = ':is([data-bb-chat-ui-fluid-details] > :not(div), [data-bb-chat-ui-fluid-details]:not([data-follow-up-composer-footer]) > div > *, [data-bb-chat-ui-fluid-details][data-follow-up-composer-footer] > :first-child > :not(div), [data-bb-chat-ui-fluid-details][data-follow-up-composer-footer] > :first-child > div > *, [data-bb-chat-ui-fluid-details][data-follow-up-composer-footer] > div:not(:first-child) > *)';
-const metadataShell = '[data-promptbox-shell][data-bb-chat-ui-fluid-details-open]:has([data-bb-chat-ui-fluid-details-toggle])';
-const detailPill = `${metadataShell} ${metadataPill}:not([hidden])`;
+const fluidShell = '[data-promptbox-shell]:has([data-bb-chat-ui-fluid-composer])';
 const voiceForm = '[data-bb-chat-ui-fluid-composer][data-bb-chat-ui-fluid-voice-only="true"]';
 const voiceCapture = '[data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"]:not([data-split="true"])';
 const voiceWithStop = `${voiceForm}:has(${voiceCapture}[data-gesture="toggle"])`;
@@ -21,21 +19,20 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { disp
 /* 음성 상자는 같은 작성창의 위·아래 컨트롤을 임시로 숨긴다. */
 [data-promptbox-shell]:has(form[data-bb-chat-ui-fluid-composer][data-promptbox-voice-active])
   :is([data-bb-chat-ui-info-bar], [data-follow-up-composer-footer], [data-new-thread-footer]) { display:none !important; }
-html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new-thread-footer]),
-html[data-bb-chat-ui-fluid-mode] [data-app-composer][data-app-composer-role][data-promptbox-shell] :is([data-follow-up-composer-footer], [data-new-thread-footer]):not([data-bb-chat-ui-fluid-details]) { display:none !important; }
-[data-promptbox-shell][data-bb-chat-ui-fluid-details-open] { position:relative; }
-html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] [data-bb-chat-ui-fluid-details][role="region"]:not([hidden]) {
-  display:flex !important; position:absolute !important; gap:8px; justify-content:flex-start; align-items:center;
-  top:var(--bb-chat-ui-pill-row-center,0px); bottom:auto; left:var(--bb-chat-ui-pill-row-left,0px); right:auto;
-  width:var(--bb-chat-ui-pill-row-width,100%); max-width:100%; min-width:0; min-height:0; max-height:none; transform:translateY(-50%);
-  z-index:30; margin:0; padding:8px 0; flex-wrap:nowrap; overflow-x:auto !important; overflow-y:hidden !important;
-  overscroll-behavior:contain; scrollbar-width:none; opacity:1; pointer-events:auto;
-  border:0; border-radius:0; background:transparent; box-shadow:none;
+/* BB가 렌더링한 하단의 기본 높이와 클릭을 좁은 패널에서도 유지한다. */
+@container follow-up-composer style(--follow-up-composer-container-compact:true) {
+  [data-follow-up-composer]:has([data-bb-chat-ui-fluid-composer]):not([data-follow-up-composer-footer-visible]) [data-follow-up-composer-footer]:not([hidden]) {
+    opacity:1; pointer-events:auto; min-height:1.5rem; max-height:1.5rem; margin-top:0.25rem;
+  }
 }
-html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-fluid-details][data-bb-chat-ui-fluid-details-before] { justify-content:safe flex-end; }
-[data-bb-chat-ui-fluid-details]::-webkit-scrollbar { display:none; }
-[data-bb-chat-ui-fluid-details] > div:not([hidden]), [data-bb-chat-ui-fluid-details][data-follow-up-composer-footer] > :first-child > div:not([hidden]) { display:contents; }
-[data-bb-chat-ui-fluid-details-resting] { opacity:0; }
+@container promptbox-shell (width <= 22rem) {
+  ${fluidShell} :is([data-follow-up-composer-footer],[data-new-thread-footer]) :is([data-promptbox-hide-branch-compact],[data-promptbox-hide-tiny]):not([hidden]) {
+    display:inline-flex !important;
+  }
+}
+/* 폰에서 떠 있는 Agentation 버튼과 BB 하단 컨트롤 사이에 공간을 둔다. */
+html:has([data-agentation-root]:not([hidden])) ${fluidShell}:has(${phoneForm})
+  :is([data-follow-up-composer-footer], [data-new-thread-footer]) { padding-inline-end:3rem; }
 [data-bb-chat-ui-fluid-options-open]:not([data-bb-chat-ui-fluid-options-returning]) :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
 [data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > :not([data-bb-chat-ui-slot-toolbar]) { opacity:0; }
 [data-bb-chat-ui-fluid-composer] {
@@ -63,8 +60,6 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-fluid-details][data-bb-chat-ui
   background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25);
   box-shadow:0 8px 24px -12px color-mix(in oklab,var(--foreground) 22%,transparent),inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent);
 }
-[data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-details-toggle] { position:relative; flex:none; background:${LIGHT_GLASS_FACE}; width:32px; height:32px; min-width:32px; min-height:32px; padding:0; border-radius:999px; }
-.dark [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-details-toggle] { background:${DARK_GLASS_FACE}; }
 [data-bb-chat-ui-fluid-composer] [hidden] { display:none !important; }
 [data-bb-chat-ui-fluid-extra-actions] { display:contents; }
 [data-bb-chat-ui-fluid-native-controls] { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
@@ -93,17 +88,13 @@ ${phoneForm} { --bb-chat-ui-fluid-input-radius:26px; --bb-chat-ui-fluid-control-
 [data-bb-chat-ui-fluid-panel] { display:flex; flex-direction:column; width:100%; min-width:0; }
 [data-bb-chat-ui-fluid-panel-list] { display:flex; flex-wrap:nowrap; gap:8px; min-width:0; min-height:0; overflow-x:auto; overflow-y:hidden; overscroll-behavior:contain; scrollbar-width:none; padding:8px; }
 [data-bb-chat-ui-fluid-panel-list]::-webkit-scrollbar { display:none; }
-${actionPill}, ${detailPill} { --bb-chat-ui-fluid-pill-height:32px; position:relative; display:inline-flex; flex:none; align-items:center; justify-content:flex-start; gap:8px; width:auto; min-width:0; max-width:none; min-height:var(--bb-chat-ui-fluid-pill-height); height:auto; padding:6px 12px; border-radius:999px; text-align:left; white-space:nowrap; font-size:12px; line-height:16px; background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25); box-shadow:inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
-${detailPill} { height:var(--bb-chat-ui-fluid-pill-height); margin:0; font-weight:500; }
-${detailPill}.text-muted-foreground, ${detailPill} > .text-muted-foreground { color:var(--foreground); }
-${detailPill} > div { height:auto; }
-${detailPill} > :is(span, div), ${detailPill} > :is(span, div) > span { font-size:inherit; font-weight:inherit; line-height:inherit; }
-.dark ${actionPill}, .dark ${detailPill} { background:${DARK_GLASS_FACE}; box-shadow:inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
-${actionPill}:is(:hover,:focus-visible):not(:disabled):not([data-disabled]), ${detailPill}:is(button):is(:hover,:focus-visible):not(:disabled):not([data-disabled]) { background-color:color-mix(in oklab,var(--foreground) 8%,transparent); }
-${actionPill} > :is([data-icon-root], svg), ${detailPill} > :is([data-icon-root], svg) { flex:none; width:16px; height:16px; }
+${actionPill} { --bb-chat-ui-fluid-pill-height:32px; position:relative; display:inline-flex; flex:none; align-items:center; justify-content:flex-start; gap:8px; width:auto; min-width:0; max-width:none; min-height:var(--bb-chat-ui-fluid-pill-height); height:auto; padding:6px 12px; border-radius:999px; text-align:left; white-space:nowrap; font-size:12px; line-height:16px; background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25); box-shadow:inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
+.dark ${actionPill} { background:${DARK_GLASS_FACE}; box-shadow:inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
+${actionPill}:is(:hover,:focus-visible):not(:disabled):not([data-disabled]) { background-color:color-mix(in oklab,var(--foreground) 8%,transparent); }
+${actionPill} > :is([data-icon-root], svg) { flex:none; width:16px; height:16px; }
 ${actionPill} > span { min-width:0; }
 [data-bb-chat-ui-fluid-panel-list] > p { margin:8px; color:var(--muted-foreground); font-size:12px; line-height:18px; }
-[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] ${actionPill}, ${metadataShell}:has([data-bb-composer-device="phone"]) ${metadataPill} { --bb-chat-ui-fluid-pill-height:36px; padding:8px 12px; font-size:13px; }
+[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] ${actionPill} { --bb-chat-ui-fluid-pill-height:36px; padding:8px 12px; font-size:13px; }
 [data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }
 [data-bb-chat-ui-fluid-row] { display:grid; flex:1 1 auto; grid-template-columns:auto minmax(0,1fr) auto; grid-template-rows:minmax(0,1fr); grid-template-areas:"options editor actions"; align-items:end; gap:4px; padding:8px; min-height:48px; box-sizing:border-box; }
 [data-bb-chat-ui-fluid-row][data-multiline="true"] { grid-template-areas:"editor editor editor" "options . actions"; grid-template-rows:minmax(0,1fr) auto; row-gap:8px; }

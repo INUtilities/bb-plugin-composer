@@ -38,7 +38,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   useLayoutEffect(() => {
     const layer=panelLayer.current;
     const composer=layer?.closest<HTMLElement>(FLUID_COMPOSER);
-    if (layer && composer) return bindFluidPillRow(layer,composer,'options');
+    if (layer && composer) return bindFluidPillRow(layer,composer);
   },[showPanel]);
   // 퇴장이 끝날 때까지 옵션 노드를 유지하고 재열림·동작 줄이기·해제 때 예약을 정리한다.
   useLayoutEffect(() => {
