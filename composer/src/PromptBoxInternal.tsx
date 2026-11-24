@@ -55,6 +55,7 @@ import {
   type FormEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactElement,
   type ReactNode,
   type Ref,
 } from "react";
@@ -283,11 +284,17 @@ function suppressTouchCompatibilityClick(ownerDocument: Document) {
   ownerDocument.addEventListener("keydown", clear, true);
 }
 
+const composerSendPlane = (
+  <svg data-promptbox-send-plane="" aria-hidden="true" focusable="false" className="size-4" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3.45 3.8 21.7 11.35a.7.7 0 0 1 0 1.3L3.45 20.2a.7.7 0 0 1-.94-.81l1.63-6.3L14.64 12l-10.5-1.09-1.63-6.3a.7.7 0 0 1 .94-.81Z" />
+  </svg>
+);
+
 interface PromptSubmitButtonProps {
   canSubmit: boolean;
   className: string;
   disabledReason: string | undefined;
-  icon: string | undefined;
+  icon: string | ReactElement | undefined;
   isBusy: boolean;
   isCompact: boolean;
   label: string | undefined;
@@ -297,6 +304,7 @@ interface PromptSubmitButtonProps {
   title: string;
 }
 
+// 같은 전송 동작을 포인터와 키보드에 연결하고 현재 동작의 아이콘을 표시한다.
 function PromptSubmitButton({
   canSubmit,
   className,
@@ -385,7 +393,9 @@ function PromptSubmitButton({
         />
       ) : (
         <>
-          <SdkIcon name={icon ?? "CornerDownLeft"} className="size-4" />
+          {typeof icon === "string" || icon === undefined ? (
+            <SdkIcon name={icon ?? "CornerDownLeft"} className="size-4" />
+          ) : icon}
           {label !== undefined && !isCompact ? (
             <span data-promptbox-submit-label="">{label}</span>
           ) : null}
@@ -1254,19 +1264,13 @@ export function PromptBoxInternal({
   const [fluidVoiceState, setFluidVoiceState] = useState(IDLE_HOLD_VOICE);
   const [fluidVoicePreview, setFluidVoicePreview] = useState(EMPTY_VOICE_PREVIEW);
   const [fluidVoiceStream, setFluidVoiceStream] = useState<MediaStream | null>(null);
-  const [fluidVoiceGesture, setFluidVoiceGesture] = useState<'hold' | 'toggle'>('toggle');
-  const fluidVoiceScroll = useRef<HTMLDivElement>(null);
   const [fluidPillRow, setFluidPillRow] = useState<'options'|'details'|null>(null);
   // i로 열린 메타정보만 닫는다.
   const closeFluidDetails = useCallback(() => setFluidPillRow(null), []);
   const fluidOptionsOpen = fluidPillRow === 'options';
   const fluidPluginSelection = useRef<{ scope: string; key: string; selection: ExperimentalComposerMenuSelection } | null>(null);
   const fluidVoiceActive = fluid && holdVoiceIsActive(fluidVoiceState);
-  const fluidVoiceBars = fluidVoiceGesture === 'toggle' && fluidVoiceState.phase === 'recording';
-  useLayoutEffect(() => {
-    const scroll = fluidVoiceScroll.current;
-    if (fluidVoiceActive && scroll) scroll.scrollTop = scroll.scrollHeight;
-  }, [fluidVoiceActive, fluidVoicePreview.text]);
+  const fluidVoiceWave = fluidVoiceActive && fluidVoiceState.phase !== 'ready' && fluidVoiceState.phase !== 'error';
   const isVoiceRecording = voice?.state === "recording";
   const isVoiceProcessing = voice?.state === "transcribing";
   const showVoiceActionGroup = isVoiceRecording || isVoiceProcessing;
@@ -3425,6 +3429,7 @@ export function PromptBoxInternal({
   };
   if (fluid) return (
     <form ref={formRef} data-bb-chat-ui-fluid-composer="" data-bb-composer-device={device} data-bb-chat-ui-fluid-view="input" data-promptbox-voice-active={voiceInteractionActive ? "" : undefined}
+      data-bb-chat-ui-fluid-voice-only={fluidVoiceActive || undefined}
       onSubmit={handleSubmit} onKeyDown={event => {
         if (fluidOptionsOpen && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeFluidOptions(); }
         else handleComposerMenuKeyDown(event.nativeEvent);
@@ -3438,21 +3443,21 @@ export function PromptBoxInternal({
         onOpen={() => { dismissComposerMenu(); setFluidPillRow(null); if (promptActionFocusFrameRef.current !== null) { cancelAnimationFrame(promptActionFocusFrameRef.current); promptActionFocusFrameRef.current = null; } blurPromptEditor(editorRef.current); }}
         onError={renderer.showError}>
       {picker => <FluidComposerDetails formRef={formRef} scopeKey={composerScopeKey}
-        open={fluidPillRow === 'details'} suspended={fluidVoiceActive || picker.open} discard={fluidOptionsOpen}
+        open={fluidPillRow === 'details'} suspended={voiceInteractionActive || picker.open} discard={fluidOptionsOpen}
         onOpen={() => { picker.close(); dismissComposerMenu(); setFluidPillRow('details'); }}
         onClose={closeFluidDetails}>
       {detailsToggle => <>
-      <FluidComposerToolbar hidden={fluidVoiceActive} inactive={picker.open} leading={detailsToggle}>{picker.modeToggle}</FluidComposerToolbar>
+      <FluidComposerToolbar hidden={voiceInteractionActive} inactive={picker.open} leading={detailsToggle}>{picker.modeToggle}</FluidComposerToolbar>
       <FluidComposerBody
-        phone={device === 'phone'}
+        phone={device === 'phone'} voiceMode={voiceInteractionActive}
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
-        decoration={fluidVoiceActive ? <FluidVoiceWaveform appearance="glow" indicator={fluidVoiceGesture === 'hold' ? 'orb' : fluidVoiceBars ? 'bars' : undefined} stream={fluidVoiceStream} exiting={fluidVoiceState.phase !== "starting" && fluidVoiceState.phase !== "recording"}/> : null}
-        draftText={fluidVoiceActive ? fluidVoicePreview.text : value} draftEditVersion={draftEditVersion.current} editorReady={editor !== null}
+        decoration={fluidVoiceWave ? <FluidVoiceWaveform appearance="glow" indicator="bars" stream={fluidVoiceStream}/> : null}
+        draftText={value} draftEditVersion={draftEditVersion.current} editorReady={editor !== null}
         toggle={<FluidComposerToggle open={fluidOptionsOpen}
           disabled={composerInputLocked || isSubmitting || showVoiceActionGroup || fluidVoiceActive || picker.open}
           onClick={() => { if (fluidOptionsOpen) closeFluidOptions(); else openFluidOptions(); }}/>}
         panelOpen={fluidOptionsOpen}
-        discardPanel={fluidPillRow === 'details' || picker.open || fluidVoiceActive}
+        discardPanel={fluidPillRow === 'details' || picker.open || voiceInteractionActive}
         panel={<FluidOptionsPanel active={fluidOptionsOpen} actions={promptActions} plugins={contributions}
           onClose={closeFluidOptions}
           onPluginSelected={selection => { fluidPluginSelection.current = { scope: composerScopeKey, key: composerKey, selection }; setFluidPillRow(null); }}
@@ -3461,15 +3466,8 @@ export function PromptBoxInternal({
           />}
         auxiliary={<>{handoff}{voice && voice.failedRecordings.length > 0 ? <FailedVoiceRecordings className="px-2 pt-2" recordings={voice.failedRecordings} retryDisabled={false} onRetry={voice.retry} onDownload={voice.download} onDiscard={voice.discard} /> : null}</>}
         editor={<div data-bb-chat-ui-voice-editor="" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
-          {fluidVoiceBars ? <div data-bb-chat-ui-voice-bars-space="" data-has-preview={!!fluidVoicePreview.text} aria-hidden="true"/> : null}
-          {fluidVoiceActive || (fluidVoiceState.error && !hasSubmittableInput) ? <div ref={fluidVoiceScroll} data-promptbox-editor-scroll="" role="status" aria-live="polite">
-            <div data-bb-chat-ui-voice-transcript="" hidden={fluidVoiceBars && !fluidVoicePreview.text} data-placeholder={!fluidVoicePreview.text || undefined}><p>{fluidVoicePreview.text ||
-              (fluidVoiceState.error ?? (fluidVoiceState.phase === 'starting' ? '마이크 준비 중…' : fluidVoiceState.phase === 'recording'
-                ? fluidVoicePreview.available ? '말씀해 주세요…' : '듣는 중…'
-                : fluidVoiceState.phase === 'transcribing' ? '음성을 변환하고 있습니다…' : '중지 또는 전송'))}</p>
-              {fluidVoiceState.error && fluidVoicePreview.text ? <p data-bb-chat-ui-voice-error="">{fluidVoiceState.error}</p> : null}
-            </div>
-            {fluidVoiceBars && !fluidVoicePreview.text ? <span className="sr-only">듣는 중…</span> : null}
+          {fluidVoiceState.error && !hasSubmittableInput ? <div data-promptbox-editor-scroll="" role="status" aria-live="polite">
+            <p data-bb-chat-ui-voice-error="">{fluidVoiceState.error}</p>
           </div> : null}
           <div hidden={fluidVoiceActive || (!!fluidVoiceState.error && !hasSubmittableInput)} inert={fluidVoiceActive || undefined} aria-hidden={fluidVoiceActive || undefined}>
             <ComposerEditorSlot editor={editor} scrollContainerRef={editorScrollContainerRef} inputLocked={composerInputLocked || fluidVoiceActive}
@@ -3481,7 +3479,7 @@ export function PromptBoxInternal({
           {picker.enabled && !voiceInteractionActive ? picker.trigger : null}
           <div data-bb-chat-ui-slot-submit="">
           <div data-promptbox-submit-group="" className="flex shrink-0 flex-row items-center" inert={picker.open || undefined} aria-hidden={picker.open || undefined}>
-            <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream} onGestureChange={setFluidVoiceGesture}
+            <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream}
               disabled={!voice?.isSupported || isSubmitting || composerInputLocked || showVoiceActionGroup}
               sendDisabled={submitDisabled || isSubmitting || isAttaching || composerInputLocked}
               sendIcon={submitIcon}
@@ -3493,7 +3491,8 @@ export function PromptBoxInternal({
                 <Icon name="Square" className="size-3.5 fill-current [&_*]:stroke-0" />
               </Button> : <ComposerSendMenu isPointerCoarse={isPointerCoarse} modifierKind={modifierSubmitAction?.kind ?? null}
                 hasInput={hasSubmittableInput} canSubmit={canSubmit} onSubmit={showModifierInMenu && onModifierSubmit ? submitModifierPrompt : undefined}>
-                <PromptSubmitButton className={COMPACT_PROMPT_ACTION_BUTTON_CLASS} canSubmit={canSubmit} icon={submitIcon} label={submitLabel} isCompact
+                <PromptSubmitButton className={COMPACT_PROMPT_ACTION_BUTTON_CLASS} canSubmit={canSubmit}
+                  icon={primarySubmitAction.kind === "send" ? composerSendPlane : submitIcon} label={submitLabel} isCompact
                   disabledReason={!canSubmit ? isAttaching ? attachmentUploadTitle : submitDisabledReason : undefined}
                   isBusy={isSubmitting || isAttaching} onPointerDown={handleSubmitPointerDown} onClick={handleSubmitClick}
                   onTouchSubmit={handleTouchSubmit} title={effectiveSubmitTitle} />
@@ -3509,6 +3508,10 @@ export function PromptBoxInternal({
         voice={voice && showVoiceActionGroup ? <VoiceRecordingBar isCompact state={renderedVoiceActionState} delivery={voice.delivery} stream={voice.stream}
           microphoneWarning={voice.microphoneWarning} submitIcon={submitIcon ?? "CornerDownLeft"} onConfirm={voice.stop} onSend={voice.send} onCancel={cancelVoiceInput} /> : undefined}
       />
+      {fluidVoiceActive ? <div className="sr-only" role="status" aria-live="polite">
+        {fluidVoiceState.error ?? (fluidVoicePreview.text || (fluidVoiceState.phase === 'starting' ? '마이크 준비 중…'
+          : fluidVoiceState.phase === 'transcribing' ? '음성을 변환하고 있습니다…' : fluidVoiceWave ? '듣는 중…' : '중지 또는 전송'))}
+      </div> : null}
       {picker.overlay}
       </>}
       </FluidComposerDetails>}

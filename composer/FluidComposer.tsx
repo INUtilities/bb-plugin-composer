@@ -4,6 +4,7 @@ import { CompactViewportOverrideProvider } from './components/ui/hooks/use-compa
 import { PromptBoxInternal } from './src/PromptBoxInternal';
 import './src/composer.css';
 
+// BB가 제공한 입력 도구를 Fluid 편집기에 연결한다.
 export function FluidComposer() {
   const renderer = useComposerRenderer();
   const { device } = useDeviceChrome();

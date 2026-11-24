@@ -30,7 +30,7 @@ test('keeps the expanded layout when the text exceeds the compact column by a fr
  try{
   f.editor.querySelector('p')!.textContent='물ㄹ';
   // 358px에서 row·editor 여백, 두 컨트롤, 두 간격을 빼면 254px이다.
-  f.text(254.5);
+  f.text(254.3125);
   f.height(48);
   assert.equal(f.probe(),true,'the compact column wraps');
   f.height(24);
