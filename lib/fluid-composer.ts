@@ -30,9 +30,6 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { disp
     display:inline-flex !important;
   }
 }
-/* 폰에서 떠 있는 Agentation 버튼과 BB 하단 컨트롤 사이에 공간을 둔다. */
-html:has([data-agentation-root]:not([hidden])) ${fluidShell}:has(${phoneForm})
-  :is([data-follow-up-composer-footer], [data-new-thread-footer]) { padding-inline-end:3rem; }
 [data-bb-chat-ui-fluid-options-open]:not([data-bb-chat-ui-fluid-options-returning]) :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
 [data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > :not([data-bb-chat-ui-slot-toolbar]) { opacity:0; }
 [data-bb-chat-ui-fluid-composer] {
