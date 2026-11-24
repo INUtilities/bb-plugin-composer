@@ -154,11 +154,35 @@ it('continues native effort changes from the currently displayed width',async()=
  finally{view.unmount();widths.mockRestore();bounds.mockRestore();Element.prototype.animate=old;}
 });
 
-// phone에서는 실제 native summary의 아이콘만 남기고 모델 글자가 옆으로 새지 않게 한다.
-it('keeps the native contents summary compact on phone and restores desktop model text',()=>{
- const root=document.documentElement,previous=root.getAttribute('data-bb-chat-ui-root-device');root.setAttribute('data-bb-chat-ui-root-device','phone');const stop=injectFluidComposer(document);
- const controls=<button type="button" aria-label="Provider, model and reasoning"><span className="contents"><svg data-tier-icon=""/><span data-model-base="">Model</span><span data-model-tag="">v2</span><span data-promptbox-hide-compact="" data-native-effort="">Medium</span></span><svg/></button>;
- const view=renderSlot({component:()=> <form data-bb-chat-ui-fluid-composer="" data-bb-composer-device="phone"><FluidModelControls controls={controls} onError={()=>{}}/></form>},{},{composer:{selection:{providerId:'provider',model:'model',reasoningLevel:'medium'}}});
- try{expect(getComputedStyle(view.container.querySelector('[data-model-base]')!).display).toBe('none');expect(getComputedStyle(view.container.querySelector('[data-model-tag]')!).display).toBe('none');expect(getComputedStyle(view.container.querySelector('[data-tier-icon]')!).display).not.toBe('none');view.container.querySelector('form')!.setAttribute('data-bb-composer-device','desktop');expect(getComputedStyle(view.container.querySelector('[data-model-base]')!).display).not.toBe('none');expect(getComputedStyle(view.container.querySelector('[data-native-effort]')!).display).toBe('none');}
- finally{view.unmount();stop();if(previous===null)root.removeAttribute('data-bb-chat-ui-root-device');else root.setAttribute('data-bb-chat-ui-root-device',previous);}
+it('shows both names on an expanded phone row and restores the one-line phone icons', () => {
+ const stop = injectFluidComposer(document);
+ const controls = <button type="button" aria-label="Provider, model and reasoning">
+  <span className="contents"><svg data-tier-icon=""/><span data-model-base="">Model</span><span data-model-tag="">v2</span><span data-promptbox-hide-compact="" data-native-effort="">Medium</span></span><svg/>
+ </button>;
+ const view = renderSlot({component: () =>
+  <form data-bb-chat-ui-fluid-composer="" data-bb-composer-device="phone">
+   <div data-bb-chat-ui-fluid-row="" data-multiline="false"><div data-bb-chat-ui-fluid-options="">
+    <FluidModelControls controls={controls} onError={()=>{}}/>
+   </div></div>
+  </form>
+ }, {}, {composer:{selection:{providerId:'provider',model:'model',reasoningLevel:'medium'}}});
+ const display = (selector: string) => getComputedStyle(view.container.querySelector(selector)!).display;
+ const row = view.container.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-row]')!;
+ const effortLabel = screen.getByRole('button', {name:'Effort: Medium'}).querySelector('[data-bb-chat-ui-fluid-effort-label]')!;
+ try {
+  expect(display('[data-model-base]')).toBe('none');
+  expect(display('[data-model-tag]')).toBe('none');
+  expect(display('[data-tier-icon]')).not.toBe('none');
+  expect(getComputedStyle(effortLabel).maxWidth).toBe('0px');
+  row.dataset.multiline = 'true';
+  expect(display('[data-model-base]')).not.toBe('none');
+  expect(display('[data-model-tag]')).not.toBe('none');
+  expect(display('[data-native-effort]')).toBe('none');
+  expect(getComputedStyle(effortLabel).maxWidth).not.toBe('0px');
+  row.dataset.multiline = 'false';
+  expect(display('[data-model-base]')).toBe('none');
+  expect(getComputedStyle(effortLabel).maxWidth).toBe('0px');
+  view.container.querySelector('form')!.setAttribute('data-bb-composer-device','desktop');
+  expect(display('[data-model-base]')).not.toBe('none');
+ } finally { view.unmount(); stop(); }
 });

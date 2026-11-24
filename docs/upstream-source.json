@@ -641,7 +641,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "93a4c1f0efd30f74bd2e8d0ea9f4733a4a298ee41acd4cff4b7cc477868d88dc",
+      "sha256": "632e1cbf84243a83cdd5d4a7f5bef21e08a39cba290fd026dc798d1520eca7fa",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"
@@ -663,14 +663,14 @@
     {
       "source": "lib/fluid-composer-layout.ts",
       "destination": "lib/fluid-composer-layout.ts",
-      "sha256": "259c2f3f5196ec10d48989c591d8258a66080e26fc0ba65affef5516465e8f9d",
+      "sha256": "9e8a559aa1912d635de41d3c2a5d9eba5e53cbd657f594180050bf8f93564fb9",
       "sourceSha256": "065d1def4969ea45feba69a0ed13f702026ef041d92ba60753a95c7af12822b7",
       "integrationOverlay": true
     },
     {
       "source": "lib/fluid-composer-layout.test.ts",
       "destination": "lib/fluid-composer-layout.test.ts",
-      "sha256": "44ea8aca1286f2496e37c245d03c473e60f3ecb712fb8106574b9bcf8ce73b10",
+      "sha256": "8c447d725746062f7e32d8b492bb6a394e444a7ee5f3b1673b6b331b6196d14c",
       "sourceSha256": "18dc4eae2605748aebc56859471cd93b475fe64647487cd69b9b2c4a6e13ec05",
       "integrationOverlay": true
     },
@@ -715,8 +715,9 @@
     {
       "source": "composer/FluidModelControls.test.tsx",
       "destination": "composer/FluidModelControls.test.tsx",
-      "sha256": "a034e2d8e23863f247d1487b06a50047d9572880a5ee62cb7593d3ce93065462",
-      "sourceSha256": "a034e2d8e23863f247d1487b06a50047d9572880a5ee62cb7593d3ce93065462"
+      "sha256": "9cb6db1745618c0ab0d82e02782db1cc39510d33c1eff2839b43de26da417911",
+      "sourceSha256": "a034e2d8e23863f247d1487b06a50047d9572880a5ee62cb7593d3ce93065462",
+      "integrationOverlay": true
     },
     {
       "source": "composer/EffortIcon.test.tsx",

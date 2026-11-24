@@ -9,7 +9,13 @@ export function needsFullWidthComposer(row: HTMLElement, editor: HTMLElement, op
   const rowStyle = win.getComputedStyle(row);
   const lineHeight = pixels(win.getComputedStyle(editor).lineHeight) || 24;
   const label = options.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-effort]:not([data-bb-chat-ui-fluid-effort-peek]) > [data-bb-chat-ui-fluid-effort-label]');
-  const compactSpace = label && !label.closest('[hidden]') ? label.getBoundingClientRect().width + pixels(win.getComputedStyle(label.parentElement!).columnGap) : 0;
+  const effortSpace = label && !label.closest('[hidden]') ? label.getBoundingClientRect().width + pixels(win.getComputedStyle(label.parentElement!).columnGap) : 0;
+  const compactModelWidth = pixels(rowStyle.getPropertyValue('--bb-chat-ui-fluid-compact-model-width'));
+  const model = compactModelWidth && row.dataset.multiline === 'true'
+    ? options.querySelector<HTMLElement>('[data-bb-chat-ui-fluid-native-controls] button[aria-label^="Provider, model and reasoning"]')
+    : null;
+  const modelSpace = model && !model.closest('[hidden]') ? Math.max(0, model.getBoundingClientRect().width - compactModelWidth) : 0;
+  const compactSpace = effortSpace + modelSpace;
   const hardLines = editor.childElementCount > 1 || !!editor.querySelector('br:not(.ProseMirror-trailingBreak)');
   if (editor.getBoundingClientRect().height > lineHeight + 1 && (!compactSpace || hardLines)) return true;
 
