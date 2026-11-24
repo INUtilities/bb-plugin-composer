@@ -28,6 +28,20 @@ function mount(nativeFooter=false){
  const v=renderSlot({component:TestComposer},{},{composer:{scope:renderer.view.scope,text:'보관할 초안'},composerRenderer:renderer});
  return{v,renderer,run,TestComposer};
 }
+it.each(['send', 'queue', 'steer'] as const)('keeps the paper-plane glyph while dispatching %s', async kind => {
+ const {v, renderer, run, TestComposer}=mount();
+ try {
+  renderer.input.submission.icon='CornerDownLeft';
+  renderer.input.submission.enter={...renderer.input.submission.enter,kind};
+  v.rerender(<TestComposer/>);
+  await screen.findByRole('textbox');
+  const submit=v.container.querySelector<HTMLButtonElement>('button[data-promptbox-submit-action][type="submit"]')!;
+  expect(submit.querySelector('[data-promptbox-send-plane]')).toBeTruthy();
+  fireEvent.submit(submit.form!);
+  expect(run).toHaveBeenCalledOnce();
+ } finally {v.unmount();}
+});
+
 // 옵션 필을 열어도 같은 입력과 전송을 사용할 수 있는지 확인한다.
 it('opens options above the unchanged input and allows editing and submitting while they remain open',async()=>{
  const{v,run}=mount();

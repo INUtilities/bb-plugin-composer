@@ -222,6 +222,9 @@ html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-split
 [data-bb-chat-ui-voice-glow] > i { position:absolute; left:5%; bottom:-6px; width:90%; height:20px; transform-origin:50% 100%; background:radial-gradient(ellipse at 50% 100%,color-mix(in oklab,var(--ring,var(--foreground)) 90%,transparent) 0%,color-mix(in oklab,var(--ring,var(--foreground)) 38%,transparent) 28%,transparent 74%); }
 [data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"] { width:auto; height:var(--bb-chat-ui-fluid-control-size); gap:8px; }
 html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"] > :is([data-bb-chat-ui-voice-primary],[data-bb-chat-ui-voice-send]) { position:relative; left:auto; top:auto; width:var(--bb-chat-ui-fluid-control-size); height:var(--bb-chat-ui-fluid-control-size); min-width:var(--bb-chat-ui-fluid-control-size); min-height:var(--bb-chat-ui-fluid-control-size); padding:0; transform:none; background:transparent; color:var(--foreground); }
+html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-appearance="composer"] > [data-bb-chat-ui-voice-primary] {
+  transition:width ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, height ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, background-color ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out};
+}
 [data-bb-chat-ui-voice-actions][data-appearance="composer"] > button::before { display:none; }
 [data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"] [data-bb-chat-ui-voice-stop-symbol] { opacity:1; }
 [data-bb-chat-ui-voice-actions][data-appearance="composer"]:not([data-split="true"]) > [data-bb-chat-ui-voice-send] { display:none; }
@@ -252,13 +255,17 @@ ${voiceForm} [data-bb-chat-ui-fluid-surface] {
 html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-visual] > [data-bb-chat-ui-voice-orbit] { left:auto; top:auto; right:4px; bottom:4px; width:calc(var(--bb-chat-ui-fluid-control-size) + 8px); height:calc(var(--bb-chat-ui-fluid-control-size) + 8px); transform:none; }
 [data-bb-chat-ui-voice-bars] { position:absolute; left:calc(var(--bb-chat-ui-fluid-control-size) + 20px); right:calc(var(--bb-chat-ui-fluid-control-size) + 20px); top:calc((var(--bb-chat-ui-fluid-control-size) - 8px) / 2); height:24px; opacity:.8; }
 [data-bb-chat-ui-voice-bars] > svg { display:block; width:100%; height:100%; overflow:visible; }
-${voiceForm} [data-bb-chat-ui-voice-visual] {
+[data-bb-chat-ui-voice-visual="bars"] {
   inset-inline-end:var(--bb-chat-ui-fluid-voice-reserve);
   border-radius:var(--bb-chat-ui-fluid-input-radius);
   transition:inset-inline-end ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out};
+  animation:bb-chat-ui-composer-voice-in 220ms ${EASE.out} both;
 }
-${voiceForm} [data-bb-chat-ui-voice-glow] { opacity:.28; }
-${voiceForm} [data-bb-chat-ui-voice-bars] {
+[data-bb-chat-ui-voice-visual="bars"][data-exiting="true"] { animation-name:bb-chat-ui-composer-voice-out; }
+@keyframes bb-chat-ui-composer-voice-in { from { opacity:0; } to { opacity:1; } }
+@keyframes bb-chat-ui-composer-voice-out { from { opacity:1; } to { opacity:0; } }
+[data-bb-chat-ui-voice-visual="bars"] [data-bb-chat-ui-voice-glow] { opacity:.28; }
+[data-bb-chat-ui-voice-visual="bars"] [data-bb-chat-ui-voice-bars] {
   inset-inline:16px; top:50%; height:34px; max-width:320px; margin-inline:auto;
   transform:translateY(-50%); opacity:1;
   filter:drop-shadow(0 0 2px color-mix(in oklab,var(--foreground) 82%,transparent))
@@ -267,8 +274,8 @@ ${voiceForm} [data-bb-chat-ui-voice-bars] {
 ${voiceForm}:has(${voiceCapture}[data-gesture="hold"]) [data-bb-chat-ui-voice-bars] {
   inset-inline-end:calc(var(--bb-chat-ui-fluid-control-size) + 16px);
 }
-${voiceForm} [data-bb-chat-ui-voice-bars] > svg { stroke-width:2.2px; }
-@media (prefers-reduced-motion: reduce) { [data-bb-chat-ui-voice-neck] { animation:none !important; opacity:0; } [data-bb-chat-ui-voice-actions] > button::before { animation:none !important; } :is([data-bb-chat-ui-voice-waveform], [data-bb-chat-ui-voice-visual]) { transition:none !important; } }
+[data-bb-chat-ui-voice-visual="bars"] [data-bb-chat-ui-voice-bars] > svg { stroke-width:2.2px; }
+@media (prefers-reduced-motion: reduce) { [data-bb-chat-ui-voice-neck] { animation:none !important; opacity:0; } [data-bb-chat-ui-voice-actions] > button::before { animation:none !important; } :is([data-bb-chat-ui-voice-waveform], [data-bb-chat-ui-voice-visual]) { transition:none !important; } [data-bb-chat-ui-voice-visual="bars"] { animation:none; } }
 /* 한 줄은 반원을 유지하고 여러 줄 입력의 실제 clip과 배경만 스쿼클로 바꾼다. */
 @supports (corner-shape: squircle) {
   [data-bb-chat-ui-fluid-height] { corner-shape:round; }

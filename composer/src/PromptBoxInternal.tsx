@@ -2,7 +2,9 @@ import { FluidModelControls } from '../FluidModelControls';
 import { FluidComposerPicker } from '../FluidComposerPicker';
 import { FluidVoiceControl } from "../FluidVoiceControl";
 import { FluidVoiceWaveform } from "../FluidVoiceWaveform";
-import { IDLE_HOLD_VOICE, holdVoiceIsActive } from "../../lib/hold-voice";
+import { FLUID_COMPOSER_MORPH_MS } from "../../lib/fluid-composer-height";
+import { EASE } from "../../lib/motion";
+import { IDLE_HOLD_VOICE, holdVoiceIsActive, type HoldVoiceSnapshot } from "../../lib/hold-voice";
 import { EMPTY_VOICE_PREVIEW } from "../../lib/live-voice-preview";
 import { FluidComposerBody } from "../FluidComposerBody";
 import { FluidComposerToggle } from "../FluidComposerToggle";
@@ -1267,6 +1269,11 @@ export function PromptBoxInternal({
   const fluidPluginSelection = useRef<{ scope: string; key: string; selection: ExperimentalComposerMenuSelection } | null>(null);
   const fluidVoiceActive = fluid && holdVoiceIsActive(fluidVoiceState);
   const fluidVoiceWave = fluidVoiceActive && fluidVoiceState.phase !== 'ready' && fluidVoiceState.phase !== 'error';
+  const [voiceWavePresent, setVoiceWavePresent] = useState(false);
+  const removeVoiceWave = useCallback(() => setVoiceWavePresent(false), []);
+  useLayoutEffect(() => {
+    if (fluidVoiceWave) setVoiceWavePresent(true);
+  }, [fluidVoiceWave]);
   const isVoiceRecording = voice?.state === "recording";
   const isVoiceProcessing = voice?.state === "transcribing";
   const showVoiceActionGroup = isVoiceRecording || isVoiceProcessing;
@@ -1404,6 +1411,36 @@ export function PromptBoxInternal({
   const composerLayout = showCompactLayout ? "compact" : "expanded";
   const composerView = renderer.view;
   const composerScopeKey = JSON.stringify(composerView.scope);
+  const voicePosition = useRef<{ scope: string; top: number } | null>(null);
+  const lastVoiceLayout = useRef({ scope: composerScopeKey, active: false });
+  const updateFluidVoice = useCallback((next: HoldVoiceSnapshot) => {
+    const active = holdVoiceIsActive(next);
+    const previous = lastVoiceLayout.current;
+    if (previous.scope === composerScopeKey && previous.active !== active) {
+      const viewport = formRef.current?.querySelector("[data-bb-chat-ui-fluid-height]");
+      const top = viewport?.getBoundingClientRect().top;
+      voicePosition.current = top === undefined ? null : { scope: composerScopeKey, top };
+    }
+    lastVoiceLayout.current = { scope: composerScopeKey, active };
+    setFluidVoiceState(next);
+  }, [composerScopeKey]);
+  useLayoutEffect(() => {
+    const before = voicePosition.current;
+    voicePosition.current = null;
+    const viewport = formRef.current?.querySelector("[data-bb-chat-ui-fluid-height]");
+    const motion = viewport?.ownerDocument.defaultView?.matchMedia(REDUCED_MOTION_QUERY);
+    if (before?.scope !== composerScopeKey || !viewport?.animate || motion?.matches) return;
+    // 하단이 사라지거나 돌아올 때도 입력창이 이전 화면 좌표에서 이어진다.
+    const offset = before.top - viewport.getBoundingClientRect().top;
+    if (Math.abs(offset) < .5) return;
+    const animation = viewport.animate([{ translate: `0px ${offset}px` }, { translate: "0px 0px" }], {
+      duration: FLUID_COMPOSER_MORPH_MS,
+      easing: EASE.out,
+    });
+    const reduce = () => { if (motion?.matches) animation.cancel(); };
+    motion?.addEventListener("change", reduce);
+    return () => { animation.cancel(); motion?.removeEventListener("change", reduce); };
+  }, [composerScopeKey, fluidVoiceActive]);
   const decorationSources = renderer.decorationSources;
   const decorationSourcesRef = useRef(decorationSources);
   decorationSourcesRef.current = decorationSources;
@@ -3443,7 +3480,8 @@ export function PromptBoxInternal({
       <FluidComposerBody
         phone={device === 'phone'} voiceMode={voiceInteractionActive}
         options={<div data-bb-chat-ui-slot-current-models="" hidden={picker.enabled}><FluidModelControls controls={executionControls} disabled={composerInputLocked || isSubmitting || fluidVoiceActive} onError={renderer.showError}/></div>}
-        decoration={fluidVoiceWave ? <FluidVoiceWaveform appearance="glow" indicator="bars" stream={fluidVoiceStream}/> : null}
+        decoration={fluidVoiceWave || voiceWavePresent ? <FluidVoiceWaveform appearance="glow" indicator="bars"
+          stream={fluidVoiceWave ? fluidVoiceStream : null} exiting={!fluidVoiceWave} onExited={removeVoiceWave}/> : null}
         draftText={value} draftEditVersion={draftEditVersion.current} editorReady={editor !== null}
         toggle={<FluidComposerToggle open={fluidOptionsOpen}
           disabled={composerInputLocked || isSubmitting || showVoiceActionGroup || fluidVoiceActive || picker.open}
@@ -3474,17 +3512,17 @@ export function PromptBoxInternal({
             <FluidVoiceControl key={composerScopeKey} appearance="composer" onStreamChange={setFluidVoiceStream}
               disabled={!voice?.isSupported || isSubmitting || composerInputLocked || showVoiceActionGroup}
               sendDisabled={submitDisabled || isSubmitting || isAttaching || composerInputLocked}
-              sendIcon={submitIcon}
+              sendIcon={composerSendPlane}
               showFallback={hasSubmittableInput || showStop || isAttaching || isSubmitting}
               warning={voice && !voice.isSupported ? voice.unsupportedMessage : voice?.microphoneWarning ?? null}
               beforeCapture={prepareVoiceInput} transcribe={transcribeHeldVoice}
-              deliver={composerVoice.deliverTranscript} onStateChange={setFluidVoiceState} onPreviewChange={setFluidVoicePreview}
+              deliver={composerVoice.deliverTranscript} onStateChange={updateFluidVoice} onPreviewChange={setFluidVoicePreview}
               fallback={showStop ? <Button data-promptbox-submit-action="" type="button" size="icon" variant="secondary" aria-label="Stop run" onClick={onStop}>
                 <Icon name="Square" className="size-3.5 fill-current [&_*]:stroke-0" />
               </Button> : <ComposerSendMenu isPointerCoarse={isPointerCoarse} modifierKind={modifierSubmitAction?.kind ?? null}
                 hasInput={hasSubmittableInput} canSubmit={canSubmit} onSubmit={showModifierInMenu && onModifierSubmit ? submitModifierPrompt : undefined}>
                 <PromptSubmitButton className={COMPACT_PROMPT_ACTION_BUTTON_CLASS} canSubmit={canSubmit}
-                  icon={primarySubmitAction.kind === "send" ? composerSendPlane : submitIcon} label={submitLabel} isCompact
+                  icon={composerSendPlane} label={submitLabel} isCompact
                   disabledReason={!canSubmit ? isAttaching ? attachmentUploadTitle : submitDisabledReason : undefined}
                   isBusy={isSubmitting || isAttaching} onPointerDown={handleSubmitPointerDown} onClick={handleSubmitClick}
                   onTouchSubmit={handleTouchSubmit} title={effectiveSubmitTitle} />

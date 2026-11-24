@@ -12,7 +12,7 @@ export const FluidVoiceWaveform = memo(function FluidVoiceWaveform({ stream, exi
   const depthId = useId();
   useLayoutEffect(() => {
     const main = appearance === 'glow' ? createVoiceGlow(glow.current!) : createVoiceOrb(svg.current!);
-    renderers.current.push(main); main.draw(0, 0); main.enter();
+    renderers.current.push(main); main.draw(0, 0);
     return () => {
       main.dispose(); renderers.current = renderers.current.filter(renderer => renderer !== main);
     };
@@ -20,11 +20,14 @@ export const FluidVoiceWaveform = memo(function FluidVoiceWaveform({ stream, exi
   useLayoutEffect(() => {
     if (appearance !== 'glow' || !indicator) return;
     const detail = indicator === 'orb' ? createVoiceOrb(svg.current!) : createVoiceBars(svg.current!);
-    renderers.current.push(detail); detail.draw(0, 0); detail.enter();
+    renderers.current.push(detail); detail.draw(0, 0);
     return () => { detail.dispose(); renderers.current = renderers.current.filter(renderer => renderer !== detail); };
   }, [appearance, indicator]);
   useLayoutEffect(() => {
-    if (!exiting) return;
+    if (!exiting) {
+      renderers.current.forEach(renderer => renderer.enter());
+      return;
+    }
     let remaining = renderers.current.length;
     const cleanups = renderers.current.map(renderer => renderer.leave(() => { if (--remaining === 0) exited.current?.(); }));
     return () => cleanups.forEach(cleanup => cleanup());
@@ -93,7 +96,7 @@ export const FluidVoiceWaveform = memo(function FluidVoiceWaveform({ stream, exi
         </linearGradient>)}</defs>
       {Array.from({ length: VOICE_ORBIT_RINGS }, (_, ring) => <path key={ring} data-bb-chat-ui-voice-ring="" stroke={`url(#${depthId}-${ring})`} vectorEffect="non-scaling-stroke" />)}
     </svg> : null;
-  return <span ref={root} data-bb-chat-ui-voice-waveform={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-orb={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-orbit={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-visual={appearance === 'glow' ? indicator ?? 'glow' : undefined} aria-hidden="true">
+  return <span ref={root} data-bb-chat-ui-voice-waveform={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-orb={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-orbit={appearance === 'orb' ? '' : undefined} data-bb-chat-ui-voice-visual={appearance === 'glow' ? indicator ?? 'glow' : undefined} data-exiting={exiting || undefined} aria-hidden="true">
     {appearance !== 'glow' ? sphere : <>
       <span ref={glow} data-bb-chat-ui-voice-glow=""><i/><i/><i/></span>
       {indicator === 'orb' ? <span data-bb-chat-ui-voice-waveform="" data-bb-chat-ui-voice-orb="" data-bb-chat-ui-voice-orbit="">{sphere}</span> : indicator === 'bars' ?

@@ -21,7 +21,8 @@
     "2026-11-10: 원격 PR #1·#2의 디자인·트랜지션에 로컬 78807cc의 활성 스타일 공유와 음성 입력을 통합했다. 프로젝트 조회·늦은 확인 포커스·숨긴 정보 행 키보드 접근·전역 property 등록을 수정하고, 기존 음성의 빠른 전사 뒤 호환 클릭 전송도 방지했다.",
     "2026-11-11: WebKit이 지원하지 않는 overflow-clip-margin 의존을 fixed overlay로 대체하고 슬롯 다섯 행을 화면 안으로 배치했다. 여러 줄 commit에서 기존 높이 controller를 동기화해 ResizeObserver 전달 전의 목표 높이 지연을 줄였으며 기존 모션과 음성을 유지한다.",
     "2026-11-23: Composer PR #4 adds the 41-bar waveform, detached stop for tap recording, and transcript insertion for tap and hold. The left-side information row and subpixel IME fit stay in place.",
-    "2026-11-24: Composer restores the original BB footer for thread information and permissions from PR #4. Fluid keeps the existing Chat UI info row and model/Effort labels."
+    "2026-11-24: Composer restores the original BB footer for thread information and permissions from PR #4. Fluid keeps the existing Chat UI info row and model/Effort labels.",
+    "2026-11-24: Fluid uses the paper-plane glyph for send, queue and steer, while BB keeps their separate actions. Voice mode animates its screen position and fades the waveform as native footer visibility changes."
   ],
   "files": [
     {
@@ -34,7 +35,7 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "92b230feb168d21b49764c0e7fef0c5302aaf0dc4111c39dbd868dc3da2d64c0",
+      "sha256": "61d13f08e1e2541eecddbbb4da7960d633068e938379a79b3530d30c3b4496ba",
       "sourceSha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6",
       "integrationOverlay": true
     },
@@ -62,7 +63,7 @@
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "b3ef95b0a7eb5e186149a7839fdd69975eff13afeeebaa25958e9d19525dd5b1",
+      "sha256": "a4611d465363b34fdf08104c1b4ba2ad9174bf21c3912ea4321c8d65831be1ac",
       "sourceSha256": "c197522d8ac0c0c00c1905412f422ff8d7a651c1d97b2e8f50cd94afbb331632",
       "integrationOverlay": true
     },
@@ -95,7 +96,7 @@
     {
       "source": "composer/FluidVoiceControl.tsx",
       "destination": "composer/FluidVoiceControl.tsx",
-      "sha256": "97678dfde455597336c6dc9918f1b5158918fd780515c82c93e45aec38e72da4",
+      "sha256": "d2426cbb59414aa86b89df5532077c4a86962451bcb5628bcc2631e363f1466c",
       "sourceSha256": "2df3ae57c7599b51ba77a2a77bb1526fbdd6e872709d2d5a0d6334170df6500e",
       "integrationOverlay": true
     },
@@ -109,7 +110,7 @@
     {
       "source": "composer/FluidVoiceWaveform.tsx",
       "destination": "composer/FluidVoiceWaveform.tsx",
-      "sha256": "f0fc54edfd48fa4a6c219c9602830ab26f5ea609e81016fbc382feb94f458027",
+      "sha256": "7990fa872ad3c9dcb8eda222f2b432e636ee8a96f9ac2ae1672ab13d9634ceee",
       "sourceSha256": "6754a3bea69d15c6b3c324ed8420564b7a07ec597cb136c1e6fb46013ec8d391",
       "integrationOverlay": true
     },
@@ -298,7 +299,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "a4e47dcdb6285ff92e8d05300ee990ec74dd2cca85b9ac055519b3a31c77d3ec",
+      "sha256": "1882941f38867042b793da59c7c2b514dc13c959513c3ac610624f453f814f4e",
       "sourceSha256": "fa3b85470e5b81c2e16800a4136bb46d666987bba1a19c8112e8b021d0f51111",
       "integrationOverlay": true
     },
@@ -635,7 +636,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "1dbe77c1c1625c4b62fd20eb48a8f7295916680ef8fb7ff123bce1ae50d011b4",
+      "sha256": "6f4cd39c3292378c36f92f3304d3a15bc7cfd48248b5af9fa3cd9ad549fd6d0c",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"
