@@ -11,6 +11,7 @@ const voiceWithStop = `${voiceForm}:has(${voiceCapture}[data-gesture="toggle"])`
 const phoneForm = '[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"]';
 const nativeFooter = ':is([data-follow-up-composer-footer], [data-new-thread-footer]):not([hidden])';
 const phoneFooterOwner = `:is([data-follow-up-composer], [data-promptbox-shell][data-app-composer-role="primary"]):not([hidden]):has(> [data-composer-box] ${phoneForm}):has(> ${nativeFooter})`;
+const phoneFooterFace = `${phoneFooterOwner} > ${nativeFooter}::before`;
 const modelTrigger = 'button[aria-label^="Provider, model and reasoning"]';
 const phoneExpandedRow = `${phoneForm}:not([data-bb-chat-ui-slot-enabled]) [data-bb-chat-ui-fluid-row][data-multiline="true"]:not([data-voice-mode="true"])`;
 const phoneSingleRow = `${phoneForm} [data-bb-chat-ui-fluid-row][data-multiline="false"]`;
@@ -45,14 +46,13 @@ ${phoneFooterOwner} > ${nativeFooter} {
   margin:0 8px -13px; padding:0 6px 13px; gap:4px;
   min-height:58px; max-height:none;
   border:1px solid transparent; border-bottom:0;
-  border-radius:16px 16px 0 0; background:none;
+  border-radius:18px 18px 0 0; background:none;
 }
 /* 카드 표면만 아래로 5px 밀어 BB 버튼의 44px 터치 영역을 유지한다. */
-${phoneFooterOwner} > ${nativeFooter}::before {
-  content:""; position:absolute; z-index:-1; pointer-events:none; inset:4px -1px 0;
+${phoneFooterFace} {
+  content:""; position:absolute; z-index:-1; pointer-events:none; inset:4px 0 0;
   border:1px solid color-mix(in oklab,var(--foreground) 12%,transparent);
   border-bottom:0; border-radius:inherit;
-  background-color:color-mix(in oklab,var(--foreground) 7%,var(--bb-chat-ui-glass-base,var(--background)));
 }
 ${phoneFooterOwner} > [data-composer-box] {
   order:1; position:relative; z-index:1; min-width:0;
@@ -79,9 +79,11 @@ ${phoneFooterOwner} > [data-composer-box] {
 [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-row][data-multiline] { grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto; grid-template-areas:". actions"; row-gap:0; }
 [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-actions] { justify-self:end; }
 [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-height][data-multiline="true"] { border-radius:var(--bb-chat-ui-fluid-input-radius); }
+${phoneFooterFace}, [data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face] {
+  background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25);
+}
 [data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face] {
   position:absolute; inset:0; pointer-events:none; border-radius:inherit;
-  background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25);
   box-shadow:0 8px 24px -12px color-mix(in oklab,var(--foreground) 22%,transparent),inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent);
 }
 [data-bb-chat-ui-fluid-composer] [hidden] { display:none !important; }
@@ -94,7 +96,8 @@ ${phoneFooterOwner} > [data-composer-box] {
 }
 [data-bb-chat-ui-fluid-height][data-voice-mode="true"] { overflow:visible; }
 ${phoneForm} { --bb-chat-ui-fluid-input-radius:26px; --bb-chat-ui-fluid-control-size:36px; --bb-chat-ui-fluid-device-max:35dvh; --bb-chat-ui-fluid-compact-model-width:32px; }
-.dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face] { background:${DARK_GLASS_FACE}; box-shadow:0 8px 24px -12px color-mix(in oklab,var(--background) 60%,transparent),inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
+.dark ${phoneFooterFace}, .dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face] { background:${DARK_GLASS_FACE}; }
+.dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face] { box-shadow:0 8px 24px -12px color-mix(in oklab,var(--background) 60%,transparent),inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
 [data-bb-chat-ui-fluid-height] { position:relative; display:flex; flex-direction:column; justify-content:flex-end; overflow:clip; border-radius:var(--bb-chat-ui-fluid-input-radius); }
 [data-bb-chat-ui-fluid-toggle] { position:absolute; left:8px; bottom:8px; z-index:1; display:flex; border-radius:999px; }
 [data-bb-chat-ui-fluid-toggle-face] { inset:4px; opacity:0; transition:opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
