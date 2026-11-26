@@ -44,8 +44,14 @@ ${phoneFooterOwner} > ${nativeFooter} {
   order:0; position:relative; z-index:0;
   margin:0 8px -13px; padding:0 6px 13px; gap:4px;
   min-height:58px; max-height:none;
+  border:1px solid transparent; border-bottom:0;
+  border-radius:16px 16px 0 0; background:none;
+}
+/* 카드 표면만 아래로 5px 밀어 BB 버튼의 44px 터치 영역을 유지한다. */
+${phoneFooterOwner} > ${nativeFooter}::before {
+  content:""; position:absolute; z-index:-1; pointer-events:none; inset:4px -1px 0;
   border:1px solid color-mix(in oklab,var(--foreground) 12%,transparent);
-  border-bottom:0; border-radius:16px 16px 0 0;
+  border-bottom:0; border-radius:inherit;
   background-color:color-mix(in oklab,var(--foreground) 7%,var(--bb-chat-ui-glass-base,var(--background)));
 }
 ${phoneFooterOwner} > [data-composer-box] {
