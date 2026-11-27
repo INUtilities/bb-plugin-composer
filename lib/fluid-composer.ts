@@ -35,7 +35,7 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { disp
 }
 /* 기존 스레드의 sticky footer 뒤로 지나가는 메시지를 흐리게 한다. */
 [data-scroll-footer]:has([data-app-composer-role="primary"]:not([hidden]) [data-follow-up-composer]:not([hidden]) [data-bb-chat-ui-fluid-composer])::before {
-  content:""; position:absolute; z-index:-1; pointer-events:none; inset:-24px 0 0;
+  content:""; position:absolute; z-index:-1; pointer-events:none; inset:-16px 0 0;
   --composer-backdrop-base:var(--bb-chat-ui-glass-base,var(--background));
   background-image:linear-gradient(to bottom,color-mix(in oklab,var(--composer-backdrop-base) 68%,transparent),var(--composer-backdrop-base));
   -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
