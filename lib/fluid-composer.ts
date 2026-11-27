@@ -11,6 +11,7 @@ const voiceWithStop = `${voiceForm}:has(${voiceCapture}[data-gesture="toggle"])`
 const phoneForm = '[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"]';
 const nativeFooter = ':is([data-follow-up-composer-footer], [data-new-thread-footer]):not([hidden])';
 const phoneFooterOwner = `:is([data-follow-up-composer], [data-promptbox-shell][data-app-composer-role="primary"]):not([hidden]):has(> [data-composer-box] ${phoneForm}):has(> ${nativeFooter})`;
+const threadComposerFooter = '[data-scroll-footer]:has([data-app-composer-role="primary"]:not([hidden]) [data-follow-up-composer]:not([hidden]) [data-bb-chat-ui-fluid-composer])';
 const phoneFooterFace = `${phoneFooterOwner} > ${nativeFooter}::before`;
 const modelTrigger = 'button[aria-label^="Provider, model and reasoning"]';
 const phoneExpandedRow = `${phoneForm}:not([data-bb-chat-ui-slot-enabled]) [data-bb-chat-ui-fluid-row][data-multiline="true"]:not([data-voice-mode="true"])`;
@@ -33,18 +34,25 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { disp
     display:inline-flex !important;
   }
 }
-/* 기존 스레드의 sticky footer 뒤로 지나가는 메시지를 흐리게 한다. */
-[data-scroll-footer]:has([data-app-composer-role="primary"]:not([hidden]) [data-follow-up-composer]:not([hidden]) [data-bb-chat-ui-fluid-composer])::before {
-  content:""; position:absolute; z-index:-1; pointer-events:none; inset:-16px 0 0;
+/* 배경색이 먼저 글자를 가리면 mask가 빠져도 블러의 픽셀 경계가 옅다. */
+${threadComposerFooter}::before, ${threadComposerFooter}::after {
+  content:""; position:absolute; pointer-events:none;
+}
+${threadComposerFooter}::before {
+  z-index:-2; inset:24px 0 0;
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 16px);
+  mask-image:linear-gradient(to bottom,transparent,black 16px);
+}
+${threadComposerFooter}::after {
+  z-index:-1; inset:-16px 0 0;
   --composer-backdrop-base:var(--bb-chat-ui-glass-base,var(--background));
   background-image:linear-gradient(to bottom,
     transparent,
     color-mix(in oklab,var(--composer-backdrop-base) 68%,transparent) 24px,
+    color-mix(in oklab,var(--composer-backdrop-base) 92%,transparent) 40px,
     var(--composer-backdrop-base)
   );
-  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
-  -webkit-mask-image:linear-gradient(to bottom,transparent,black 48px);
-  mask-image:linear-gradient(to bottom,transparent,black 48px);
 }
 /* 휴대폰에서는 BB 컨트롤을 입력 표면 뒤에 겹치는 상단 카드에 둔다. */
 ${phoneFooterOwner} {
