@@ -638,7 +638,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "ae7b166c3a1e73b230b7134c6cb33f289e0552c56191af04962c7492f07be850",
+      "sha256": "4b9f928109f8f90d139dff68d94766aaa570e394741aec9e163fa4cce8595bff",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"
