@@ -4,12 +4,18 @@ import { EASE } from './motion.ts';
 import { fluidPickerCss } from './fluid-picker.ts';
 
 const actionPill = '[data-bb-chat-ui-fluid-panel-list] [role="menuitem"]';
-const metadataPill = ':is([data-bb-chat-ui-fluid-details] > :not(div), [data-bb-chat-ui-fluid-details]:not([data-follow-up-composer-footer]) > div > *, [data-bb-chat-ui-fluid-details][data-follow-up-composer-footer] > :first-child > :not(div), [data-bb-chat-ui-fluid-details][data-follow-up-composer-footer] > :first-child > div > *, [data-bb-chat-ui-fluid-details][data-follow-up-composer-footer] > div:not(:first-child) > *)';
-const metadataShell = '[data-promptbox-shell][data-bb-chat-ui-fluid-details-open]:has([data-bb-chat-ui-fluid-details-toggle])';
-const detailPill = `${metadataShell} ${metadataPill}:not([hidden])`;
+const fluidShell = '[data-promptbox-shell]:has([data-bb-chat-ui-fluid-composer])';
 const voiceForm = '[data-bb-chat-ui-fluid-composer][data-bb-chat-ui-fluid-voice-only="true"]';
 const voiceCapture = '[data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"]:not([data-split="true"])';
 const voiceWithStop = `${voiceForm}:has(${voiceCapture}[data-gesture="toggle"])`;
+const phoneForm = '[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"]';
+const nativeFooter = ':is([data-follow-up-composer-footer], [data-new-thread-footer]):not([hidden])';
+const phoneFooterOwner = `:is([data-follow-up-composer], [data-promptbox-shell][data-app-composer-role="primary"]):not([hidden]):has(> [data-composer-box] ${phoneForm}):has(> ${nativeFooter})`;
+const threadComposerFooter = '[data-scroll-footer]:has([data-app-composer-role="primary"]:not([hidden]) [data-follow-up-composer]:not([hidden]) [data-bb-chat-ui-fluid-composer])';
+const phoneFooterFace = `${phoneFooterOwner} > ${nativeFooter}::before`;
+const modelTrigger = 'button[aria-label^="Provider, model and reasoning"]';
+const phoneExpandedRow = `${phoneForm}:not([data-bb-chat-ui-slot-enabled]) [data-bb-chat-ui-fluid-row][data-multiline="true"]:not([data-voice-mode="true"])`;
+const phoneSingleRow = `${phoneForm} [data-bb-chat-ui-fluid-row][data-multiline="false"]`;
 
 export const fluidComposerCss = `
 ${fluidPickerCss}
@@ -17,21 +23,61 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-info-bar]:not([hidden]) { disp
 /* 음성 상자는 같은 작성창의 위·아래 컨트롤을 임시로 숨긴다. */
 [data-promptbox-shell]:has(form[data-bb-chat-ui-fluid-composer][data-promptbox-voice-active])
   :is([data-bb-chat-ui-info-bar], [data-follow-up-composer-footer], [data-new-thread-footer]) { display:none !important; }
-html[data-bb-chat-ui-fluid-mode] :is([data-follow-up-composer-footer], [data-new-thread-footer]),
-html[data-bb-chat-ui-fluid-mode] [data-app-composer][data-app-composer-role][data-promptbox-shell] :is([data-follow-up-composer-footer], [data-new-thread-footer]):not([data-bb-chat-ui-fluid-details]) { display:none !important; }
-[data-promptbox-shell][data-bb-chat-ui-fluid-details-open] { position:relative; }
-html[data-bb-chat-ui-fluid-mode] [data-promptbox-shell][data-bb-chat-ui-fluid-details-open] [data-bb-chat-ui-fluid-details][role="region"]:not([hidden]) {
-  display:flex !important; position:absolute !important; gap:8px; justify-content:flex-start; align-items:center;
-  top:var(--bb-chat-ui-pill-row-center,0px); bottom:auto; left:var(--bb-chat-ui-pill-row-left,0px); right:auto;
-  width:var(--bb-chat-ui-pill-row-width,100%); max-width:100%; min-width:0; min-height:0; max-height:none; transform:translateY(-50%);
-  z-index:30; margin:0; padding:8px 0; flex-wrap:nowrap; overflow-x:auto !important; overflow-y:hidden !important;
-  overscroll-behavior:contain; scrollbar-width:none; opacity:1; pointer-events:auto;
-  border:0; border-radius:0; background:transparent; box-shadow:none;
+/* BB가 렌더링한 하단의 기본 높이와 클릭을 좁은 패널에서도 유지한다. */
+@container follow-up-composer style(--follow-up-composer-container-compact:true) {
+  [data-follow-up-composer]:has([data-bb-chat-ui-fluid-composer]):not([data-follow-up-composer-footer-visible]) [data-follow-up-composer-footer]:not([hidden]) {
+    opacity:1; pointer-events:auto; min-height:1.5rem; max-height:1.5rem; margin-top:0.25rem;
+  }
 }
-html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-fluid-details][data-bb-chat-ui-fluid-details-before] { justify-content:safe flex-end; }
-[data-bb-chat-ui-fluid-details]::-webkit-scrollbar { display:none; }
-[data-bb-chat-ui-fluid-details] > div:not([hidden]), [data-bb-chat-ui-fluid-details][data-follow-up-composer-footer] > :first-child > div:not([hidden]) { display:contents; }
-[data-bb-chat-ui-fluid-details-resting] { opacity:0; }
+@container promptbox-shell (width <= 22rem) {
+  ${fluidShell} :is([data-follow-up-composer-footer],[data-new-thread-footer]) :is([data-promptbox-hide-branch-compact],[data-promptbox-hide-tiny]):not([hidden]) {
+    display:inline-flex !important;
+  }
+}
+/* 배경색이 먼저 글자를 가리면 mask가 빠져도 블러의 픽셀 경계가 옅다. */
+${threadComposerFooter}::before, ${threadComposerFooter}::after {
+  content:""; position:absolute; pointer-events:none;
+}
+${threadComposerFooter}::before {
+  z-index:-2; inset:24px 0 0;
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 16px);
+  mask-image:linear-gradient(to bottom,transparent,black 16px);
+}
+${threadComposerFooter}::after {
+  z-index:-1; inset:-16px 0 0;
+  --composer-backdrop-base:var(--bb-chat-ui-glass-base,var(--background));
+  background-image:linear-gradient(to bottom,
+    transparent,
+    color-mix(in oklab,var(--composer-backdrop-base) 68%,transparent) 24px,
+    color-mix(in oklab,var(--composer-backdrop-base) 92%,transparent) 40px,
+    var(--composer-backdrop-base)
+  );
+}
+/* 휴대폰에서는 BB 컨트롤을 입력 표면 뒤에 겹치는 상단 카드에 둔다. */
+${phoneFooterOwner} {
+  display:flex; flex-direction:column; reading-flow:flex-visual;
+}
+/* 기존 떠 있는 피드백 버튼이 표시되면 하단 액션의 화면 위치를 유지한다. */
+html[data-bb-chat-ui-root-device="phone"]:has([data-agentation-root]:not([hidden])) ${phoneFooterOwner} {
+  padding-block-end:2.75rem;
+}
+${phoneFooterOwner} > ${nativeFooter} {
+  order:0; position:relative; z-index:0;
+  margin:0 8px -13px; padding:0 6px 13px; gap:4px;
+  min-height:58px; max-height:none;
+  border:1px solid transparent; border-bottom:0;
+  border-radius:18px 18px 0 0; background:none;
+}
+/* 카드 표면만 아래로 5px 밀어 BB 버튼의 44px 터치 영역을 유지한다. */
+${phoneFooterFace} {
+  content:""; position:absolute; z-index:-1; pointer-events:none; inset:4px 0 0;
+  border:1px solid color-mix(in oklab,var(--foreground) 12%,transparent);
+  border-bottom:0; border-radius:inherit;
+}
+${phoneFooterOwner} > [data-composer-box] {
+  order:1; position:relative; z-index:1; min-width:0;
+}
 [data-bb-chat-ui-fluid-options-open]:not([data-bb-chat-ui-fluid-options-returning]) :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) { pointer-events:none; }
 [data-bb-chat-ui-fluid-options-open] :is([data-bb-chat-ui-info-bar], [data-bb-chat-ui-slot-toolbar]) > :not([data-bb-chat-ui-slot-toolbar]) { opacity:0; }
 [data-bb-chat-ui-fluid-composer] {
@@ -54,13 +100,13 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-fluid-details][data-bb-chat-ui
 [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-row][data-multiline] { grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto; grid-template-areas:". actions"; row-gap:0; }
 [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-actions] { justify-self:end; }
 [data-bb-chat-ui-slot-open] [data-bb-chat-ui-fluid-height][data-multiline="true"] { border-radius:var(--bb-chat-ui-fluid-input-radius); }
+${phoneFooterFace}, [data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face] {
+  background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25);
+}
 [data-bb-chat-ui-fluid-surface], [data-bb-chat-ui-fluid-toggle-face] {
   position:absolute; inset:0; pointer-events:none; border-radius:inherit;
-  background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25);
   box-shadow:0 8px 24px -12px color-mix(in oklab,var(--foreground) 22%,transparent),inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent);
 }
-[data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-details-toggle] { position:relative; flex:none; background:${LIGHT_GLASS_FACE}; width:32px; height:32px; min-width:32px; min-height:32px; padding:0; border-radius:999px; }
-.dark [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-fluid-details-toggle] { background:${DARK_GLASS_FACE}; }
 [data-bb-chat-ui-fluid-composer] [hidden] { display:none !important; }
 [data-bb-chat-ui-fluid-extra-actions] { display:contents; }
 [data-bb-chat-ui-fluid-native-controls] { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
@@ -70,8 +116,9 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-fluid-details][data-bb-chat-ui
   transition:transform ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, inset-inline-end ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out};
 }
 [data-bb-chat-ui-fluid-height][data-voice-mode="true"] { overflow:visible; }
-[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] { --bb-chat-ui-fluid-input-radius:26px; --bb-chat-ui-fluid-control-size:36px; --bb-chat-ui-fluid-device-max:35dvh; }
-.dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face] { background:${DARK_GLASS_FACE}; box-shadow:0 8px 24px -12px color-mix(in oklab,var(--background) 60%,transparent),inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
+${phoneForm} { --bb-chat-ui-fluid-input-radius:26px; --bb-chat-ui-fluid-control-size:36px; --bb-chat-ui-fluid-device-max:35dvh; --bb-chat-ui-fluid-compact-model-width:32px; }
+.dark ${phoneFooterFace}, .dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face] { background:${DARK_GLASS_FACE}; }
+.dark [data-bb-chat-ui-fluid-surface], .dark [data-bb-chat-ui-fluid-toggle-face] { box-shadow:0 8px 24px -12px color-mix(in oklab,var(--background) 60%,transparent),inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
 [data-bb-chat-ui-fluid-height] { position:relative; display:flex; flex-direction:column; justify-content:flex-end; overflow:clip; border-radius:var(--bb-chat-ui-fluid-input-radius); }
 [data-bb-chat-ui-fluid-toggle] { position:absolute; left:8px; bottom:8px; z-index:1; display:flex; border-radius:999px; }
 [data-bb-chat-ui-fluid-toggle-face] { inset:4px; opacity:0; transition:opacity ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}; }
@@ -89,17 +136,13 @@ html[data-bb-chat-ui-fluid-mode] [data-bb-chat-ui-fluid-details][data-bb-chat-ui
 [data-bb-chat-ui-fluid-panel] { display:flex; flex-direction:column; width:100%; min-width:0; }
 [data-bb-chat-ui-fluid-panel-list] { display:flex; flex-wrap:nowrap; gap:8px; min-width:0; min-height:0; overflow-x:auto; overflow-y:hidden; overscroll-behavior:contain; scrollbar-width:none; padding:8px; }
 [data-bb-chat-ui-fluid-panel-list]::-webkit-scrollbar { display:none; }
-${actionPill}, ${detailPill} { --bb-chat-ui-fluid-pill-height:32px; position:relative; display:inline-flex; flex:none; align-items:center; justify-content:flex-start; gap:8px; width:auto; min-width:0; max-width:none; min-height:var(--bb-chat-ui-fluid-pill-height); height:auto; padding:6px 12px; border-radius:999px; text-align:left; white-space:nowrap; font-size:12px; line-height:16px; background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25); box-shadow:inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
-${detailPill} { height:var(--bb-chat-ui-fluid-pill-height); margin:0; font-weight:500; }
-${detailPill}.text-muted-foreground, ${detailPill} > .text-muted-foreground { color:var(--foreground); }
-${detailPill} > div { height:auto; }
-${detailPill} > :is(span, div), ${detailPill} > :is(span, div) > span { font-size:inherit; font-weight:inherit; line-height:inherit; }
-.dark ${actionPill}, .dark ${detailPill} { background:${DARK_GLASS_FACE}; box-shadow:inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
-${actionPill}:is(:hover,:focus-visible):not(:disabled):not([data-disabled]), ${detailPill}:is(button):is(:hover,:focus-visible):not(:disabled):not([data-disabled]) { background-color:color-mix(in oklab,var(--foreground) 8%,transparent); }
-${actionPill} > :is([data-icon-root], svg), ${detailPill} > :is([data-icon-root], svg) { flex:none; width:16px; height:16px; }
+${actionPill} { --bb-chat-ui-fluid-pill-height:32px; position:relative; display:inline-flex; flex:none; align-items:center; justify-content:flex-start; gap:8px; width:auto; min-width:0; max-width:none; min-height:var(--bb-chat-ui-fluid-pill-height); height:auto; padding:6px 12px; border-radius:999px; text-align:left; white-space:nowrap; font-size:12px; line-height:16px; background:${LIGHT_GLASS_FACE}; backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25); box-shadow:inset 0 1px 3px color-mix(in oklab,var(--popover) 35%,transparent); }
+.dark ${actionPill} { background:${DARK_GLASS_FACE}; box-shadow:inset 0 1px 3px color-mix(in oklab,var(--foreground) 8%,transparent); }
+${actionPill}:is(:hover,:focus-visible):not(:disabled):not([data-disabled]) { background-color:color-mix(in oklab,var(--foreground) 8%,transparent); }
+${actionPill} > :is([data-icon-root], svg) { flex:none; width:16px; height:16px; }
 ${actionPill} > span { min-width:0; }
 [data-bb-chat-ui-fluid-panel-list] > p { margin:8px; color:var(--muted-foreground); font-size:12px; line-height:18px; }
-[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] ${actionPill}, ${metadataShell}:has([data-bb-composer-device="phone"]) ${metadataPill} { --bb-chat-ui-fluid-pill-height:36px; padding:8px 12px; font-size:13px; }
+[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] ${actionPill} { --bb-chat-ui-fluid-pill-height:36px; padding:8px 12px; font-size:13px; }
 [data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-bb-chat-ui-fluid-editor][data-bb-chat-ui-fluid-moving] .ProseMirror { caret-color:transparent; }
 [data-bb-chat-ui-fluid-row] { display:grid; flex:1 1 auto; grid-template-columns:auto minmax(0,1fr) auto; grid-template-rows:minmax(0,1fr); grid-template-areas:"options editor actions"; align-items:end; gap:4px; padding:8px; min-height:48px; box-sizing:border-box; }
 [data-bb-chat-ui-fluid-row][data-multiline="true"] { grid-template-areas:"editor editor editor" "options . actions"; grid-template-rows:minmax(0,1fr) auto; row-gap:8px; }
@@ -157,9 +200,13 @@ ${actionPill} > span { min-width:0; }
 [data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-bb-chat-ui-fluid-row] { min-height:52px; }
 [data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-promptbox-editor-scroll] { font-size:16px; }
 [data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] :is([data-promptbox-submit-action], button[aria-label="Prompt actions"], button[aria-label="Start voice input"], [data-bb-chat-ui-voice-record]) { width:36px; height:36px; min-width:36px; min-height:36px; }
-[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] { width:32px; max-width:32px; padding-inline:6px; gap:0; }
-[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-bb-chat-ui-fluid-options] button[aria-label^="Provider, model and reasoning"] > :not(:first-child) { display:none; }
-[data-bb-chat-ui-fluid-composer][data-bb-composer-device="phone"] [data-bb-chat-ui-fluid-native-controls] button[aria-label^="Provider, model and reasoning"] > span.contents > :not(:first-child) { display:none; }
+${phoneForm} [data-bb-chat-ui-fluid-options] ${modelTrigger} > :not(:first-child) { display:none; }
+${phoneSingleRow} [data-bb-chat-ui-fluid-options] ${modelTrigger} { width:var(--bb-chat-ui-fluid-compact-model-width); max-width:var(--bb-chat-ui-fluid-compact-model-width); padding-inline:6px; gap:0; }
+${phoneSingleRow} [data-bb-chat-ui-fluid-native-controls] ${modelTrigger} > span.contents > :not(:first-child) { display:none; }
+${phoneExpandedRow} { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"editor editor" "options actions"; }
+${phoneExpandedRow} > [data-bb-chat-ui-fluid-options] { justify-self:start; max-width:100%; }
+${phoneExpandedRow} ${modelTrigger} { flex-shrink:1; }
+${phoneExpandedRow} [data-bb-chat-ui-fluid-effort] { flex:none; }
 [data-bb-chat-ui-voice-options] { display:flex; align-items:center; gap:4px; }
 [data-bb-chat-ui-voice-options][inert] { opacity:.4; }
 [data-bb-chat-ui-voice-actions] {
@@ -226,6 +273,9 @@ html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-split
 [data-bb-chat-ui-voice-glow] > i { position:absolute; left:5%; bottom:-6px; width:90%; height:20px; transform-origin:50% 100%; background:radial-gradient(ellipse at 50% 100%,color-mix(in oklab,var(--ring,var(--foreground)) 90%,transparent) 0%,color-mix(in oklab,var(--ring,var(--foreground)) 38%,transparent) 28%,transparent 74%); }
 [data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"] { width:auto; height:var(--bb-chat-ui-fluid-control-size); gap:8px; }
 html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"] > :is([data-bb-chat-ui-voice-primary],[data-bb-chat-ui-voice-send]) { position:relative; left:auto; top:auto; width:var(--bb-chat-ui-fluid-control-size); height:var(--bb-chat-ui-fluid-control-size); min-width:var(--bb-chat-ui-fluid-control-size); min-height:var(--bb-chat-ui-fluid-control-size); padding:0; transform:none; background:transparent; color:var(--foreground); }
+html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-actions][data-appearance="composer"] > [data-bb-chat-ui-voice-primary] {
+  transition:width ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, height ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out}, background-color ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out};
+}
 [data-bb-chat-ui-voice-actions][data-appearance="composer"] > button::before { display:none; }
 [data-bb-chat-ui-voice-actions][data-appearance="composer"][data-active="true"] [data-bb-chat-ui-voice-stop-symbol] { opacity:1; }
 [data-bb-chat-ui-voice-actions][data-appearance="composer"]:not([data-split="true"]) > [data-bb-chat-ui-voice-send] { display:none; }
@@ -256,13 +306,17 @@ ${voiceForm} [data-bb-chat-ui-fluid-surface] {
 html [data-bb-chat-ui-fluid-composer] [data-bb-chat-ui-voice-visual] > [data-bb-chat-ui-voice-orbit] { left:auto; top:auto; right:4px; bottom:4px; width:calc(var(--bb-chat-ui-fluid-control-size) + 8px); height:calc(var(--bb-chat-ui-fluid-control-size) + 8px); transform:none; }
 [data-bb-chat-ui-voice-bars] { position:absolute; left:calc(var(--bb-chat-ui-fluid-control-size) + 20px); right:calc(var(--bb-chat-ui-fluid-control-size) + 20px); top:calc((var(--bb-chat-ui-fluid-control-size) - 8px) / 2); height:24px; opacity:.8; }
 [data-bb-chat-ui-voice-bars] > svg { display:block; width:100%; height:100%; overflow:visible; }
-${voiceForm} [data-bb-chat-ui-voice-visual] {
+[data-bb-chat-ui-voice-visual="bars"] {
   inset-inline-end:var(--bb-chat-ui-fluid-voice-reserve);
   border-radius:var(--bb-chat-ui-fluid-input-radius);
   transition:inset-inline-end ${FLUID_COMPOSER_MORPH_MS}ms ${EASE.out};
+  animation:bb-chat-ui-composer-voice-in 220ms ${EASE.out} both;
 }
-${voiceForm} [data-bb-chat-ui-voice-glow] { opacity:.28; }
-${voiceForm} [data-bb-chat-ui-voice-bars] {
+[data-bb-chat-ui-voice-visual="bars"][data-exiting="true"] { animation-name:bb-chat-ui-composer-voice-out; }
+@keyframes bb-chat-ui-composer-voice-in { from { opacity:0; } to { opacity:1; } }
+@keyframes bb-chat-ui-composer-voice-out { from { opacity:1; } to { opacity:0; } }
+[data-bb-chat-ui-voice-visual="bars"] [data-bb-chat-ui-voice-glow] { opacity:.28; }
+[data-bb-chat-ui-voice-visual="bars"] [data-bb-chat-ui-voice-bars] {
   inset-inline:16px; top:50%; height:34px; max-width:320px; margin-inline:auto;
   transform:translateY(-50%); opacity:1;
   filter:drop-shadow(0 0 2px color-mix(in oklab,var(--foreground) 82%,transparent))
@@ -271,8 +325,8 @@ ${voiceForm} [data-bb-chat-ui-voice-bars] {
 ${voiceForm}:has(${voiceCapture}[data-gesture="hold"]) [data-bb-chat-ui-voice-bars] {
   inset-inline-end:calc(var(--bb-chat-ui-fluid-control-size) + 16px);
 }
-${voiceForm} [data-bb-chat-ui-voice-bars] > svg { stroke-width:2.2px; }
-@media (prefers-reduced-motion: reduce) { [data-bb-chat-ui-voice-neck] { animation:none !important; opacity:0; } [data-bb-chat-ui-voice-actions] > button::before { animation:none !important; } :is([data-bb-chat-ui-voice-waveform], [data-bb-chat-ui-voice-visual]) { transition:none !important; } }
+[data-bb-chat-ui-voice-visual="bars"] [data-bb-chat-ui-voice-bars] > svg { stroke-width:2.2px; }
+@media (prefers-reduced-motion: reduce) { [data-bb-chat-ui-voice-neck] { animation:none !important; opacity:0; } [data-bb-chat-ui-voice-actions] > button::before { animation:none !important; } :is([data-bb-chat-ui-voice-waveform], [data-bb-chat-ui-voice-visual]) { transition:none !important; } [data-bb-chat-ui-voice-visual="bars"] { animation:none; } }
 /* 한 줄은 반원을 유지하고 여러 줄 입력의 실제 clip과 배경만 스쿼클로 바꾼다. */
 @supports (corner-shape: squircle) {
   [data-bb-chat-ui-fluid-height] { corner-shape:round; }

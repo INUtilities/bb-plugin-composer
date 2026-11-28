@@ -20,7 +20,11 @@
     "2026-11-10: opening the 06 picker compacts the composer to the selected slot labels and one line, then restores the mounted draft and prior shape when closed.",
     "2026-11-10: 원격 PR #1·#2의 디자인·트랜지션에 로컬 78807cc의 활성 스타일 공유와 음성 입력을 통합했다. 프로젝트 조회·늦은 확인 포커스·숨긴 정보 행 키보드 접근·전역 property 등록을 수정하고, 기존 음성의 빠른 전사 뒤 호환 클릭 전송도 방지했다.",
     "2026-11-11: WebKit이 지원하지 않는 overflow-clip-margin 의존을 fixed overlay로 대체하고 슬롯 다섯 행을 화면 안으로 배치했다. 여러 줄 commit에서 기존 높이 controller를 동기화해 ResizeObserver 전달 전의 목표 높이 지연을 줄였으며 기존 모션과 음성을 유지한다.",
-    "2026-11-23: Composer PR #4 adds the 41-bar waveform, detached stop for tap recording, and transcript insertion for tap and hold. The left-side information row and subpixel IME fit stay in place."
+    "2026-11-23: Composer PR #4 adds the 41-bar waveform, detached stop for tap recording, and transcript insertion for tap and hold. The left-side information row and subpixel IME fit stay in place.",
+    "2026-11-24: Composer restores the original BB footer for thread information and permissions from PR #4. Fluid keeps the existing Chat UI info row and model/Effort labels.",
+    "2026-11-24: Fluid uses the paper-plane glyph for send, queue and steer, while BB keeps their separate actions. Voice mode animates its screen position and fades the waveform as native footer visibility changes.",
+    "2026-11-24: The empty phone follow-up composer requests the host footer without moving focus. The BB footer remains visible after focus leaves.",
+    "2026-11-25: BB footer controls sit in a phone-only card tucked behind the input. Desktop retains the original BB footer layout."
   ],
   "files": [
     {
@@ -33,7 +37,7 @@
     {
       "source": "composer/FluidComposer.options.test.tsx",
       "destination": "composer/FluidComposer.options.test.tsx",
-      "sha256": "5827eb1c8452c51970ea80d42e888161774bdb1558329b84c4868bf52a8c508b",
+      "sha256": "b5eec0f9b24e52edf0b5758f699ef04b3a89ef9d06d15902cee3edccaeb02446",
       "sourceSha256": "3fd05c1804ff9a108eab7c3352d783a62ddf0f4dfda4bb94112c46e1b96f8eb6",
       "integrationOverlay": true
     },
@@ -47,7 +51,7 @@
     {
       "source": "composer/FluidComposer.voice.test.tsx",
       "destination": "composer/FluidComposer.voice.test.tsx",
-      "sha256": "5903b005c9ab4fde092bcc83384c54076af0cc5a8281cb25e6cead5d10013b55",
+      "sha256": "2fe866628ce993c0fd2707cbd5d14cd3951760f4c5a4ebfa825fa692188016e0",
       "sourceSha256": "f9647987eb8b3ddbca15526a71988c48d12815481780a7c99b5833c8194b0af7",
       "integrationOverlay": true
     },
@@ -61,15 +65,8 @@
     {
       "source": "composer/FluidComposerBody.tsx",
       "destination": "composer/FluidComposerBody.tsx",
-      "sha256": "c1c4934444474e7533102a67339a8bd3701b445a79af050cd81f55af966e4b16",
+      "sha256": "a4611d465363b34fdf08104c1b4ba2ad9174bf21c3912ea4321c8d65831be1ac",
       "sourceSha256": "c197522d8ac0c0c00c1905412f422ff8d7a651c1d97b2e8f50cd94afbb331632",
-      "integrationOverlay": true
-    },
-    {
-      "source": "composer/FluidComposerDetails.tsx",
-      "destination": "composer/FluidComposerDetails.tsx",
-      "sha256": "a0f1fbb4e526a524d0829dcadfa58e8bed0b2b611a55b4f0e3320a6e082590c4",
-      "sourceSha256": "ddf2c84c51b64c73f7b98e0ab0f012090b3cb12e1ee71a65701bb56e3c1a434e",
       "integrationOverlay": true
     },
     {
@@ -101,7 +98,7 @@
     {
       "source": "composer/FluidVoiceControl.tsx",
       "destination": "composer/FluidVoiceControl.tsx",
-      "sha256": "97678dfde455597336c6dc9918f1b5158918fd780515c82c93e45aec38e72da4",
+      "sha256": "d2426cbb59414aa86b89df5532077c4a86962451bcb5628bcc2631e363f1466c",
       "sourceSha256": "2df3ae57c7599b51ba77a2a77bb1526fbdd6e872709d2d5a0d6334170df6500e",
       "integrationOverlay": true
     },
@@ -115,7 +112,7 @@
     {
       "source": "composer/FluidVoiceWaveform.tsx",
       "destination": "composer/FluidVoiceWaveform.tsx",
-      "sha256": "f0fc54edfd48fa4a6c219c9602830ab26f5ea609e81016fbc382feb94f458027",
+      "sha256": "7990fa872ad3c9dcb8eda222f2b432e636ee8a96f9ac2ae1672ab13d9634ceee",
       "sourceSha256": "6754a3bea69d15c6b3c324ed8420564b7a07ec597cb136c1e6fb46013ec8d391",
       "integrationOverlay": true
     },
@@ -304,7 +301,7 @@
     {
       "source": "composer/src/PromptBoxInternal.tsx",
       "destination": "composer/src/PromptBoxInternal.tsx",
-      "sha256": "ce041ecd35e87be0f83929f73b75429d7620e03e81ff034a07400b34b9cc36bc",
+      "sha256": "7b1e377a87149de573b2a980525f96df7140306fbbb627f7b5430f66bb1b4717",
       "sourceSha256": "fa3b85470e5b81c2e16800a4136bb46d666987bba1a19c8112e8b021d0f51111",
       "integrationOverlay": true
     },
@@ -641,7 +638,7 @@
     {
       "source": "lib/fluid-composer.ts",
       "destination": "lib/fluid-composer.ts",
-      "sha256": "93a4c1f0efd30f74bd2e8d0ea9f4733a4a298ee41acd4cff4b7cc477868d88dc",
+      "sha256": "1e352594333d050132b1be5f47bbff47462c8efa1b6ece64b65daf2f3b95a31f",
       "sourceSha256": "46c502f5c30eed2a2ce73dffb4f505464efbdc6abfc3d492dcd3ae875fe35d05",
       "integrationOverlay": true,
       "integrationReason": "로컬 main 78807cc의 활성 stylesheet 공유 보존"
@@ -663,14 +660,14 @@
     {
       "source": "lib/fluid-composer-layout.ts",
       "destination": "lib/fluid-composer-layout.ts",
-      "sha256": "259c2f3f5196ec10d48989c591d8258a66080e26fc0ba65affef5516465e8f9d",
+      "sha256": "9e8a559aa1912d635de41d3c2a5d9eba5e53cbd657f594180050bf8f93564fb9",
       "sourceSha256": "065d1def4969ea45feba69a0ed13f702026ef041d92ba60753a95c7af12822b7",
       "integrationOverlay": true
     },
     {
       "source": "lib/fluid-composer-layout.test.ts",
       "destination": "lib/fluid-composer-layout.test.ts",
-      "sha256": "44ea8aca1286f2496e37c245d03c473e60f3ecb712fb8106574b9bcf8ce73b10",
+      "sha256": "8c447d725746062f7e32d8b492bb6a394e444a7ee5f3b1673b6b331b6196d14c",
       "sourceSha256": "18dc4eae2605748aebc56859471cd93b475fe64647487cd69b9b2c4a6e13ec05",
       "integrationOverlay": true
     },
@@ -715,8 +712,9 @@
     {
       "source": "composer/FluidModelControls.test.tsx",
       "destination": "composer/FluidModelControls.test.tsx",
-      "sha256": "a034e2d8e23863f247d1487b06a50047d9572880a5ee62cb7593d3ce93065462",
-      "sourceSha256": "a034e2d8e23863f247d1487b06a50047d9572880a5ee62cb7593d3ce93065462"
+      "sha256": "9cb6db1745618c0ab0d82e02782db1cc39510d33c1eff2839b43de26da417911",
+      "sourceSha256": "a034e2d8e23863f247d1487b06a50047d9572880a5ee62cb7593d3ce93065462",
+      "integrationOverlay": true
     },
     {
       "source": "composer/EffortIcon.test.tsx",
@@ -931,8 +929,9 @@
     {
       "source": "composer/FluidComposer.picker.test.tsx",
       "destination": "composer/FluidComposer.picker.test.tsx",
-      "sha256": "fc8c771085b36fc9a0d73dc7e70cc023e483fbc81a72850b82b06eb651d4f3cc",
-      "sourceSha256": "fc8c771085b36fc9a0d73dc7e70cc023e483fbc81a72850b82b06eb651d4f3cc"
+      "sha256": "3ffe88d6b9b329d15ada31c4ba8adb5345b5d167a491c7b00965c451f57188c2",
+      "sourceSha256": "fc8c771085b36fc9a0d73dc7e70cc023e483fbc81a72850b82b06eb651d4f3cc",
+      "integrationOverlay": true
     },
     {
       "source": "composer/FluidComposerPicker.test.tsx",

@@ -34,11 +34,11 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const [panelPresent, setPanelPresent] = useState(panelOpen);
   const panelLayer = useRef<HTMLDivElement>(null);
   const showPanel = !discardPanel && (panelOpen || panelPresent);
-  // 옵션이 표시되는 동안만 i 필을 기준으로 목록 위치를 맞춘다.
+  // 옵션이 표시되는 동안만 정보 행을 기준으로 목록 위치를 맞춘다.
   useLayoutEffect(() => {
     const layer=panelLayer.current;
     const composer=layer?.closest<HTMLElement>(FLUID_COMPOSER);
-    if (layer && composer) return bindFluidPillRow(layer,composer,'options');
+    if (layer && composer) return bindFluidPillRow(layer,composer);
   },[showPanel]);
   // 퇴장이 끝날 때까지 옵션 노드를 유지하고 재열림·동작 줄이기·해제 때 예약을 정리한다.
   useLayoutEffect(() => {
@@ -67,6 +67,11 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
   const layoutAnimation = useRef<Animation | null>(null);
   const actionAnimation = useRef<Animation | null>(null);
   const actionPosition = useRef<{ x: number; y: number } | null>(null);
+  const readActionPosition = (column: HTMLElement) => {
+    const box = column.getBoundingClientRect();
+    const frame = viewport.current!.getBoundingClientRect();
+    return { x: box.x - frame.x, y: box.y - frame.y };
+  };
   const previousVoiceMode = useRef(voiceMode);
   const layoutProbe = useRef((_beforeInput?: { x: number; y: number }) => {});
   // 입력 전 위치를 사용해 원격의 첫 프레임 보정과 현재 높이 곡선을 함께 유지한다.
@@ -76,7 +81,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     if (viewport.current?.closest('[data-bb-chat-ui-slot-open]')) return;
     const input = editorColumn.current?.querySelector<HTMLElement>('[data-bb-chat-ui-voice-transcript], .ProseMirror');
     if (!input || !row.current || !optionColumn.current || !actionColumn.current || !editorColumn.current || !content.current) return;
-    if (!draftText && !voiceMode) actionPosition.current = actionColumn.current.getBoundingClientRect();
+    if (!draftText && previousVoiceMode.current === voiceMode) actionPosition.current = readActionPosition(actionColumn.current);
     const next = voiceMode || needsFullWidthComposer(row.current, input, optionColumn.current, actionColumn.current);
     traceComposerInput(viewport.current, 'layoutProbe.result', {composing:composing.current, needsFullWidth:next});
     // 한글 IME 조합 중에는 임시 글자 폭으로 접힘 판정이 흔들릴 수 있다.
@@ -198,7 +203,7 @@ export function FluidComposerBody({ editor, options, actions, attachments, voice
     previousVoiceMode.current = voiceMode;
     if (!column) return;
     actionAnimation.current?.cancel();
-    const next = column.getBoundingClientRect(); actionPosition.current = next;
+    const next = readActionPosition(column); actionPosition.current = next;
     if (!changed || !previous || !column.animate || column.ownerDocument.defaultView!.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const dx = previous.x - next.x, dy = previous.y - next.y;
     if (dx || dy) actionAnimation.current = column.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: FLUID_COMPOSER_MORPH_MS, easing: EASE.out });

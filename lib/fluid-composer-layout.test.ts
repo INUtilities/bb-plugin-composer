@@ -55,6 +55,31 @@ test('uses the collapsed effort width after a preview without losing explicit ne
   f.editor.innerHTML='<p>first</p><p>second</p>';assert.equal(f.probe(),true);
  }finally{f.dom.window.close();}
 });
+
+test('uses the compact model and effort widths when a phone draft can return to one line', () => {
+ const f = fixture();
+ try {
+  const options = f.dom.window.document.getElementById('left')!;
+  options.parentElement!.dataset.multiline = 'true';
+  options.parentElement!.style.setProperty('--bb-chat-ui-fluid-compact-model-width', '32px');
+  options.innerHTML = `<div data-bb-chat-ui-fluid-native-controls>
+    <button aria-label="Provider, model and reasoning">Extended model name</button>
+   </div><button data-bb-chat-ui-fluid-effort style="column-gap:6px"><span data-bb-chat-ui-fluid-effort-label>High</span></button>`;
+  options.getBoundingClientRect = () => ({ width: 176 } as DOMRect);
+  options.querySelector('button')!.getBoundingClientRect = () => ({ width: 112 } as DOMRect);
+  options.querySelector('span')!.getBoundingClientRect = () => ({ width: 22 } as DOMRect);
+  // The expanded options take 176px. Their compact footprint is 68px.
+  f.text(222);
+  assert.equal(f.probe(), false, 'the names must not keep a draft expanded');
+  f.text(222.3125);
+  assert.equal(f.probe(), true, 'fractional overflow must still wrap');
+  f.editor.innerHTML = '<p>first<br>second</p>';
+  f.height(48);
+  f.text(60);
+  assert.equal(f.probe(), true, 'an explicit line break must stay expanded');
+ } finally { f.dom.window.close(); }
+});
+
 test('measures a clipped mention by its visible outer box instead of its long hidden label',()=>{
  const f=fixture();try{
   f.editor.innerHTML='<p><span style="margin:0 4px">very long clipped mention label</span></p>';

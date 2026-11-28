@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode, type ReactElement } from 'react';
 import { Button } from './components/ui/button';
 import { Icon } from './components/ui/icon';
 import { HoldVoiceSession, IDLE_HOLD_VOICE, holdVoiceIsActive, type HoldVoiceDelivery, type HoldVoiceSnapshot } from '../lib/hold-voice';
@@ -13,7 +13,7 @@ export interface FluidVoiceControlProps {
   showFallback: boolean;
   warning: string | null;
   fallback: ReactNode;
-  sendIcon?: string | null;
+  sendIcon?: string | ReactElement | null;
   beforeCapture?(): void;
   transcribe(file: File, signal: AbortSignal): Promise<string>;
   deliver(text: string, mode: HoldVoiceDelivery): void;
@@ -86,6 +86,7 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
       deliver: (text, mode) => current.current.deliver(text, mode),
       changed: snapshot => {
         if (!mounted) return;
+        current.current.onStateChange(snapshot);
         setState(snapshot);
         if (snapshot.phase !== 'starting' && snapshot.phase !== 'recording') { stopPreview(); setStream(null); current.current.onStreamChange?.(null); }
         if (snapshot.phase === 'error' && snapshot.hasRecording) { setLeaving(false); setChoicesOpen(true); }
@@ -93,6 +94,7 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
       },
     });
     session.current = recording;
+    current.current.onStateChange(recording.snapshot);
     const loseFocus = () => { if (['starting','recording'].includes(recording.snapshot.phase)) cancel(); };
     const visibility = () => { if (document.hidden) loseFocus(); };
     const escape = (event: KeyboardEvent) => {
@@ -106,7 +108,6 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
       recording.dispose(); current.current.onStreamChange?.(null); if (session.current === recording) session.current = null;
     };
   }, [cancel, stopPreview, releasePress]);
-  useLayoutEffect(() => props.onStateChange(state), [props.onStateChange, state]);
   useLayoutEffect(() => { if (props.disabled && session.current && holdVoiceIsActive(session.current.snapshot)) cancel(); }, [props.disabled, cancel]);
 
   const active = holdVoiceIsActive(state), busy = leaving || state.phase === 'stopping' || state.phase === 'transcribing';
@@ -200,7 +201,8 @@ export function FluidVoiceControl(props: FluidVoiceControlProps) {
     </Button>
     {active ? <Button type="button" size="icon" variant="default" data-bb-chat-ui-voice-send="" aria-label="음성 내용 전송" aria-busy={busy}
       inert={!choicesOpen || undefined} aria-hidden={!choicesOpen || undefined} tabIndex={choicesOpen ? 0 : -1}
-      disabled={!choicesOpen || busy || props.disabled || props.sendDisabled} onClick={() => finish('send')}><Icon name={props.sendIcon ?? 'CornerDownLeft'} className="size-4"/></Button> : null}
+      disabled={!choicesOpen || busy || props.disabled || props.sendDisabled} onClick={() => finish('send')}>{typeof props.sendIcon === 'object' && props.sendIcon !== null
+        ? props.sendIcon : <Icon name={props.sendIcon ?? 'CornerDownLeft'} className="size-4"/>}</Button> : null}
     {state.error ? <span className="sr-only" role="alert">{state.error}</span> : null}
   </span>;
 }
